@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fafafa;
+  --foreground: #191919;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* ASU Brand Colors */
+  --color-asu-maroon: #8C1D40;
+  --color-asu-gold: #FFC627;
+  --color-asu-green: #78BE20;
+  --color-asu-blue: #00A3E0;
+  --color-asu-orange: #FF7F32;
+  --color-asu-gray: #747474;
+  --color-asu-copper: #AF674B;
+  --color-asu-turquoise: #4AB7C4;
+  --color-asu-pink: #E74973;
+
+  /* Grays */
+  --color-gray-100: #FAFAFA;
+  --color-gray-200: #E8E8E8;
+  --color-gray-300: #D0D0D0;
+  --color-gray-400: #BFBFBF;
+  --color-gray-500: #747474;
+  --color-gray-600: #484848;
+  --color-gray-700: #191919;
+
+  /* Semantic */
+  --color-sidebar-bg: #8C1D40;
+  --color-sidebar-hover: #6e1633;
+  --color-sidebar-text: #ffffff;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* Skip link for accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-asu-maroon);
+  color: white;
+  padding: 8px 16px;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid var(--color-asu-blue);
+  outline-offset: 2px;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
