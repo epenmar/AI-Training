@@ -36,6 +36,7 @@ export interface Database {
           description?: string | null;
           sort_order?: number;
         };
+        Relationships: [];
       };
       skills: {
         Row: {
@@ -59,6 +60,7 @@ export interface Database {
           bloom_phase_id?: number;
           is_gap?: boolean;
         };
+        Relationships: [];
       };
       assessment_questions: {
         Row: {
@@ -76,6 +78,7 @@ export interface Database {
           skill_id?: number;
           scenario?: string;
         };
+        Relationships: [];
       };
       assessment_options: {
         Row: {
@@ -100,6 +103,7 @@ export interface Database {
           level_label?: string;
           score?: number;
         };
+        Relationships: [];
       };
       learning_items: {
         Row: {
@@ -128,6 +132,7 @@ export interface Database {
           direct_link?: string | null;
           leveling_rationale?: string | null;
         };
+        Relationships: [];
       };
       lesson_flow: {
         Row: {
@@ -176,6 +181,7 @@ export interface Database {
           skill_ids?: number[];
           specific_location?: string | null;
         };
+        Relationships: [];
       };
       level_up_activities: {
         Row: {
@@ -206,6 +212,7 @@ export interface Database {
           deliverable?: string | null;
           linked_phase_ids?: number[];
         };
+        Relationships: [];
       };
       activity_guide_steps: {
         Row: {
@@ -224,6 +231,7 @@ export interface Database {
           step_number?: number;
           instruction?: string;
         };
+        Relationships: [];
       };
       profiles: {
         Row: {
@@ -245,6 +253,7 @@ export interface Database {
           display_name?: string | null;
           avatar_url?: string | null;
         };
+        Relationships: [];
       };
       assessment_attempts: {
         Row: {
@@ -265,6 +274,7 @@ export interface Database {
           total_score?: number;
           overall_band?: string;
         };
+        Relationships: [];
       };
       assessment_responses: {
         Row: {
@@ -288,6 +298,7 @@ export interface Database {
           score?: number;
           level_label?: string;
         };
+        Relationships: [];
       };
       user_activity_completions: {
         Row: {
@@ -308,6 +319,7 @@ export interface Database {
           completed_at?: string;
           deliverable_notes?: string | null;
         };
+        Relationships: [];
       };
       community_posts: {
         Row: {
@@ -340,8 +352,10 @@ export interface Database {
           skill_id?: number | null;
           activity_id?: number | null;
         };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
     Functions: Record<string, never>;
     Enums: Record<string, never>;
   };

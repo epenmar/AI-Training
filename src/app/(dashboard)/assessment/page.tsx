@@ -1,33 +1,39 @@
-export default function AssessmentPage() {
-  return (
-    <div className="max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-700 mb-2">
-        AI Skills Self-Assessment
-      </h2>
-      <p className="text-gray-500 mb-6">
-        14 scenario-based questions to measure your current AI skill levels.
-      </p>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-        <div className="w-16 h-16 bg-asu-maroon/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg
-            className="w-8 h-8 text-asu-maroon"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-            />
-          </svg>
-        </div>
-        <p className="text-gray-500">
-          Assessment coming in Stage 3. The 14 scenario questions and scoring engine will be built here.
-        </p>
+import { createClient } from "@/lib/supabase/server";
+import { AssessmentFlow } from "@/components/assessment/AssessmentFlow";
+
+export default async function AssessmentPage() {
+  const supabase = await createClient();
+
+  const { data: questions } = await supabase
+    .from("assessment_questions")
+    .select("*")
+    .order("id");
+
+  const { data: options } = await supabase
+    .from("assessment_options")
+    .select("*")
+    .order("question_id")
+    .order("option_key");
+
+  const { data: skills } = await supabase
+    .from("skills")
+    .select("*");
+
+  if (!questions || !options || !skills) {
+    return (
+      <div className="max-w-3xl mx-auto text-center py-12">
+        <p className="text-gray-500">Unable to load assessment questions. Please try again later.</p>
       </div>
-    </div>
-  );
+    );
+  }
+
+  const skillMap = new Map(skills.map((s) => [s.id, s]));
+
+  const questionsWithOptions = questions.map((q) => ({
+    ...q,
+    options: options.filter((o) => o.question_id === q.id),
+    skill: skillMap.get(q.skill_id)!,
+  }));
+
+  return <AssessmentFlow questions={questionsWithOptions} />;
 }
