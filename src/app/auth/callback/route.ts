@@ -17,7 +17,6 @@ export async function GET(request: Request) {
         process.env.NEXT_PUBLIC_ALLOW_TEST_ACCOUNTS === "true";
 
       if (!allowTestAccounts && !email.endsWith("@asu.edu")) {
-        // Sign out the non-ASU user
         await supabase.auth.signOut();
         return NextResponse.redirect(
           `${origin}/auth/error?reason=domain`
