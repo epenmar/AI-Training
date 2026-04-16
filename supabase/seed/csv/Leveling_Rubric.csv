@@ -1,0 +1,4 @@
+Level,Definition,Examples
+Foundational,"Definitions, vocabulary, 'what is X', overview/intro, single-step procedures.",Glossary terms; 'What is generative AI'; Zero-shot prompt definition
+Intermediate,"Applying concepts, multi-step processes, comparing/contrasting, examples and scenarios.",Few-shot prompting; identifying hallucinations; using a framework
+Advanced,"Synthesis, edge cases, troubleshooting, design decisions, evaluation, content explicitly flagged advanced.",RACCCA evaluation; agent risk controls; redesigning assessments

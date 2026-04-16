@@ -1,0 +1,27 @@
+ID,Source,Topic,Summary,Learning Level,Direct Link,Leveling Rationale
+1,AI-X Framework,AI-X Framework overview,"Set of complementary tools (Compass, Guide, Toolkit) for designing AI-mediated learning experiences responsibly.",Foundational,https://aix-framework.lei-tech.org/home,Framework orientation
+2,AI-X Framework,Principled Innovation,ASU's foundational ethical-design lens that underpins the AI-X tools.,Foundational,https://aix-framework.lei-tech.org/principled-innovation,Ethical foundation
+3,AI-X Framework,AI-X Compass (self-assessment),"20–25 minute guided self-assessment to clarify use case, examine fit, surface risks, and get next-step recommendation for an AI-X idea.",Intermediate,https://aix-framework.lei-tech.org/compass,Structured early-stage evaluation tool
+4,AI-X Framework,AI-X Guide (4-level reflection),Self-assessment of a working prototype across 8 themes using Implemented/Partially/Not Yet/N/A levels.,Advanced,https://aix-framework.lei-tech.org/guide,Prototype-stage design audit
+5,AI-X Framework,AI-X Toolkit overview,"Menu of tools across four design stages: Challenge, Creation, Implementation, Investigation.",Foundational,https://aix-framework.lei-tech.org/aix-toolkit-home,Toolkit orientation
+6,AI-X Framework,Challenge: Getting Started,"Define learning objectives, learners, and conditions before jumping to a solution.",Foundational,https://aix-framework.lei-tech.org/aix-toolkit/challenge-getting-started,Stage orientation
+7,AI-X Framework,Five Whys Technique,Iterative root-cause questioning to find the underlying educational problem.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/five-whys,Diagnostic technique
+8,AI-X Framework,Task Analysis,Decompose what learners must do to identify cognitive and procedural steps.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/task-analysis,Analysis technique
+9,AI-X Framework,Personas & Learning Scenarios,Build representative learner personas and scenarios to ground design decisions.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/personas,Learner-centered design
+10,AI-X Framework,Stakeholder Needs & Values,Surface needs and values of all impacted stakeholders.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/stakeholder-needs,Stakeholder mapping
+11,AI-X Framework,How AI Systems Work,Plain-language explanation of how AI systems function to inform appropriate use.,Foundational,https://aix-framework.lei-tech.org/aix-toolkit/how-ai-works,Foundational AI concept
+12,AI-X Framework,Sense-Making Ethical Evaluation,Structured ethical evaluation of an AI tool idea before building.,Advanced,https://aix-framework.lei-tech.org/aix-toolkit/ethical-evaluation,Ethics evaluation
+13,AI-X Framework,Creation: Getting Started,Orientation for design and development of an AI tool.,Foundational,https://aix-framework.lei-tech.org/aix-toolkit/creation-getting-started,Stage orientation
+14,AI-X Framework,Learning Sciences Roadmap,Ground design decisions in learning-sciences research.,Advanced,https://aix-framework.lei-tech.org/aix-toolkit/learning-sciences,Research-based design
+15,AI-X Framework,Prototyping,Build low/high-fidelity prototypes to test design intent.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/prototyping,Design technique
+16,AI-X Framework,Requirements,Capture functional and non-functional requirements for the tool.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/requirements,Specification
+17,AI-X Framework,Logic Model,Map inputs → activities → outputs → outcomes → impact for the AI tool.,Advanced,https://aix-framework.lei-tech.org/aix-toolkit/logic-model,Theory-of-change framework
+18,AI-X Framework,Data Plan,"Plan what data the tool collects, stores, and uses—including privacy.",Advanced,https://aix-framework.lei-tech.org/aix-toolkit/data-plan,Data governance
+19,AI-X Framework,Implementation: Getting Started,Orientation for testing the tool in real conditions.,Foundational,https://aix-framework.lei-tech.org/aix-toolkit/implementation-getting-started,Stage orientation
+20,AI-X Framework,Accessibility Guide,Practical guidance for making AI tools accessible.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/accessibility-guide,Accessibility practice
+21,AI-X Framework,End-User & Usability Testing,Methods for testing usability with intended users.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/usability-testing,User research
+22,AI-X Framework,Investigation: Getting Started,Orientation for analyzing data collected about the tool.,Foundational,https://aix-framework.lei-tech.org/aix-toolkit/investigation-getting-started,Stage orientation
+23,AI-X Framework,Data Collection Methods Overview,Comparison of methods for collecting tool-effectiveness data.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/data-collection,Methods overview
+24,AI-X Framework,A/B Testing,Compare tool variants with controlled experiments.,Advanced,https://aix-framework.lei-tech.org/aix-toolkit/ab-testing,Experimental design
+25,AI-X Framework,Survey,Design and deploy surveys to gather user feedback.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/survey,Quantitative method
+26,AI-X Framework,Focus Groups & Interviews,Qualitative methods for deeper user insight.,Intermediate,https://aix-framework.lei-tech.org/aix-toolkit/focus-groups,Qualitative method

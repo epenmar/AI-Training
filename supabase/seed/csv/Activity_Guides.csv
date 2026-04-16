@@ -1,0 +1,256 @@
+Skill #,Level-Up Band,Activity Title,Step #,Instruction
+1,Foundational → Intermediate,Tool Selection Matrix,1,"Read the three scenarios below and open a blank document for your matrix:
+• Scenario A: You need to generate 20 multiple-choice quiz questions from a textbook chapter.
+• Scenario B: You need to summarize 15 student discussion posts into key themes.
+• Scenario C: You need to draft personalized feedback on student presentations."
+1,Foundational → Intermediate,Tool Selection Matrix,2,"For each scenario, consider which AI tool fits best. Think about: Does the tool handle long inputs? Does it need to see files? Is student data involved (VITRA)?"
+1,Foundational → Intermediate,Tool Selection Matrix,3,"Fill in your matrix: rows = scenarios, columns = Recommended Tool, Why This Tool, One Limitation."
+1,Foundational → Intermediate,Tool Selection Matrix,4,"For at least one scenario, actually try the task in your recommended tool. Does reality match your prediction?"
+1,Foundational → Intermediate,Tool Selection Matrix,5,Revise your matrix based on what you learned from the test run.
+1,Intermediate → Advanced,Tool Audit & Recommendation Brief,1,Identify one AI tool your department is considering adopting or that you've been asked about.
+1,Intermediate → Advanced,Tool Audit & Recommendation Brief,2,"Check its VITRA status: go to ASU's tool approval page (or ask your IT liaison) and document whether it's approved, under review, or not yet submitted."
+1,Intermediate → Advanced,Tool Audit & Recommendation Brief,3,"Test the tool on a representative task from your actual workflow. Note output quality, ease of use, and any limitations."
+1,Intermediate → Advanced,Tool Audit & Recommendation Brief,4,"Evaluate data handling: What does the tool's privacy policy say about data storage, training, and sharing? Would you be comfortable putting student data in it?"
+1,Intermediate → Advanced,Tool Audit & Recommendation Brief,5,Check accessibility: Can it be used with a screen reader? Does it have keyboard navigation? Is the output accessible?
+1,Intermediate → Advanced,Tool Audit & Recommendation Brief,6,"Write your one-page brief: Purpose, Tool Evaluated, VITRA Status, Strengths (with evidence), Risks (with evidence), Recommendation (adopt / pilot / wait / reject)."
+1,New → Foundational,AI Tool Safari,1,"Open three AI tools you have access to at ASU (start with ASU's ChatGPT, then try Microsoft Copilot, and Google Gemini)."
+1,New → Foundational,AI Tool Safari,2,Write one simple prompt and copy it exactly: 'Write a 3-sentence explanation of active learning suitable for a course syllabus.'
+1,New → Foundational,AI Tool Safari,3,Paste that same prompt into each tool. Do not modify it.
+1,New → Foundational,AI Tool Safari,4,"For each response, note: How long is it? What tone does it use? Does it follow the 3-sentence constraint? Does it feel accurate?"
+1,New → Foundational,AI Tool Safari,5,Write a short comparison (a few bullet points per tool): What did each one do well? What surprised you?
+1,New → Foundational,AI Tool Safari,6,Pick the one you'd use again for this type of task and write one sentence explaining why.
+2,Foundational → Intermediate,The Anchoring Breaker,1,"Pick a real design problem you're working on (e.g., 'I need a new final project for my intro course')."
+2,Foundational → Intermediate,The Anchoring Breaker,2,Prompt the AI to brainstorm 5 ideas. Copy them into a document labeled 'Round 1.'
+2,Foundational → Intermediate,The Anchoring Breaker,3,"Now break the anchor. Try one of these moves:
+• 'Now pretend you're a student who hates group work. What would you suggest instead?'
+• 'Generate 5 more ideas, but none of them can involve technology.'
+• 'What would someone who thinks all of these are terrible suggest?'"
+2,Foundational → Intermediate,The Anchoring Breaker,4,Copy the new ideas into your doc labeled 'Round 2.'
+2,Foundational → Intermediate,The Anchoring Breaker,5,Compare the two rounds side by side. Highlight ideas that only appeared after you broke the anchor.
+2,Foundational → Intermediate,The Anchoring Breaker,6,"Write one sentence: which round was more useful, and what does that tell you about how AI defaults work?"
+2,Intermediate → Advanced,Structured Divergent Brainstorm,1,"Define your problem clearly in one sentence (e.g., 'I need to redesign my midterm assessment to be AI-resilient')."
+2,Intermediate → Advanced,Structured Divergent Brainstorm,2,"Create Prompt 1 — the Student perspective: 'You are a college student taking [course]. What assessment format would challenge you the most and help you learn, even if you had access to AI?'"
+2,Intermediate → Advanced,Structured Divergent Brainstorm,3,"Create Prompt 2 — the Skeptic perspective: 'You are a faculty member who believes AI makes traditional assessments meaningless. What would you propose instead, and what are the biggest risks?'"
+2,Intermediate → Advanced,Structured Divergent Brainstorm,4,"Create Prompt 3 — Tree of Thought: 'Generate three completely independent approaches to redesigning a midterm assessment for [course] in the age of AI. For each approach, reason through the design logic step by step before proposing the assessment. The three approaches should share no structural similarities.'"
+2,Intermediate → Advanced,Structured Divergent Brainstorm,5,Run all three prompts. Copy the outputs into a single document.
+2,Intermediate → Advanced,Structured Divergent Brainstorm,6,Synthesize: Which ideas appeared in only one angle? Which tensions surfaced? Build your final shortlist of 2–3 ideas with a rationale for each.
+2,New → Foundational,My First AI Conversation,1,"Open your preferred AI tool and pick a topic you know well (e.g., a course you teach, a hobby, your research area)."
+2,New → Foundational,My First AI Conversation,2,Write an opening prompt: a question or request about that topic.
+2,New → Foundational,My First AI Conversation,3,"After the AI responds, read it carefully and write a follow-up that builds on what it said (don't start a new topic)."
+2,New → Foundational,My First AI Conversation,4,"Repeat for 5 total turns. Each time, push the conversation deeper: ask 'why?', request an example, challenge something it said, or ask it to consider a different angle."
+2,New → Foundational,My First AI Conversation,5,"After turn 5, re-read the whole conversation. Write a sentence about how the final response differs from the first one."
+2,New → Foundational,My First AI Conversation,6,Reflection: Did the conversation go somewhere you didn't expect? What would you do differently next time?
+3,Foundational → Intermediate,The Fabrication Detector,1,Ask the AI: 'Write a 2-paragraph literature review on [topic in your field] with in-text citations and a reference list.'
+3,Foundational → Intermediate,The Fabrication Detector,2,Print or copy the output. Get three different colored highlighters (or use digital markup).
+3,Foundational → Intermediate,The Fabrication Detector,3,For each citation: Search for it in Google Scholar or your library database. Highlight green if it exists and the AI described it accurately.
+3,Foundational → Intermediate,The Fabrication Detector,4,"For each factual claim (even those without citations): Verify against a known source. Highlight yellow if partially accurate, red if wrong or fabricated."
+3,Foundational → Intermediate,The Fabrication Detector,5,"Count your colors. Write a summary: X% green, Y% yellow, Z% red. What pattern do you notice in the errors?"
+3,Foundational → Intermediate,The Fabrication Detector,6,Reflection: What type of claim was most likely to be fabricated? How would you build a verification habit into your workflow?
+3,Intermediate → Advanced,AI-Assisted Research Workflow,1,Define a real research question you're working on.
+3,Intermediate → Advanced,AI-Assisted Research Workflow,2,Design a multi-step workflow: (1) Use AI to generate an initial list of relevant sources. (2) Verify each source exists. (3) Read the actual abstracts of verified sources. (4) Ask AI to synthesize findings across the verified set only. (5) Verify the synthesis against your reading.
+3,Intermediate → Advanced,AI-Assisted Research Workflow,3,Draw or describe the workflow as a diagram with verification gates between each step.
+3,Intermediate → Advanced,AI-Assisted Research Workflow,4,"Run the workflow on your real research question. At each gate, document what you caught (fabrications, misrepresentations, missing nuance)."
+3,Intermediate → Advanced,AI-Assisted Research Workflow,5,"Write up: Where did AI add value (speed, breadth, connections you missed)? Where did it introduce risk? What would you change for next time?"
+3,Intermediate → Advanced,AI-Assisted Research Workflow,6,Package the workflow as a reusable template a colleague could follow.
+3,New → Foundational,Source Check Challenge,1,"Open an AI tool and ask: 'Recommend 3 peer-reviewed articles about [a topic in your field] published in the last 5 years. Include author names, journal, and year.'"
+3,New → Foundational,Source Check Challenge,2,Copy the 3 citations into a document.
+3,New → Foundational,Source Check Challenge,3,Open Google Scholar (scholar.google.com). Search for each article by its exact title.
+3,New → Foundational,Source Check Challenge,4,"For each citation, record: Found it (yes/no)? If yes, do the author and year match? If no, does a similar article exist or was this completely fabricated?"
+3,New → Foundational,Source Check Challenge,5,Write a takeaway: What percentage was real? Would you have caught the fakes without checking?
+4,Foundational → Intermediate,The Confidence Trap,1,"Think of a question where AI is likely to struggle: a niche topic, something that changed recently, or a common misconception in your field."
+4,Foundational → Intermediate,The Confidence Trap,2,Ask the AI that question. Note how confident it sounds.
+4,Foundational → Intermediate,The Confidence Trap,3,Step 1 — Personal knowledge check: Does this match what I already know?
+4,Foundational → Intermediate,The Confidence Trap,4,"Step 2 — Primary source check: Can I find the specific claim in an official source (university website, journal, government document)?"
+4,Foundational → Intermediate,The Confidence Trap,5,Step 3 — Consistency check: Ask the AI the same question rephrased differently. Does it give the same answer? Ask it to argue the opposite. Does it flip easily?
+4,Foundational → Intermediate,The Confidence Trap,6,"Write up your 3-step check as a walkthrough someone else could follow, showing what you found at each step."
+4,Intermediate → Advanced,RACCCA in Practice,1,Find a real piece of AI-generated content from your work (or ask AI to generate a substantive paragraph about your field).
+4,Intermediate → Advanced,RACCCA in Practice,2,"Set up a RACCCA evaluation document with six sections: Relevance, Accuracy, Currency, Credibility, Coverage, Audience."
+4,Intermediate → Advanced,RACCCA in Practice,3,Relevance: Does the content address the right question for the right context?
+4,Intermediate → Advanced,RACCCA in Practice,4,Accuracy: Fact-check every specific claim. Document what you verified and how.
+4,Intermediate → Advanced,RACCCA in Practice,5,"Currency: Is the information up to date? Check dates, references to recent events or policies."
+4,Intermediate → Advanced,RACCCA in Practice,6,Credibility: Are the sources (if any) authoritative? Would you stake your professional reputation on this?
+4,Intermediate → Advanced,RACCCA in Practice,7,Coverage: Does it address the topic comprehensively or are key perspectives missing?
+4,Intermediate → Advanced,RACCCA in Practice,8,"Audience: Is the tone, complexity, and framing appropriate for the intended reader?"
+4,Intermediate → Advanced,RACCCA in Practice,9,"Score each dimension (Strong / Adequate / Weak) with specific evidence. Write a final verdict: use as-is, revise with specific changes, or discard."
+4,New → Foundational,Spot the Fake,1,"Pick a topic you're genuinely knowledgeable about — your research area, your institution's history, a hobby."
+4,New → Foundational,Spot the Fake,2,Ask the AI: 'Tell me 5 interesting facts about [topic].'
+4,New → Foundational,Spot the Fake,3,"Read each fact. Without searching the web, mark each one: ✅ I know this is right, ❓ I'm not sure, ❌ I think this is wrong."
+4,New → Foundational,Spot the Fake,4,"For any you marked ❌ or ❓, explain in one sentence why you're suspicious."
+4,New → Foundational,Spot the Fake,5,Now do a quick web search on the ones you flagged. Were you right to be suspicious?
+4,New → Foundational,Spot the Fake,6,Takeaway: Write one sentence about what made the wrong facts convincing.
+5,Foundational → Intermediate,The Style Coach,1,"Find a sample of your own writing (an email you're proud of, a syllabus section, a report paragraph). Paste it into the AI."
+5,Foundational → Intermediate,The Style Coach,2,"Ask: 'Analyze the writing style of this text. Describe the tone, sentence structure, vocabulary level, and any distinctive patterns.'"
+5,Foundational → Intermediate,The Style Coach,3,Read the AI's analysis. Does it capture your voice? Note what it gets right and wrong.
+5,Foundational → Intermediate,The Style Coach,4,"Now go back to a previous AI-generated draft and prompt: 'Rewrite this [draft] to match the writing style you just analyzed. Keep the content but match the tone, sentence length, and vocabulary.'"
+5,Foundational → Intermediate,The Style Coach,5,"Compare three versions: (1) original AI draft, (2) style-matched revision, (3) your manual edits on top. What could the AI mimic and what could it not?"
+5,Intermediate → Advanced,The Refinement Loop,1,"Start with a substantive writing task (not a quick email — something like a course description, a proposal section, or a report)."
+5,Intermediate → Advanced,The Refinement Loop,2,"Pass 1 — Generate: Write a detailed prompt including audience, purpose, length, tone, key points. Generate the first draft."
+5,Intermediate → Advanced,The Refinement Loop,3,"Pass 2 — AI Self-Critique: Paste the draft back and prompt: 'Critique this draft against these criteria: [your criteria — e.g., accuracy, specificity, tone, logical flow]. List what's strong and what needs work.'"
+5,Intermediate → Advanced,The Refinement Loop,4,Pass 3 — AI Revision: Ask: 'Now revise the draft based on your critique. Show me the improved version.'
+5,Intermediate → Advanced,The Refinement Loop,5,Pass 4 — Your Final Edit: Read the revised draft critically. Fix everything that still isn't right. These are the things only you can do.
+5,Intermediate → Advanced,The Refinement Loop,6,Document the progression: copy all 4 versions into a single doc with annotations on what changed at each step and what only human judgment could fix.
+5,New → Foundational,Before & After,1,"Identify a real writing task you need to do this week (an email, an announcement, a short description)."
+5,New → Foundational,Before & After,2,Ask an AI to draft it. Give a simple prompt with the key details.
+5,New → Foundational,Before & After,3,"Read the draft aloud. If it doesn't sound like something you'd say, highlight those parts."
+5,New → Foundational,Before & After,4,Rewrite the highlighted sections in your own words. Don't worry about making it perfect — just make it sound like you.
+5,New → Foundational,Before & After,5,Put the AI version and your version side by side. Write 2–3 bullet points: What did the AI get right? What did it miss about your voice?
+6,Foundational → Intermediate,Design an Agent on Paper,1,"Identify a repetitive multi-step workflow in your role (examples: onboarding a new TA, prepping a weekly module, reviewing submissions for completeness)."
+6,Foundational → Intermediate,Design an Agent on Paper,2,"Map the workflow: list every step in order, from trigger to completion."
+6,Foundational → Intermediate,Design an Agent on Paper,3,"For each step, mark: Could AI do this? (Yes / Partially / No). For 'Partially,' note what the human still needs to do."
+6,Foundational → Intermediate,Design an Agent on Paper,4,"Identify where a human checkpoint is essential (anything involving judgment, sensitive data, or external communication)."
+6,Foundational → Intermediate,Design an Agent on Paper,5,"Design the agent on paper: Goal, Trigger event, Numbered steps (marking which are AI and which are human), Tools the agent would need access to, Risks if it goes wrong."
+6,Foundational → Intermediate,Design an Agent on Paper,6,Review your design: Is there a step where a mistake would be hard to undo? Add a human gate there.
+6,Intermediate → Advanced,Build and Test a Simple Agent,1,Choose the workflow from your paper design (or a simpler version of it).
+6,Intermediate → Advanced,Build and Test a Simple Agent,2,"Pick your platform: Claude Projects, a custom GPT, Gemini Gems, or any tool that supports persistent instructions."
+6,Intermediate → Advanced,Build and Test a Simple Agent,3,"Write the system prompt: Define the agent's role, its specific task, the steps it should follow, its constraints, and where it should pause for human input."
+6,Intermediate → Advanced,Build and Test a Simple Agent,4,Test Input 1: Give it a straightforward version of the task. Does it follow your steps? Does it stay in role?
+6,Intermediate → Advanced,Build and Test a Simple Agent,5,"Test Input 2: Give it an edge case (missing information, ambiguous request). How does it handle uncertainty?"
+6,Intermediate → Advanced,Build and Test a Simple Agent,6,Test Input 3: Try to break it — give it something outside its scope. Does it recognize the boundary or does it hallucinate a response?
+6,Intermediate → Advanced,Build and Test a Simple Agent,7,"Write your evaluation: What worked, where it drifted, what you'd change in the system prompt, and whether this agent is ready for a real pilot."
+6,New → Foundational,Agent vs. Prompt: What's the Difference?,1,Read pages 8–9 of the GenAI 101 Take-Home Reference PDF (the AI Agents section).
+6,New → Foundational,Agent vs. Prompt: What's the Difference?,2,"Open ChatGPT (or your preferred tool) and give it a multi-step task: 'Plan a 3-day faculty workshop on AI in teaching. Include: a theme for each day, 3 session titles per day, and a draft invitation email.'"
+6,New → Foundational,Agent vs. Prompt: What's the Difference?,3,Watch how it handles the task. Does it do all three parts? Does it connect them logically? Does it ask you clarifying questions?
+6,New → Foundational,Agent vs. Prompt: What's the Difference?,4,"Write a short reflection: (1) What did it handle on its own? (2) Where did you have to guide it? (3) In your own words, what would make this an 'agent' rather than just a chatbot responding to a long prompt?"
+7,Foundational → Intermediate,Theme Finder,1,"Gather a set of open-ended survey responses (at least 20). Ensure they're de-identified — remove any names, IDs, or identifying details."
+7,Foundational → Intermediate,Theme Finder,2,Read through them yourself first. Jot down 3–5 themes you notice.
+7,Foundational → Intermediate,Theme Finder,3,"Paste them into an AI tool with the prompt: 'Group these responses into 4–6 themes. For each theme, give it a name, a 1-sentence description, and list which responses belong to it.'"
+7,Foundational → Intermediate,Theme Finder,4,Compare: Did the AI find the same themes you did? Did it surface anything you missed? Did it group any responses in a way that doesn't make sense?
+7,Foundational → Intermediate,Theme Finder,5,"Write a comparison table: Your themes vs. AI themes. Note agreements, disagreements, and which approach found things the other missed."
+7,Intermediate → Advanced,Privacy-First Data Analysis Workflow,1,"Identify a real dataset in your work that involves some level of sensitivity (survey data, assessment results, participation logs)."
+7,Intermediate → Advanced,Privacy-First Data Analysis Workflow,2,"Step 1 — De-identification: Before touching any AI tool, create a de-identified copy. Document what you removed and how."
+7,Intermediate → Advanced,Privacy-First Data Analysis Workflow,3,Step 2 — Tool verification: Confirm the AI tool you're using is approved for the type of data you have. Document the tool name and its approval status.
+7,Intermediate → Advanced,Privacy-First Data Analysis Workflow,4,"Step 3 — Analysis: Run your analysis with a clear, documented prompt. Save the prompt and the output."
+7,Intermediate → Advanced,Privacy-First Data Analysis Workflow,5,Step 4 — Verification: Spot-check the AI's analysis against your own manual review of the data.
+7,Intermediate → Advanced,Privacy-First Data Analysis Workflow,6,"Step 5 — Audit trail: Create a log documenting each step, the decisions you made, and the results."
+7,Intermediate → Advanced,Privacy-First Data Analysis Workflow,7,Package the whole thing as a reusable workflow checklist another person on your team could follow.
+7,New → Foundational,AI Meets Your Spreadsheet,1,"Find a simple, non-sensitive dataset (e.g., public enrollment numbers, a list of courses by department, a sample CSV from a website)."
+7,New → Foundational,AI Meets Your Spreadsheet,2,"Open an AI tool that can read data (ChatGPT, Copilot, Gemini). Paste in or upload the data."
+7,New → Foundational,AI Meets Your Spreadsheet,3,"Ask: 'What do you see in this data? Describe the main trends, any outliers, and basic summary statistics.'"
+7,New → Foundational,AI Meets Your Spreadsheet,4,"Read the AI's analysis. Open the spreadsheet yourself and manually spot-check 2–3 of its claims (e.g., 'the average is X' — does that match?)."
+7,New → Foundational,AI Meets Your Spreadsheet,5,Write a short note: What did the AI get right? What did it miss? Would you trust it to summarize data you haven't looked at yourself?
+8,Foundational → Intermediate,Slide Deck Draft,1,"Pick a topic you're preparing to present (a workshop, a lecture, a training)."
+8,Foundational → Intermediate,Slide Deck Draft,2,Ask an AI tool to generate a 5-slide outline with suggested content and visual descriptions for each slide.
+8,Foundational → Intermediate,Slide Deck Draft,3,Build (or have AI build) the actual slides from that outline.
+8,Foundational → Intermediate,Slide Deck Draft,4,Evaluate each slide: Does the structure make sense for your audience? Is the visual hierarchy clear? What context is missing that only you know?
+8,Foundational → Intermediate,Slide Deck Draft,5,"Revise: fix structure, swap generic content for your specific examples, adjust visuals. Save both versions."
+8,Foundational → Intermediate,Slide Deck Draft,6,"Write a comparison note: What did you keep, what did you change, and what could the AI not have known about your audience?"
+8,Intermediate → Advanced,Visual Communication Audit,1,"Choose a complex visual: a multi-step process, a comparison infographic, or a systems diagram."
+8,Intermediate → Advanced,Visual Communication Audit,2,"Generate it using AI (describe it in detail: elements, relationships, labels, layout)."
+8,Intermediate → Advanced,Visual Communication Audit,3,"Accuracy audit: Are all labels correct? Do spatial relationships (arrows, groupings, hierarchy) accurately represent the content?"
+8,Intermediate → Advanced,Visual Communication Audit,4,Clarity audit: Show it to someone unfamiliar with the topic. Can they understand the main point without your explanation?
+8,Intermediate → Advanced,Visual Communication Audit,5,"Accessibility audit: Check color contrast (use a contrast checker tool), ensure it would make sense described as alt text, verify text is readable at standard sizes."
+8,Intermediate → Advanced,Visual Communication Audit,6,Document all corrections you made post-generation. Create a checklist others could use when reviewing AI-generated visuals.
+8,New → Foundational,"Describe It, See It",1,"Pick a concept you frequently explain to learners (e.g., a process, a comparison, a hierarchy)."
+8,New → Foundational,"Describe It, See It",2,Write a description prompt: 'Create a diagram showing [your concept]. Include [key elements]. Use a [type: flowchart / comparison / hierarchy].'
+8,New → Foundational,"Describe It, See It",3,"Try it in an AI tool that generates visuals (ChatGPT with DALL-E, Canva AI, or a text-to-diagram tool like Mermaid or Napkin.ai)."
+8,New → Foundational,"Describe It, See It",4,Evaluate the output: Is it accurate? Are labels correct? Does it communicate what you intended? What would you need to fix?
+8,New → Foundational,"Describe It, See It",5,"Write a short list: 'Usable as-is,' 'Needs minor fixes,' 'Would need to redo manually.' Explain each."
+9,Foundational → Intermediate,Write Your Disclosure Statement,1,Context 1 — Syllabus: Draft a 2–3 sentence statement for a course syllabus that tells students how AI was used in creating course materials and what the expectations are for student AI use.
+9,Foundational → Intermediate,Write Your Disclosure Statement,2,Context 2 — Conference presentation: Draft a 2–3 sentence disclosure for a slide deck acknowledgment section describing what AI assisted with and how you verified the content.
+9,Foundational → Intermediate,Write Your Disclosure Statement,3,Context 3 — Grant proposal: Draft a 2–3 sentence statement for a methods or acknowledgments section describing AI's role in the research or writing process.
+9,Foundational → Intermediate,Write Your Disclosure Statement,4,"For each, make sure you cover: What tool? What task? How was the output verified?"
+9,Foundational → Intermediate,Write Your Disclosure Statement,5,Review all three: Would a reader know exactly what you did and didn't rely on AI for? Revise until the answer is yes.
+9,Intermediate → Advanced,Disclosure Decision Tree,1,"List 5+ scenarios where the right level of disclosure isn't obvious. Examples: 'AI suggested the outline but I wrote every word,' 'I used AI to edit for grammar only,' 'A student used AI and I used AI to check their work.'"
+9,Intermediate → Advanced,Disclosure Decision Tree,2,"For each scenario, determine: Does this require disclosure? To whom? How much detail?"
+9,Intermediate → Advanced,Disclosure Decision Tree,3,"Arrange your scenarios into a decision tree: Start with 'Did you use AI?' and branch from there based on the type of use, the audience, and the institutional context."
+9,Intermediate → Advanced,Disclosure Decision Tree,4,Add at least 2 edge cases that test the limits of your tree.
+9,Intermediate → Advanced,Disclosure Decision Tree,5,"Draw or build the tree as a visual (flowchart tool, whiteboard, or AI-generated Mermaid diagram)."
+9,Intermediate → Advanced,Disclosure Decision Tree,6,Write a brief rationale for each endpoint ('Full disclosure needed because...' or 'No disclosure needed because...').
+9,New → Foundational,Find the Policy,1,Search for ASU's current policy on disclosing AI use in faculty or staff work. Bookmark it. Write a 1-sentence summary.
+9,New → Foundational,Find the Policy,2,"Pick one external context relevant to your work: a journal you might publish in, a funder you might apply to, or a professional organization you belong to. Find their AI disclosure policy."
+9,New → Foundational,Find the Policy,3,"Write a 1-sentence summary of that policy. If they don't have one, note that — it's useful information too."
+9,New → Foundational,Find the Policy,4,"Create a simple reference card (a document, a sticky note, or a bookmark folder) with both policies and their links so you can find them quickly."
+10,Foundational → Intermediate,The Nuanced Take,1,"Pick a strong claim someone might make about AI (examples: 'AI can grade essays just as well as humans,' 'AI will replace instructional designers,' 'AI eliminates the need for office hours')."
+10,Foundational → Intermediate,The Nuanced Take,2,Write one paragraph responding to that claim. Your paragraph must: (1) Acknowledge the kernel of truth. (2) Identify at least two specific limitations. (3) Name a bias or risk the speaker hasn't considered. (4) Suggest a more nuanced framing.
+10,Foundational → Intermediate,The Nuanced Take,3,"For each limitation or bias you mention, note where you learned about it (a course module, a personal experience, an article)."
+10,Foundational → Intermediate,The Nuanced Take,4,Read your paragraph aloud. Does it sound like someone who understands the complexity? Revise until it does.
+10,Intermediate → Advanced,Lead a Discussion,1,Design a 15-minute discussion for your team or a group of colleagues. The central question: 'What should our [department/program/team]'s stance on AI be?'
+10,Intermediate → Advanced,Lead a Discussion,2,Prepare talking points covering: (1) What AI can do that's relevant to your context. (2) What it can't do or does poorly. (3) Bias and fairness concerns specific to your field. (4) Privacy and data considerations. (5) Impact on pedagogy or workflow.
+10,Intermediate → Advanced,Lead a Discussion,3,Anticipate 2–3 objections (from both enthusiasts and skeptics) and prepare evidence-based responses.
+10,Intermediate → Advanced,Lead a Discussion,4,"Draft a proposed next step (e.g., a pilot, a policy, a working group, a learning goal)."
+10,Intermediate → Advanced,Lead a Discussion,5,Facilitate the discussion (or simulate it by having AI play the role of participants with different viewpoints). Document what surprised you and how you'd adjust the discussion for next time.
+10,New → Foundational,Three Things AI Can and Can't Do,1,Get a piece of paper (or open a blank doc). Draw a line down the middle. Label the left column 'AI Can Do This' and the right column 'AI Can't Do This.'
+10,New → Foundational,Three Things AI Can and Can't Do,2,"Without looking anything up, list 3 items in each column based on your current understanding."
+10,New → Foundational,Three Things AI Can and Can't Do,3,Now test each one. Open an AI tool and try each 'Can Do' and 'Can't Do' item. Does reality match your prediction?
+10,New → Foundational,Three Things AI Can and Can't Do,4,Update your list based on what happened. Mark anything that surprised you.
+10,New → Foundational,Three Things AI Can and Can't Do,5,Write a short reflection: What was your biggest surprise? What does this tell you about your mental model of AI?
+11,Foundational → Intermediate,Reimagine an Assignment,1,Pick one existing assignment from a course you teach or support. Write down its learning objective.
+11,Foundational → Intermediate,Reimagine an Assignment,2,Ask AI to generate 3 creative alternatives that achieve the same learning objective but use a completely different format. Prompt: 'The learning objective is [X]. Generate 3 alternative assignments that are structurally different from a traditional [essay/exam/project]. At least one should involve students using an AI tool as part of the activity.'
+11,Foundational → Intermediate,Reimagine an Assignment,3,Evaluate each alternative: Is it feasible? Does it really achieve the objective? What could go wrong? What would be exciting about it?
+11,Foundational → Intermediate,Reimagine an Assignment,4,Pick the one you'd most want to pilot. Write a short plan: What would you need to build? What would you tell students? What would you assess?
+11,Intermediate → Advanced,Design a Novel AI Learning Experience,1,Set a design constraint: 'This activity could not exist without AI.' Not AI as an add-on — AI as structurally essential.
+11,Intermediate → Advanced,Design a Novel AI Learning Experience,2,"Brainstorm 3 possibilities. Examples to spark ideas:
+• Students interrogate an AI playing a historical figure, then critique where the AI's responses diverge from the historical record.
+• AI generates intentionally flawed work that students must diagnose and fix.
+• AI plays the role of a demanding client who keeps changing requirements."
+11,Intermediate → Advanced,Design a Novel AI Learning Experience,3,"Pick one and fully design it: Learning objective, how AI is used (what tool, what prompt, what role), student instructions, what the ID needs to build or configure, evaluation criteria."
+11,Intermediate → Advanced,Design a Novel AI Learning Experience,4,Anticipate failure modes: What if the AI goes off-script? What if students game it? What if the technology breaks mid-activity?
+11,Intermediate → Advanced,Design a Novel AI Learning Experience,5,Write a contingency for each failure mode. Package the whole thing as a complete activity description another ID could build from.
+11,New → Foundational,The Unexpected Prompt,1,"Pick the most routine task in your work week (writing a meeting agenda, drafting an email, creating a to-do list)."
+11,New → Foundational,The Unexpected Prompt,2,"Now ask AI to do it in an unexpected format: 'Write my meeting agenda as a choose-your-own-adventure,' or 'Turn my to-do list into a series of haiku,' or 'Draft this email as if it's a conversation between two colleagues.'"
+11,New → Foundational,The Unexpected Prompt,3,"Read the output. Yes, it's silly — but was any part of it actually useful or thought-provoking?"
+11,New → Foundational,The Unexpected Prompt,4,Write a sentence: Did the unexpected format surface anything you wouldn't have thought of otherwise? What does that tell you about creative constraint?
+12,Foundational → Intermediate,The Decision Framework Draft,1,"Based on your experience, draft a personal decision framework. Start with the header: 'When I Will and Won't Use AI.'"
+12,Foundational → Intermediate,The Decision Framework Draft,2,"List 4–6 criteria you use (or should use) to decide. Examples: 'The stakes (is this going to students or just to me?)', 'Whether the task benefits from my own thinking,' 'Data sensitivity,' 'Time pressure.'"
+12,Foundational → Intermediate,The Decision Framework Draft,3,"For each criterion, write an example: a time when that criterion pushed you toward AI and a time it pushed you away."
+12,Foundational → Intermediate,The Decision Framework Draft,4,"Include at least one ethical consideration (e.g., 'Will using AI here mean a student doesn't practice a skill they need?') and one practical one (e.g., 'Is using AI actually faster, or am I just avoiding the hard part?')."
+12,Foundational → Intermediate,The Decision Framework Draft,5,Read it back. Does it feel honest? Add a note on what you're still uncertain about.
+12,Intermediate → Advanced,Principled Innovation Case Study,1,"Pick a real AI use case in your work — something you've done or are considering (e.g., using AI to generate quiz questions, having students use AI in a project, adopting an AI tool for your team)."
+12,Intermediate → Advanced,Principled Innovation Case Study,2,"Map the stakeholders: Who is affected? (students, faculty, IT, administration, the tool vendor)"
+12,Intermediate → Advanced,Principled Innovation Case Study,3,"Apply the four Principled Innovation lenses:
+• Curiosity: What are we trying to learn or achieve? What's the opportunity?
+• Care: Who could be harmed? What are the unintended consequences?
+• Clarity: Are we being transparent about what AI is doing and why?
+• Intentionality: Are we making a deliberate choice or just defaulting to the easiest option?"
+12,Intermediate → Advanced,Principled Innovation Case Study,4,Identify tensions: Where do curiosity and care pull in different directions? Where does urgency compete with intentionality?
+12,Intermediate → Advanced,Principled Innovation Case Study,5,Propose a path forward that addresses the tensions honestly. Present it to a colleague and document their feedback.
+12,Intermediate → Advanced,Principled Innovation Case Study,6,"Write up the full case study with all sections, including the feedback and how you'd incorporate it."
+12,New → Foundational,My AI Decision Journal,1,"Create a simple log (a note on your phone, a sticky note, a spreadsheet — whatever you'll actually use)."
+12,New → Foundational,My AI Decision Journal,2,"For 5 work days, each time you consider using AI (whether you do or not), jot down: Date, Task, Did I use AI? (Y/N), Why or why not? (1 sentence)."
+12,New → Foundational,My AI Decision Journal,3,Don't judge your entries — just log honestly.
+12,New → Foundational,My AI Decision Journal,4,"At the end of the week, read through your log. Look for patterns: What tasks did you always use AI for? What tasks did you always do yourself? Were any decisions hard?"
+12,New → Foundational,My AI Decision Journal,5,Write a 3-sentence reflection on what you noticed about your own habits and decision-making.
+13,Foundational → Intermediate,Signal vs. Noise Filter,1,"Over the next day or two, collect 5 recent articles or posts about AI from different sources (social media, news, newsletters, institutional updates)."
+13,Foundational → Intermediate,Signal vs. Noise Filter,2,"For each one, evaluate:
+• Is this hype or substance? (Does it make claims that are backed by evidence or experience?)
+• What actually changed? (Is there a genuine new development or is it repackaging old news?)
+• Does it affect my work? (Rate: High / Medium / Low relevance)"
+13,Foundational → Intermediate,Signal vs. Noise Filter,3,Write a 1-sentence verdict for each item.
+13,Foundational → Intermediate,Signal vs. Noise Filter,4,"Compile into a simple table: Source, Headline, Hype/Substance, Relevance, Takeaway."
+13,Foundational → Intermediate,Signal vs. Noise Filter,5,Reflection: Did this exercise change how you'll read AI news in the future?
+13,Intermediate → Advanced,Curate a Team Brief,1,"Decide on a format for a team AI update: a short email, a Slack post, a 1-page brief, or a shared doc. Pick what your team would actually read."
+13,Intermediate → Advanced,Curate a Team Brief,2,"Curate 3–5 items from the past month. For each: write a plain-language summary (2–3 sentences), tag it by category (Tool Update / Research / Policy / Practice), and rate its relevance to your team."
+13,Intermediate → Advanced,Curate a Team Brief,3,Include one 'Try This' action item — one concrete thing a team member could do this month based on what you curated.
+13,Intermediate → Advanced,Curate a Team Brief,4,Write a brief intro paragraph that contextualizes the items (what's the theme this month?).
+13,Intermediate → Advanced,Curate a Team Brief,5,Format it cleanly and share it (or save it as your first issue).
+13,Intermediate → Advanced,Curate a Team Brief,6,Create a template so you can produce the next issue in half the time.
+13,New → Foundational,Build Your Starter Kit,1,"Open a browser and find 3 sources you could follow for AI-in-education news. You need one from each category:
+• Institutional: ASU's AI hub (lx.asu.edu/ai) or the Provost's AI page.
+• Practitioner/researcher: A person who writes or posts about AI in higher ed (e.g., a blog, a newsletter, a LinkedIn feed).
+• Tool-focused: A site that tracks AI tool updates or comparisons."
+13,New → Foundational,Build Your Starter Kit,2,Bookmark all three.
+13,New → Foundational,Build Your Starter Kit,3,"Read one item from each source right now (an article, a post, an update)."
+13,New → Foundational,Build Your Starter Kit,4,"For each, write one sentence: What is this source good for? And one sentence: What was my takeaway from what I read today?"
+14,Foundational → Intermediate,Teach Me a Feature,1,"Pick an AI feature you haven't tried yet. Examples: uploading a document for analysis, using custom instructions/system prompts, creating a custom GPT or Claude Project, using image generation."
+14,Foundational → Intermediate,Teach Me a Feature,2,"Ask the AI: 'I want to learn how to [feature]. Walk me through it step by step, assuming I've never done it before.'"
+14,Foundational → Intermediate,Teach Me a Feature,3,"Follow the steps exactly as given. Note any step that's unclear, wrong, or missing."
+14,Foundational → Intermediate,Teach Me a Feature,4,"When you succeed (or fail), tell the AI what happened and ask it to troubleshoot or clarify."
+14,Foundational → Intermediate,Teach Me a Feature,5,"Verify the AI's instructions against official documentation (help pages, user guides). Note any discrepancies."
+14,Foundational → Intermediate,Teach Me a Feature,6,"Write up your tested walkthrough: the AI's steps, your corrections, and the working result."
+14,Intermediate → Advanced,Meta-Learning Protocol,1,"Write down your 5-step meta-learning protocol:
+1. Ask AI to explain the capability.
+2. Ask AI to show you an example.
+3. Try it yourself on a low-stakes task.
+4. Ask AI to evaluate your attempt.
+5. Cross-check against official documentation or community resources."
+14,Intermediate → Advanced,Meta-Learning Protocol,2,"Pick something genuinely unfamiliar to you (a new tool, a new technique, an advanced feature)."
+14,Intermediate → Advanced,Meta-Learning Protocol,3,Run steps 1–2: Get the explanation and example. Note: Is the explanation clear? Is the example realistic?
+14,Intermediate → Advanced,Meta-Learning Protocol,4,Run step 3: Try it yourself. Don't aim for perfection — aim for learning.
+14,Intermediate → Advanced,Meta-Learning Protocol,5,Run step 4: Show the AI your result and ask it to evaluate. How useful is its feedback? Does it catch real issues or just give generic praise?
+14,Intermediate → Advanced,Meta-Learning Protocol,6,"Run step 5: Find an external source (documentation, a forum, a tutorial). Does it confirm what the AI told you? What did the external source add?"
+14,Intermediate → Advanced,Meta-Learning Protocol,7,"Write up the protocol as a reusable document, annotated with your experience: where the protocol worked, where it fell short, and how you'd adapt it for a colleague."
+14,New → Foundational,Ask AI About AI,1,Open any AI tool you have access to.
+14,New → Foundational,Ask AI About AI,2,Type: 'I'm brand new to using AI tools. What are the 3 most important things I should understand before I start using you for my work as an educator?'
+14,New → Foundational,Ask AI About AI,3,"Read the response carefully. Does it match what you've heard from colleagues, training, or articles? Anything surprising?"
+14,New → Foundational,Ask AI About AI,4,Ask one follow-up question based on something it said that you want to understand better.
+14,New → Foundational,Ask AI About AI,5,Write a short note: What was helpful? What would you want to verify with a human or another source?

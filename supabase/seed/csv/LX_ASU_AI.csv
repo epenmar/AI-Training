@@ -1,0 +1,17 @@
+ID,Source,Topic,Summary,Learning Level,Direct Link,Leveling Rationale
+1,LX ASU AI,AI Creative Learning Lab — Overview,"ASU Learning Experience hub for faculty starting their AI journey, anchored in Principled Innovation.",Foundational,https://lx.asu.edu/ai,Hub orientation
+2,LX ASU AI,Foundations & tools page,"Curated foundation for understanding AI concepts and tools, with emphasis on generative AI.",Foundational,https://lx.asu.edu/ai/foundations,Page-level orientation
+3,LX ASU AI,Intro to Generative AI (video),"Introductory video covering key GenAI concepts, terminology, and examples.",Foundational,https://lx.asu.edu/ai/foundations,Foundational video
+4,LX ASU AI,Prompting (foundations),Foundational guidance on how to prompt generative AI tools.,Foundational,https://lx.asu.edu/ai/foundations,Prompting basics
+5,LX ASU AI,AI Tools at ASU,Overview of AI tools available to ASU faculty and the approval pathway.,Foundational,https://lx.asu.edu/ai/foundations,Tool inventory
+6,LX ASU AI,FAQs (foundations),Common questions about using GenAI in teaching.,Foundational,https://lx.asu.edu/ai/foundations,FAQ
+7,LX ASU AI,Advanced Prompting Strategies,Featured use case showcasing advanced prompting techniques.,Advanced,https://lx.asu.edu/ai/foundations,Applied advanced prompting
+8,LX ASU AI,The AI Playground,Featured exploratory environment for trying AI tools.,Intermediate,https://lx.asu.edu/ai/foundations,Exploration tool
+9,LX ASU AI,AI and the VITRA Process,How VITRA applies to AI tool selection at ASU.,Intermediate,https://lx.asu.edu/ai/foundations,Policy/process applied
+10,LX ASU AI,AI-enhanced learning page,Strategies for using AI to enhance teaching and learning at ASU.,Intermediate,https://lx.asu.edu/ai/ai-enhanced-learning,Page-level orientation
+11,LX ASU AI,AI-Enhanced Assignments,Designing assignments that integrate generative AI thoughtfully.,Intermediate,https://lx.asu.edu/ai/ai-enhanced-learning,Assignment design
+12,LX ASU AI,AI-supported Teaching Practices,Day-to-day teaching practices that leverage AI.,Intermediate,https://lx.asu.edu/ai/ai-enhanced-learning,Pedagogical practice
+13,LX ASU AI,Building Custom Bots and AI Agents,How to build custom bots and agents to support teaching.,Advanced,https://lx.asu.edu/ai/ai-enhanced-learning,Tool building
+14,LX ASU AI,AI Atlas,Map of AI use cases across ASU with programs and events.,Foundational,https://lx.asu.edu/ai/ai-atlas,Use-case map
+15,LX ASU AI,Coordinates of Innovation: AI Use Cases,Catalog of innovation use cases inside the AI Atlas.,Intermediate,https://lx.asu.edu/ai/ai-atlas,Use-case inventory
+16,LX ASU AI,Support & Community,Where to get help and connect with peers using AI at ASU.,Foundational,https://lx.asu.edu/ai/community,Support resources
