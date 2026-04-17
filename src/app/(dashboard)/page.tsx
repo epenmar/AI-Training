@@ -84,10 +84,14 @@ export default async function DashboardHome() {
     }
   }
 
-  const displayName =
-    (user.user_metadata?.full_name as string | undefined) ||
-    user.email?.split("@")[0] ||
-    "there";
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .single();
+
+  const fullName = profile?.display_name ?? "";
+  const firstName = fullName.trim().split(/\s+/)[0] || "there";
 
   const primaryCta = !latestAttempt ? (
     <div className="bg-asu-maroon text-white rounded-lg p-6">
@@ -162,7 +166,7 @@ export default async function DashboardHome() {
       {/* Welcome */}
       <section>
         <h2 className="text-2xl font-bold text-gray-700">
-          Welcome back, {displayName}
+          Welcome back, {firstName}
         </h2>
         <p className="mt-1 text-gray-500">
           {latestAttempt

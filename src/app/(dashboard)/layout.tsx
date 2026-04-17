@@ -17,11 +17,21 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, avatar_url")
+    .eq("id", user.id)
+    .single();
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <TopNav user={user} />
+        <TopNav
+          email={user.email ?? ""}
+          displayName={profile?.display_name ?? user.email ?? "User"}
+          avatarUrl={profile?.avatar_url ?? null}
+        />
         <main
           id="main-content"
           className="flex-1 overflow-y-auto bg-gray-100 p-6"

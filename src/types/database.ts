@@ -146,6 +146,7 @@ export interface Database {
           source: string | null;
           item_title: string;
           link: string | null;
+          source_url: string | null;
           purpose: string | null;
           id_guidance: string | null;
           skill_ids: number[];
@@ -161,6 +162,7 @@ export interface Database {
           source?: string | null;
           item_title: string;
           link?: string | null;
+          source_url?: string | null;
           purpose?: string | null;
           id_guidance?: string | null;
           skill_ids?: number[];
@@ -176,6 +178,7 @@ export interface Database {
           source?: string | null;
           item_title?: string;
           link?: string | null;
+          source_url?: string | null;
           purpose?: string | null;
           id_guidance?: string | null;
           skill_ids?: number[];

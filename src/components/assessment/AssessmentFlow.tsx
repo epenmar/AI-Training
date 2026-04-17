@@ -125,18 +125,12 @@ export function AssessmentFlow({ questions }: Props) {
     const totalScore = responses.reduce((sum, r) => sum + r.score, 0);
     const overallBand = getBand(totalScore);
 
-    // Ensure profile exists (handles accounts created before profile trigger)
+    // Ensure profile exists (handles accounts created before profile trigger).
+    // Leave display_name null so the account-setup flow prompts on first visit.
     await supabase
       .from("profiles")
       .upsert(
-        {
-          id: user.id,
-          email: user.email ?? "",
-          display_name:
-            (user.user_metadata?.full_name as string | undefined) ||
-            user.email?.split("@")[0] ||
-            null,
-        },
+        { id: user.id, email: user.email ?? "" },
         { onConflict: "id", ignoreDuplicates: true }
       );
 

@@ -52,5 +52,30 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // First-time setup: send users to /account?setup=1 until they've picked a
+  // real name. Earlier code auto-filled display_name with the email or the
+  // email prefix, so treat those as "not set."
+  if (
+    user &&
+    !isPublicPath &&
+    !request.nextUrl.pathname.startsWith("/account")
+  ) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, email")
+      .eq("id", user.id)
+      .single();
+    const name = profile?.display_name?.trim();
+    const emailPrefix = profile?.email?.split("@")[0];
+    const needsSetup =
+      !name || name === profile?.email || name === emailPrefix;
+    if (needsSetup) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/account";
+      url.searchParams.set("setup", "1");
+      return NextResponse.redirect(url);
+    }
+  }
+
   return supabaseResponse;
 }

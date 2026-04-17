@@ -1,11 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { User } from "@supabase/supabase-js";
 
-export function TopNav({ user }: { user: User }) {
+interface Props {
+  email: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+export function TopNav({ email, displayName, avatarUrl }: Props) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -15,12 +21,9 @@ export function TopNav({ user }: { user: User }) {
     router.push("/login");
   };
 
-  const displayName =
-    user.user_metadata?.full_name ?? user.email ?? "User";
-  const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
   const initials = displayName
     .split(" ")
-    .map((n: string) => n[0])
+    .map((n) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
@@ -62,10 +65,11 @@ export function TopNav({ user }: { user: User }) {
           aria-haspopup="true"
         >
           {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={avatarUrl}
               alt=""
-              className="w-8 h-8 rounded-full"
+              className="w-8 h-8 rounded-full object-cover"
             />
           ) : (
             <div className="w-8 h-8 bg-asu-maroon text-white rounded-full flex items-center justify-center text-xs font-medium">
@@ -106,11 +110,19 @@ export function TopNav({ user }: { user: User }) {
                 <p className="text-sm font-medium text-gray-700 truncate">
                   {displayName}
                 </p>
-                <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                <p className="text-xs text-gray-400 truncate">{email}</p>
               </div>
+              <Link
+                href="/account"
+                onClick={() => setMenuOpen(false)}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                role="menuitem"
+              >
+                Account settings
+              </Link>
               <button
                 onClick={handleSignOut}
-                className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
                 role="menuitem"
               >
                 Sign out
