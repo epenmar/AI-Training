@@ -167,7 +167,7 @@ export function CommunityFilters({
     ];
 
   return (
-    <div className="mb-5 flex flex-wrap items-start gap-3 bg-white border border-gray-200 rounded-lg p-3">
+    <div className="mb-5 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-start gap-3 bg-white border border-gray-200 rounded-lg p-3">
       <FilterDropdown
         id="skill-filter"
         label="Skill"
