@@ -18,7 +18,7 @@ export default async function AccountPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url, email, show_in_community, public_contact")
+    .select("display_name, avatar_url, email, public_contact")
     .eq("id", user.id)
     .single();
 
@@ -50,7 +50,6 @@ export default async function AccountPage({
       <AccountForm
         initialDisplayName={initialDisplayName}
         initialAvatarUrl={profile?.avatar_url ?? null}
-        initialShowInCommunity={profile?.show_in_community ?? true}
         initialPublicContact={profile?.public_contact ?? ""}
         email={user.email ?? ""}
         isSetup={isSetup}

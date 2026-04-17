@@ -69,6 +69,7 @@ export function UploadForm({
   const [error, setError] = useState("");
   const [selectedSkill, setSelectedSkill] = useState(initialSkillId);
   const [selectedActivity, setSelectedActivity] = useState(initialActivityId);
+  const [anonymous, setAnonymous] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -172,6 +173,7 @@ export function UploadForm({
           url: trimmedUrl,
           skillId: skillIdRaw ? parseInt(skillIdRaw, 10) : null,
           activityId: activityIdRaw ? parseInt(activityIdRaw, 10) : null,
+          anonymous,
         });
         if (res && "error" in res && res.error) setError(res.error);
       });
@@ -219,6 +221,7 @@ export function UploadForm({
         mediaType: kind,
         skillId: skillIdRaw ? parseInt(skillIdRaw, 10) : null,
         activityId: activityIdRaw ? parseInt(activityIdRaw, 10) : null,
+        anonymous,
       });
       setUploadStatus("");
       if (res && "error" in res && res.error) setError(res.error);
@@ -506,6 +509,27 @@ export function UploadForm({
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Anonymous toggle */}
+      <div className="pt-2 border-t border-gray-100">
+        <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={anonymous}
+            onChange={(e) => setAnonymous(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-asu-maroon focus:ring-asu-maroon cursor-pointer"
+          />
+          <span>
+            Post anonymously
+            <span className="block text-xs text-gray-400 font-normal mt-0.5">
+              When checked, this post shows as &quot;Anonymous&quot; and your
+              contact info is hidden. Leave unchecked to share credit (and let
+              peers reach out if you&apos;ve added contact info on your
+              account).
+            </span>
+          </span>
+        </label>
       </div>
 
       {error && (

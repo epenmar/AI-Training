@@ -346,6 +346,7 @@ export interface Database {
           media_type: string;
           skill_id: number | null;
           activity_id: number | null;
+          anonymous: boolean;
           created_at: string;
         };
         Insert: {
@@ -357,6 +358,7 @@ export interface Database {
           media_type?: string;
           skill_id?: number | null;
           activity_id?: number | null;
+          anonymous?: boolean;
           created_at?: string;
         };
         Update: {
@@ -366,6 +368,7 @@ export interface Database {
           media_type?: string;
           skill_id?: number | null;
           activity_id?: number | null;
+          anonymous?: boolean;
         };
         Relationships: [];
       };

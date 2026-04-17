@@ -79,7 +79,7 @@ export default async function CommunityPage({
     authorIds.length > 0
       ? await supabase
           .from("profiles")
-          .select("id, display_name, show_in_community, public_contact")
+          .select("id, display_name, public_contact")
           .in("id", authorIds)
       : { data: [] };
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
@@ -131,7 +131,7 @@ export default async function CommunityPage({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {posts.map((post) => {
             const author = profileMap.get(post.user_id);
-            const showName = author?.show_in_community && author?.display_name;
+            const showName = !post.anonymous && author?.display_name;
             const authorName = showName ? author.display_name : "Anonymous";
             const publicContact = showName ? author?.public_contact ?? null : null;
             const skill = post.skill_id ? skillMap.get(post.skill_id) : null;

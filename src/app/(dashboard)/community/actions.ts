@@ -50,6 +50,7 @@ type CreatePostInput = {
   mediaType: "image" | "video" | "audio" | "document";
   skillId: number | null;
   activityId: number | null;
+  anonymous: boolean;
 };
 
 export async function createPost(input: CreatePostInput) {
@@ -83,6 +84,7 @@ export async function createPost(input: CreatePostInput) {
     media_type: input.mediaType,
     skill_id: input.skillId,
     activity_id: input.activityId,
+    anonymous: input.anonymous,
   });
   if (insertErr) {
     await supabase.storage.from("community-media").remove([input.mediaPath]);
@@ -99,6 +101,7 @@ type CreateLinkPostInput = {
   url: string;
   skillId: number | null;
   activityId: number | null;
+  anonymous: boolean;
 };
 
 export async function createLinkPost(input: CreateLinkPostInput) {
@@ -132,6 +135,7 @@ export async function createLinkPost(input: CreateLinkPostInput) {
     media_type: "link",
     skill_id: input.skillId,
     activity_id: input.activityId,
+    anonymous: input.anonymous,
   });
   if (error) return { error: error.message };
 
@@ -145,6 +149,7 @@ type UpdatePostInput = {
   description: string | null;
   skillId: number | null;
   activityId: number | null;
+  anonymous: boolean;
 };
 
 export async function updatePost(input: UpdatePostInput) {
@@ -180,6 +185,7 @@ export async function updatePost(input: UpdatePostInput) {
       description: input.description,
       skill_id: input.skillId,
       activity_id: input.activityId,
+      anonymous: input.anonymous,
     })
     .eq("id", input.postId);
   if (error) return { error: error.message };

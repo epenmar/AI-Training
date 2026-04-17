@@ -19,7 +19,7 @@ export default async function EditPostPage({
   const [{ data: post }, { data: viewerProfile }] = await Promise.all([
     supabase
       .from("community_posts")
-      .select("id, title, description, skill_id, activity_id, user_id")
+      .select("id, title, description, skill_id, activity_id, user_id, anonymous")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -76,6 +76,7 @@ export default async function EditPostPage({
         initialDescription={post.description ?? ""}
         initialSkillId={post.skill_id ? String(post.skill_id) : ""}
         initialActivityId={post.activity_id ? String(post.activity_id) : ""}
+        initialAnonymous={post.anonymous ?? false}
         skills={skills ?? []}
         activities={activities ?? []}
       />

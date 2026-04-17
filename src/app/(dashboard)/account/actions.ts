@@ -17,7 +17,6 @@ export async function saveProfile(formData: FormData) {
   if (!displayName) return { error: "Please enter a name." };
   if (displayName.length > 80) return { error: "Name is too long." };
 
-  const showInCommunity = formData.get("show_in_community") != null;
   const publicContact =
     formData.get("public_contact")?.toString().trim() ?? "";
   if (publicContact.length > 200) {
@@ -63,11 +62,9 @@ export async function saveProfile(formData: FormData) {
   const patch: {
     display_name: string;
     avatar_url?: string;
-    show_in_community: boolean;
     public_contact: string | null;
   } = {
     display_name: displayName,
-    show_in_community: showInCommunity,
     public_contact: publicContact.length > 0 ? publicContact : null,
   };
   if (newAvatarUrl) patch.avatar_url = newAvatarUrl;

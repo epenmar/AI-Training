@@ -21,6 +21,7 @@ interface Props {
   initialDescription: string;
   initialSkillId: string;
   initialActivityId: string;
+  initialAnonymous: boolean;
   skills: Skill[];
   activities: Activity[];
 }
@@ -31,6 +32,7 @@ export function EditPostForm({
   initialDescription,
   initialSkillId,
   initialActivityId,
+  initialAnonymous,
   skills,
   activities,
 }: Props) {
@@ -40,6 +42,7 @@ export function EditPostForm({
   const [description, setDescription] = useState(initialDescription);
   const [selectedSkill, setSelectedSkill] = useState(initialSkillId);
   const [selectedActivity, setSelectedActivity] = useState(initialActivityId);
+  const [anonymous, setAnonymous] = useState(initialAnonymous);
   const [error, setError] = useState("");
 
   const filteredActivities = selectedSkill
@@ -62,6 +65,7 @@ export function EditPostForm({
         description: description.trim() || null,
         skillId: selectedSkill ? parseInt(selectedSkill, 10) : null,
         activityId: selectedActivity ? parseInt(selectedActivity, 10) : null,
+        anonymous,
       });
       if (res && "error" in res && res.error) setError(res.error);
     });
@@ -161,6 +165,25 @@ export function EditPostForm({
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Anonymous toggle */}
+      <div className="pt-2 border-t border-gray-100">
+        <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={anonymous}
+            onChange={(e) => setAnonymous(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-asu-maroon focus:ring-asu-maroon cursor-pointer"
+          />
+          <span>
+            Post anonymously
+            <span className="block text-xs text-gray-400 font-normal mt-0.5">
+              When checked, this post shows as &quot;Anonymous&quot; and your
+              contact info is hidden.
+            </span>
+          </span>
+        </label>
       </div>
 
       {error && (

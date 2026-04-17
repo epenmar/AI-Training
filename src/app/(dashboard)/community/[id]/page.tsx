@@ -43,7 +43,7 @@ export default async function CommunityPostPage({
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, avatar_url, show_in_community, public_contact")
+      .select("display_name, avatar_url, public_contact")
       .eq("id", post.user_id)
       .single(),
     post.skill_id
@@ -67,7 +67,7 @@ export default async function CommunityPostPage({
       .single(),
   ]);
 
-  const showName = author?.show_in_community && author?.display_name;
+  const showName = !post.anonymous && author?.display_name;
   const authorName = showName ? author.display_name : "Anonymous";
   const publicContact = showName ? author?.public_contact ?? null : null;
   const canDelete = post.user_id === user.id || !!viewerProfile?.is_admin;
