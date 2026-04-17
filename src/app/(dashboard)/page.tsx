@@ -1,123 +1,353 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-const quickLinks = [
-  {
-    title: "Take Self-Assessment",
-    description: "14 scenario-based questions to measure your AI skills",
-    href: "/assessment",
-    color: "bg-asu-maroon",
-    textColor: "text-white",
-  },
-  {
-    title: "Learning Paths",
-    description: "9 Bloom's Taxonomy phases with curated resources",
-    href: "/learning-paths",
-    color: "bg-asu-blue",
-    textColor: "text-white",
-  },
-  {
-    title: "Activities",
-    description: "42 hands-on activities to build your skills",
-    href: "/activities",
-    color: "bg-asu-green",
-    textColor: "text-white",
-  },
-  {
-    title: "Community",
-    description: "Share your work and see what others are building",
-    href: "/community",
-    color: "bg-asu-turquoise",
-    textColor: "text-white",
-  },
-];
+export default async function DashboardHome() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-export default function DashboardHome() {
+  // Fetch user's latest data
+  const [
+    { data: latestAttempt },
+    { data: completions },
+    { count: totalActivities },
+    { data: recentPosts },
+  ] = await Promise.all([
+    supabase
+      .from("assessment_attempts")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("completed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("user_activity_completions")
+      .select("activity_id")
+      .eq("user_id", user.id),
+    supabase
+      .from("level_up_activities")
+      .select("*", { count: "exact", head: true }),
+    supabase
+      .from("community_posts")
+      .select("id, title, media_url, media_type, user_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(3),
+  ]);
+
+  const completedCount = completions?.length ?? 0;
+  const activityPct = totalActivities
+    ? Math.round((completedCount / totalActivities) * 100)
+    : 0;
+
+  // Suggest a next activity — any incomplete activity in the skill that scored lowest
+  const completedSet = new Set(
+    (completions ?? []).map((c) => c.activity_id)
+  );
+  let suggestedActivity: {
+    id: number;
+    title: string;
+    band: string;
+    skill_id: number;
+  } | null = null;
+
+  if (latestAttempt) {
+    const { data: responses } = await supabase
+      .from("assessment_responses")
+      .select("*")
+      .eq("attempt_id", latestAttempt.id)
+      .order("score");
+    const { data: questions } = await supabase
+      .from("assessment_questions")
+      .select("id, skill_id");
+    const qSkillMap = new Map((questions ?? []).map((q) => [q.id, q.skill_id]));
+
+    for (const r of responses ?? []) {
+      const skillId = qSkillMap.get(r.question_id);
+      if (!skillId) continue;
+      const { data: acts } = await supabase
+        .from("level_up_activities")
+        .select("id, title, band, skill_id")
+        .eq("skill_id", skillId);
+      const incomplete = (acts ?? []).find((a) => !completedSet.has(a.id));
+      if (incomplete) {
+        suggestedActivity = incomplete;
+        break;
+      }
+    }
+  }
+
+  const displayName =
+    (user.user_metadata?.full_name as string | undefined) ||
+    user.email?.split("@")[0] ||
+    "there";
+
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      {/* Welcome Section */}
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Welcome */}
       <section>
         <h2 className="text-2xl font-bold text-gray-700">
-          Welcome to the AI Skills Training Dashboard
+          Welcome back, {displayName}
         </h2>
-        <p className="mt-2 text-gray-500">
-          Assess, track, and develop your AI skills with personalized learning
-          paths built on Andrew Maynard&apos;s 14 AI Skill Statements and
-          Bloom&apos;s Taxonomy.
+        <p className="mt-1 text-gray-500">
+          {latestAttempt
+            ? `You're at ${latestAttempt.overall_band} level — keep the momentum going.`
+            : "Start with a self-assessment to see where you stand across 14 AI skills."}
         </p>
       </section>
 
-      {/* Quick Links Grid */}
-      <section aria-labelledby="quick-links-heading">
-        <h3 id="quick-links-heading" className="sr-only">
-          Quick links
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {quickLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`${link.color} ${link.textColor} rounded-lg p-6 hover:opacity-90 transition-opacity`}
-            >
-              <h4 className="text-lg font-semibold">{link.title}</h4>
-              <p className="mt-1 text-sm opacity-80">{link.description}</p>
-            </Link>
-          ))}
+      {/* Top stats */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+            Latest Score
+          </p>
+          {latestAttempt ? (
+            <>
+              <p className="text-2xl font-bold text-asu-maroon mt-1">
+                {latestAttempt.total_score}
+                <span className="text-sm font-normal text-gray-400">/42</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {latestAttempt.overall_band}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-gray-300 mt-1">—</p>
+              <p className="text-xs text-gray-400 mt-0.5">Not taken yet</p>
+            </>
+          )}
         </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+            Activities Completed
+          </p>
+          <p className="text-2xl font-bold text-asu-maroon mt-1">
+            {completedCount}
+            <span className="text-sm font-normal text-gray-400">
+              /{totalActivities ?? 0}
+            </span>
+          </p>
+          <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+            <div
+              className="bg-asu-green h-1.5 rounded-full transition-all"
+              style={{ width: `${activityPct}%` }}
+            />
+          </div>
+        </div>
+
+        <Link
+          href="/learning-paths"
+          className="bg-asu-blue text-white rounded-lg p-5 hover:bg-asu-blue/90 transition-colors"
+        >
+          <p className="text-xs uppercase tracking-wide font-medium opacity-80">
+            Learning Paths
+          </p>
+          <p className="text-2xl font-bold mt-1">9 phases</p>
+          <p className="text-xs opacity-80 mt-0.5">Browse all →</p>
+        </Link>
+
+        <Link
+          href="/community"
+          className="bg-asu-turquoise text-white rounded-lg p-5 hover:bg-asu-turquoise/90 transition-colors"
+        >
+          <p className="text-xs uppercase tracking-wide font-medium opacity-80">
+            Community
+          </p>
+          <p className="text-2xl font-bold mt-1">
+            {recentPosts?.length ?? 0} posts
+          </p>
+          <p className="text-xs opacity-80 mt-0.5">See what others built →</p>
+        </Link>
       </section>
 
-      {/* Getting Started Card */}
-      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">
-          Getting Started
-        </h3>
-        <ol className="space-y-3 text-sm text-gray-600">
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-asu-maroon text-white rounded-full flex items-center justify-center text-xs font-bold">
-              1
-            </span>
-            <span>
-              <strong>Take the self-assessment</strong> — 14 scenario-based
-              questions that reveal your current AI skill levels.
-            </span>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-asu-maroon text-white rounded-full flex items-center justify-center text-xs font-bold">
-              2
-            </span>
-            <span>
-              <strong>Review your results</strong> — See your strengths and
-              personalized activity recommendations.
-            </span>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-asu-maroon text-white rounded-full flex items-center justify-center text-xs font-bold">
-              3
-            </span>
-            <span>
-              <strong>Follow learning paths</strong> — Work through Bloom&apos;s
-              Taxonomy phases at your own pace.
-            </span>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-asu-maroon text-white rounded-full flex items-center justify-center text-xs font-bold">
-              4
-            </span>
-            <span>
-              <strong>Complete activities</strong> — Hands-on projects that
-              produce real deliverables.
-            </span>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-asu-maroon text-white rounded-full flex items-center justify-center text-xs font-bold">
-              5
-            </span>
-            <span>
-              <strong>Retake and track progress</strong> — Measure growth over
-              time.
-            </span>
-          </li>
-        </ol>
-      </section>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Primary action column */}
+        <div className="lg:col-span-2 space-y-5">
+          {/* Primary CTA */}
+          {!latestAttempt ? (
+            <div className="bg-asu-maroon text-white rounded-lg p-6">
+              <h3 className="text-lg font-bold mb-1">
+                Take your first self-assessment
+              </h3>
+              <p className="text-sm opacity-90 mb-4">
+                14 scenario questions. About 10 minutes. You&apos;ll get a
+                per-skill breakdown and tailored next steps.
+              </p>
+              <Link
+                href="/assessment"
+                className="inline-block bg-white text-asu-maroon px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-gray-100 transition-colors"
+              >
+                Start Assessment
+              </Link>
+            </div>
+          ) : suggestedActivity ? (
+            <div className="bg-white border-2 border-asu-maroon rounded-lg p-6">
+              <p className="text-xs uppercase tracking-wide text-asu-maroon font-semibold mb-1">
+                Suggested next activity
+              </p>
+              <h3 className="text-lg font-bold text-gray-700 mb-1">
+                {suggestedActivity.title}
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Based on your lowest scoring skill from the last assessment.
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <Link
+                  href={`/activities/${suggestedActivity.id}`}
+                  className="px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
+                >
+                  Open activity
+                </Link>
+                <Link
+                  href="/activities"
+                  className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Browse all
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-asu-green/10 border border-asu-green rounded-lg p-6">
+              <h3 className="text-lg font-bold text-gray-700 mb-1">
+                Great work — all suggested activities complete!
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Retake the assessment to see how far you&apos;ve come.
+              </p>
+              <Link
+                href="/assessment"
+                className="inline-block px-5 py-2.5 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
+              >
+                Retake Assessment
+              </Link>
+            </div>
+          )}
+
+          {/* Quick links */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">
+              Explore
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Link
+                href="/progress"
+                className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
+              >
+                <p className="text-sm font-semibold text-gray-700">
+                  Progress over time
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  See how scores have changed
+                </p>
+              </Link>
+              <Link
+                href="/learning-paths"
+                className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
+              >
+                <p className="text-sm font-semibold text-gray-700">
+                  Learning paths
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  9 Bloom phases, 107+ items
+                </p>
+              </Link>
+              <Link
+                href="/activities"
+                className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
+              >
+                <p className="text-sm font-semibold text-gray-700">
+                  All activities
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  42 hands-on projects
+                </p>
+              </Link>
+              <Link
+                href="/slack"
+                className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
+              >
+                <p className="text-sm font-semibold text-gray-700">
+                  Slack channels
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Team conversations
+                </p>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Community sidebar */}
+        <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              Recent Community Posts
+            </h3>
+            <Link
+              href="/community"
+              className="text-xs text-asu-maroon hover:underline font-medium"
+            >
+              View all →
+            </Link>
+          </div>
+          {recentPosts && recentPosts.length > 0 ? (
+            <ul className="space-y-3">
+              {recentPosts.map((post) => (
+                <li
+                  key={post.id}
+                  className="flex gap-3 pb-3 last:pb-0 last:border-0 border-b border-gray-100"
+                >
+                  {post.media_type === "image" ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={post.media_url}
+                      alt=""
+                      className="w-16 h-16 rounded object-cover flex-shrink-0"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded bg-gray-200 flex items-center justify-center flex-shrink-0">
+                      <svg
+                        className="w-6 h-6 text-gray-400"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-700 line-clamp-2">
+                      {post.title}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(post.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-sm text-gray-500 mb-2">No posts yet</p>
+              <Link
+                href="/community/new"
+                className="text-xs text-asu-maroon hover:underline font-medium"
+              >
+                Share the first one →
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
