@@ -34,50 +34,49 @@ export async function deletePost(postId: string) {
   return { success: true };
 }
 
-export async function createPost(formData: FormData) {
+type CreatePostInput = {
+  title: string;
+  description: string | null;
+  mediaPath: string;
+  mediaType: "image" | "video";
+  skillId: number | null;
+  activityId: number | null;
+};
+
+export async function createPost(input: CreatePostInput) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not signed in" };
 
-  const title = formData.get("title")?.toString().trim();
-  const description = formData.get("description")?.toString().trim() || null;
-  const skillIdRaw = formData.get("skill_id")?.toString();
-  const activityIdRaw = formData.get("activity_id")?.toString();
-  const file = formData.get("media") as File | null;
-
-  if (!title || !file || file.size === 0) {
-    return { error: "Title and media file are required" };
+  const title = input.title?.trim();
+  if (!title || !input.mediaPath) {
+    return { error: "Title and media are required" };
   }
 
-  const isVideo = file.type.startsWith("video/");
-  const ext = file.name.split(".").pop() ?? "bin";
-  const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-  const { error: uploadErr } = await supabase.storage
-    .from("community-media")
-    .upload(path, file, {
-      contentType: file.type,
-      upsert: false,
-    });
-  if (uploadErr) return { error: `Upload failed: ${uploadErr.message}` };
+  // Enforce that the path belongs to the authenticated user (matches the
+  // storage RLS policy). Defends against a tampered client request.
+  const pathPrefix = input.mediaPath.split("/")[0];
+  if (pathPrefix !== user.id) {
+    return { error: "Invalid media path" };
+  }
 
   const {
     data: { publicUrl },
-  } = supabase.storage.from("community-media").getPublicUrl(path);
+  } = supabase.storage.from("community-media").getPublicUrl(input.mediaPath);
 
   const { error: insertErr } = await supabase.from("community_posts").insert({
     user_id: user.id,
     title,
-    description,
+    description: input.description,
     media_url: publicUrl,
-    media_type: isVideo ? "video" : "image",
-    skill_id: skillIdRaw ? parseInt(skillIdRaw, 10) : null,
-    activity_id: activityIdRaw ? parseInt(activityIdRaw, 10) : null,
+    media_type: input.mediaType,
+    skill_id: input.skillId,
+    activity_id: input.activityId,
   });
   if (insertErr) {
-    await supabase.storage.from("community-media").remove([path]);
+    await supabase.storage.from("community-media").remove([input.mediaPath]);
     return { error: insertErr.message };
   }
 

@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { createPost } from "@/app/(dashboard)/community/actions";
+import { createClient } from "@/lib/supabase/client";
 
 interface Skill {
   id: number;
@@ -95,12 +96,64 @@ export function UploadForm({
     setIsDragging(false);
   };
 
+  const [uploadStatus, setUploadStatus] = useState("");
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const file = formData.get("media") as File | null;
+    const title = formData.get("title")?.toString().trim() ?? "";
+    const description = formData.get("description")?.toString().trim() || null;
+    const skillIdRaw = formData.get("skill_id")?.toString();
+    const activityIdRaw = formData.get("activity_id")?.toString();
+
+    if (!file || file.size === 0) {
+      setError("Choose a file to share");
+      return;
+    }
+    if (!title) {
+      setError("Give your post a title");
+      return;
+    }
+
     startTransition(async () => {
-      const res = await createPost(formData);
+      setUploadStatus("Uploading file…");
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setUploadStatus("");
+        setError("You're signed out. Refresh and try again.");
+        return;
+      }
+
+      const ext = file.name.split(".").pop() ?? "bin";
+      const path = `${user.id}/${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}.${ext}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("community-media")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (uploadErr) {
+        setUploadStatus("");
+        setError(`Upload failed: ${uploadErr.message}`);
+        return;
+      }
+
+      setUploadStatus("Saving post…");
+      const res = await createPost({
+        title,
+        description,
+        mediaPath: path,
+        mediaType: file.type.startsWith("video/") ? "video" : "image",
+        skillId: skillIdRaw ? parseInt(skillIdRaw, 10) : null,
+        activityId: activityIdRaw ? parseInt(activityIdRaw, 10) : null,
+      });
+      setUploadStatus("");
       if (res && "error" in res && res.error) setError(res.error);
     });
   };
@@ -283,7 +336,7 @@ export function UploadForm({
           disabled={pending}
           className="px-5 py-2.5 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
-          {pending ? "Uploading..." : "Share post"}
+          {pending ? uploadStatus || "Uploading…" : "Share post"}
         </button>
       </div>
     </form>
