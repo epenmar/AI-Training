@@ -136,15 +136,11 @@ export default async function CommunityPage() {
           <p className="text-gray-700 font-medium mb-1">
             No posts yet — be the first!
           </p>
-          <p className="text-gray-500 text-sm mb-4">
-            Share a screenshot or short clip of what you&apos;ve built with AI.
+          <p className="text-gray-500 text-sm">
+            Use the <span className="font-medium">Share something</span> button
+            above to post a screenshot or short clip of what you&apos;ve built
+            with AI.
           </p>
-          <Link
-            href="/community/new"
-            className="inline-block px-5 py-2.5 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
-          >
-            Share the first post
-          </Link>
         </div>
       )}
     </div>
