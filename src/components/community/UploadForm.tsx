@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { createPost } from "@/app/(dashboard)/community/actions";
 
 interface Skill {
@@ -35,27 +35,64 @@ export function UploadForm({
   const [error, setError] = useState("");
   const [selectedSkill, setSelectedSkill] = useState(initialSkillId);
   const [selectedActivity, setSelectedActivity] = useState(initialActivityId);
+  const [isDragging, setIsDragging] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const filteredActivities = selectedSkill
     ? activities.filter((a) => a.skill_id === parseInt(selectedSkill, 10))
     : [];
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const applyFile = (file: File | null): boolean => {
     setError("");
-    const file = e.target.files?.[0];
     if (!file) {
       setPreview(null);
       setPreviewType(null);
-      return;
+      setFileName(null);
+      return false;
+    }
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      setError("Please drop an image or video file");
+      return false;
     }
     if (file.size > MAX_BYTES) {
       setError("File is larger than 50MB");
-      e.target.value = "";
-      return;
+      return false;
     }
     const url = URL.createObjectURL(file);
     setPreview(url);
     setPreviewType(file.type.startsWith("video/") ? "video" : "image");
+    setFileName(file.name);
+    return true;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    const ok = applyFile(file);
+    if (!ok && e.target.value) e.target.value = "";
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    if (!applyFile(file)) return;
+    if (inputRef.current) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      inputRef.current.files = dt.files;
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    if (!isDragging) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -75,24 +112,62 @@ export function UploadForm({
     >
       {/* Media upload */}
       <div>
+        <p className="block text-sm font-medium text-gray-700 mb-2">
+          Screenshot or video <span className="text-red-500">*</span>
+        </p>
         <label
           htmlFor="media"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragOver}
+          onDragLeave={handleDragLeave}
+          className={`relative flex flex-col items-center justify-center gap-2 w-full rounded-lg border-2 border-dashed px-4 py-8 text-center cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-asu-maroon focus-within:border-asu-maroon ${
+            isDragging
+              ? "border-asu-maroon bg-asu-maroon/5"
+              : "border-gray-300 bg-gray-50 hover:border-asu-maroon/50 hover:bg-gray-100"
+          }`}
         >
-          Screenshot or video <span className="text-red-500">*</span>
+          <svg
+            className={`w-8 h-8 pointer-events-none ${
+              isDragging ? "text-asu-maroon" : "text-gray-400"
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 16a4 4 0 01-.88-7.9A5 5 0 0115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+            />
+          </svg>
+          <p className="text-sm text-gray-700 pointer-events-none">
+            <span className="font-semibold text-asu-maroon">
+              Drag and drop
+            </span>{" "}
+            or <span className="font-semibold text-asu-maroon">click to browse</span>
+          </p>
+          <p className="text-xs text-gray-400 pointer-events-none">
+            Images or videos, up to 50MB
+          </p>
+          {fileName && (
+            <p className="text-xs text-gray-600 mt-1 pointer-events-none break-all">
+              Selected: {fileName}
+            </p>
+          )}
+          <input
+            ref={inputRef}
+            id="media"
+            name="media"
+            type="file"
+            accept="image/*,video/*"
+            required
+            onChange={handleFileChange}
+            className="sr-only"
+          />
         </label>
-        <input
-          id="media"
-          name="media"
-          type="file"
-          accept="image/*,video/*"
-          required
-          onChange={handleFileChange}
-          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-asu-maroon file:text-white hover:file:bg-sidebar-hover file:cursor-pointer cursor-pointer"
-        />
-        <p className="text-xs text-gray-400 mt-1">
-          Max 50MB. Images or videos.
-        </p>
         {preview && (
           <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 max-w-sm">
             {previewType === "video" ? (
