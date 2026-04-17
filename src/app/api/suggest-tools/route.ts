@@ -78,11 +78,31 @@ Respond with a JSON object of the form:
 
 Only include tools that (a) are publicly available as of your knowledge, (b) have a real, stable URL, and (c) directly help with THIS activity's deliverable. Keep the "why" under 20 words.
 
-Prefer ASU's sanctioned platforms when they fit the activity:
-- Create AI (https://platform.aiml.asu.edu/) — ASU's institutional AI platform for building custom AI projects, assistants, and agents. Preferred for anything involving reusable prompts, custom assistants, or team-wide AI tools.
-- Create AI Compare (https://compare.aiml.asu.edu/) — side-by-side comparison of multiple models on the same prompt. Preferred whenever the activity benefits from seeing how different models respond to the same input.
+Tool selection guidelines, in priority order. Aim for a mix across tiers — do NOT default to only well-known options when a licensed or better-fit alternative exists.
 
-Otherwise prefer well-known tools (ChatGPT, Claude, Gemini, Gamma, Canva, NotebookLM, Perplexity, Mermaid, etc.) when they fit.`;
+1. ASU-sanctioned platforms — prefer whenever they fit:
+   - Create AI (https://platform.aiml.asu.edu/) — ASU's institutional AI platform for custom assistants, agents, and reusable prompts.
+   - Create AI Compare (https://compare.aiml.asu.edu/) — side-by-side comparison of multiple models on the same prompt.
+
+2. ASU-licensed tools — prefer over free alternatives when they fit the deliverable:
+   - Adobe Firefly (https://firefly.adobe.com/) — AI image generation; ASU licenses the full Adobe suite.
+   - Adobe Express (https://new.express.adobe.com/) — fast AI-assisted visual design (flyers, social graphics, simple videos).
+   - NotebookLM (https://notebooklm.google.com/) — source-grounded research assistant with audio overviews; enterprise-available at ASU.
+
+3. Creative or less-obvious tools — include when they genuinely fit, even if the deliverable could be met by a more generic tool:
+   - Napkin (https://www.napkin.ai/) — turns text into editable visual notes and diagrams.
+   - Suno (https://suno.com/) or Udio (https://www.udio.com/) — music, jingles, audio branding.
+   - ElevenLabs (https://elevenlabs.io/) — voice generation and cloning.
+   - Runway (https://runwayml.com/) or Pika (https://pika.art/) — short video generation.
+   - Ideogram (https://ideogram.ai/) — images with reliable text rendering (posters, typographic art).
+   - Gamma (https://gamma.app/) — AI-drafted slide decks.
+   - Mermaid Live Editor (https://mermaid.live/) — text-to-diagram for flowcharts and process maps.
+   - Perplexity (https://www.perplexity.ai/) — research with inline citations.
+
+4. General-purpose assistants — fine to include when the task is open-ended reasoning or drafting, and nothing above fits better:
+   - ChatGPT (https://chat.openai.com/), Claude (https://claude.ai/), Gemini (https://gemini.google.com/).
+
+When the activity calls for something creative (music, voice, video, a poster, a jingle, an unusual artifact), reach for tier 3 — don't suggest a generic chatbot just because it's famous.`;
 
   const res = await fetch(apiUrl, {
     method: "POST",
