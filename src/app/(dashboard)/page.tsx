@@ -16,6 +16,7 @@ export default async function DashboardHome() {
     { data: completions },
     { data: allActivities },
     { data: recentPosts },
+    { count: totalPostCount },
   ] = await Promise.all([
     supabase
       .from("assessment_attempts")
@@ -34,6 +35,9 @@ export default async function DashboardHome() {
       .select("id, title, media_url, media_type, user_id, created_at")
       .order("created_at", { ascending: false })
       .limit(3),
+    supabase
+      .from("community_posts")
+      .select("id", { count: "exact", head: true }),
   ]);
 
   const TOTAL_SKILLS = 14;
@@ -270,7 +274,7 @@ export default async function DashboardHome() {
             Community
           </p>
           <p className="text-2xl font-bold mt-1">
-            {recentPosts?.length ?? 0} posts
+            {totalPostCount ?? 0} posts
           </p>
           <p className="text-xs opacity-80 mt-0.5">See what others built →</p>
         </Link>
