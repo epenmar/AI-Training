@@ -21,6 +21,10 @@ const BAND_OPTIONS = [
   { value: "Intermediate → Advanced", label: "Intermediate → Advanced" },
 ];
 
+function truncate(text: string, max: number) {
+  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
+}
+
 export function CommunityFilters({
   skills,
   activeSkillId,
@@ -56,8 +60,8 @@ export function CommunityFilters({
         >
           <option value="">All skills</option>
           {skills.map((s) => (
-            <option key={s.id} value={s.id}>
-              Skill {s.id}: {s.short_name}
+            <option key={s.id} value={s.id} title={s.short_name}>
+              Skill {s.id}: {truncate(s.short_name, 38)}
             </option>
           ))}
         </select>
