@@ -137,9 +137,9 @@ export default async function CommunityPage() {
             No posts yet — be the first!
           </p>
           <p className="text-gray-500 text-sm">
-            Use the <span className="font-medium">Share something</span> button
-            above to post a screenshot or short clip of what you&apos;ve built
-            with AI.
+            Use the <span className="font-medium">Share something</span>
+            {" "}button above to post a screenshot or short clip of what
+            you&apos;ve built with AI.
           </p>
         </div>
       )}
