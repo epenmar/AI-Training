@@ -114,86 +114,101 @@ export default async function PhaseDetailPage({
                     "bg-gray-100 text-gray-600";
                   const modalityIcon =
                     MODALITY_ICONS[item.modality ?? ""] ?? "•";
-                  return (
-                    <li
-                      key={item.id}
-                      className="bg-white rounded-lg border border-gray-200 p-4 hover:border-asu-maroon/40 transition-colors"
-                    >
-                      <div className="flex items-start gap-3">
-                        <span
-                          className="text-lg flex-shrink-0 mt-0.5"
-                          aria-hidden="true"
-                        >
-                          {modalityIcon}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-3 flex-wrap">
-                            <h4 className="text-base font-medium text-gray-700">
-                              {item.link ? (
-                                <a
-                                  href={item.link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="hover:text-asu-maroon hover:underline focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:ring-offset-1 rounded"
-                                >
-                                  {item.item_title}
-                                  <svg className="inline-block w-3.5 h-3.5 ml-1 -mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="opens in new tab">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                  </svg>
-                                </a>
-                              ) : (
-                                item.item_title
-                              )}
-                            </h4>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {item.learning_level && (
-                                <span
-                                  className={`text-xs font-medium px-2 py-0.5 rounded-full ${levelClass}`}
-                                >
-                                  {item.learning_level}
-                                </span>
-                              )}
-                              {item.modality && (
-                                <span className="text-xs text-gray-500">
-                                  {item.modality}
-                                </span>
-                              )}
-                            </div>
+
+                  const cardBody = (
+                    <div className="flex items-start gap-3">
+                      <span
+                        className="text-lg flex-shrink-0 mt-0.5"
+                        aria-hidden="true"
+                      >
+                        {modalityIcon}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <h4 className="text-base font-medium text-gray-700 group-hover:text-asu-maroon transition-colors">
+                            {item.item_title}
+                            {item.link && (
+                              <svg
+                                className="inline-block w-3.5 h-3.5 ml-1 -mt-0.5 text-gray-400 group-hover:text-asu-maroon"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                aria-label="opens in new tab"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
+                              </svg>
+                            )}
+                          </h4>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {item.learning_level && (
+                              <span
+                                className={`text-xs font-medium px-2 py-0.5 rounded-full ${levelClass}`}
+                              >
+                                {item.learning_level}
+                              </span>
+                            )}
+                            {item.modality && (
+                              <span className="text-xs text-gray-500">
+                                {item.modality}
+                              </span>
+                            )}
                           </div>
-                          {item.specific_location && (
-                            <p className="text-xs text-gray-400 mt-1">
-                              📍 {item.specific_location}
-                            </p>
-                          )}
-                          {item.purpose && (
-                            <p className="text-sm text-gray-500 mt-2">
-                              {item.purpose}
-                            </p>
-                          )}
-                          {item.skill_ids && item.skill_ids.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mt-2">
-                              {item.skill_ids.map((sid) => {
-                                const skill = skillMap.get(sid);
-                                if (!skill) return null;
-                                return (
-                                  <span
-                                    key={sid}
-                                    className="inline-block text-xs bg-asu-maroon/10 text-asu-maroon px-2 py-0.5 rounded"
-                                    title={skill.statement}
-                                  >
-                                    Skill {sid}: {skill.short_name}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          )}
-                          {item.source && (
-                            <p className="text-xs text-gray-400 mt-2 italic">
-                              Source: {item.source}
-                            </p>
-                          )}
                         </div>
+                        {item.specific_location && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            📍 {item.specific_location}
+                          </p>
+                        )}
+                        {item.purpose && (
+                          <p className="text-sm text-gray-500 mt-2">
+                            {item.purpose}
+                          </p>
+                        )}
+                        {item.skill_ids && item.skill_ids.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {item.skill_ids.map((sid) => {
+                              const skill = skillMap.get(sid);
+                              if (!skill) return null;
+                              return (
+                                <span
+                                  key={sid}
+                                  className="inline-block text-xs bg-asu-maroon/10 text-asu-maroon px-2 py-0.5 rounded"
+                                  title={skill.statement}
+                                >
+                                  Skill {sid}: {skill.short_name}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
+                    </div>
+                  );
+
+                  const cardClass =
+                    "group block bg-white rounded-lg border border-gray-200 p-4 hover:border-asu-maroon/40 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:ring-offset-2";
+
+                  return (
+                    <li key={item.id}>
+                      {item.link ? (
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cardClass}
+                        >
+                          {cardBody}
+                        </a>
+                      ) : (
+                        <div className={cardClass.replace("hover:shadow-sm", "")}>
+                          {cardBody}
+                        </div>
+                      )}
                     </li>
                   );
                 })}
