@@ -210,7 +210,17 @@ export default async function CommunityPostPage({
                 year: "numeric",
               })}
             </div>
-            {canDelete && <DeletePostButton postId={post.id} />}
+            {canDelete && (
+              <div className="flex items-center gap-4">
+                <Link
+                  href={`/community/${post.id}/edit`}
+                  className="text-xs text-gray-500 hover:text-asu-maroon"
+                >
+                  Edit
+                </Link>
+                <DeletePostButton postId={post.id} />
+              </div>
+            )}
           </div>
         </div>
       </article>

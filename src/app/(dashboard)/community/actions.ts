@@ -92,3 +92,53 @@ export async function createPost(input: CreatePostInput) {
   revalidatePath("/community");
   redirect("/community");
 }
+
+type UpdatePostInput = {
+  postId: string;
+  title: string;
+  description: string | null;
+  skillId: number | null;
+  activityId: number | null;
+};
+
+export async function updatePost(input: UpdatePostInput) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in" };
+
+  const title = input.title?.trim();
+  if (!title) return { error: "Title is required" };
+
+  const { data: post } = await supabase
+    .from("community_posts")
+    .select("user_id")
+    .eq("id", input.postId)
+    .single();
+  if (!post) return { error: "Post not found" };
+
+  if (post.user_id !== user.id) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+    if (!profile?.is_admin) return { error: "Not allowed" };
+  }
+
+  const { error } = await supabase
+    .from("community_posts")
+    .update({
+      title,
+      description: input.description,
+      skill_id: input.skillId,
+      activity_id: input.activityId,
+    })
+    .eq("id", input.postId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/community");
+  revalidatePath(`/community/${input.postId}`);
+  redirect(`/community/${input.postId}`);
+}
