@@ -98,7 +98,9 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10">
         <div className="w-8 h-8 bg-asu-gold rounded flex items-center justify-center flex-shrink-0">
-          <span className="text-asu-maroon font-bold text-sm">A</span>
+          <span className="text-asu-maroon font-extrabold text-xs tracking-tight">
+            AI
+          </span>
         </div>
         <div>
           <p className="text-sm font-semibold text-white leading-tight">

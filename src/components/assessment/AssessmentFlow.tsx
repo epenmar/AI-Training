@@ -34,6 +34,7 @@ function getBand(score: number): string {
 
 export function AssessmentFlow({ questions }: Props) {
   const router = useRouter();
+  const [started, setStarted] = useState(false);
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -43,6 +44,44 @@ export function AssessmentFlow({ questions }: Props) {
   const total = questions.length;
   const answered = Object.keys(answers).length;
   const allAnswered = answered === total;
+
+  if (!started) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          <h1 className="text-2xl font-bold text-gray-700 mb-4">
+            Before you begin
+          </h1>
+          <div className="space-y-4 text-gray-600 leading-relaxed">
+            <p>
+              This assessment works best when you answer honestly about where
+              you are <strong>right now</strong> — not where you want to be, or
+              where you think you should be.
+            </p>
+            <p>
+              Your responses shape the learning path we recommend. An inflated
+              score points you toward activities that will feel too abstract;
+              an underestimate points you toward things you&apos;ve already
+              mastered. Neither helps you grow.
+            </p>
+            <p>
+              There are no wrong answers, and nothing you select is shared with
+              anyone. You can retake this at any time as your skills develop.
+            </p>
+            <p className="text-sm text-gray-500">
+              14 scenario questions · about 10 minutes
+            </p>
+          </div>
+          <button
+            onClick={() => setStarted(true)}
+            className="mt-6 px-5 py-2.5 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover cursor-pointer transition-colors"
+          >
+            Start assessment
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   function selectOption(questionId: number, optionKey: string) {
     setAnswers((prev) => ({ ...prev, [questionId]: optionKey }));
@@ -86,6 +125,21 @@ export function AssessmentFlow({ questions }: Props) {
     const totalScore = responses.reduce((sum, r) => sum + r.score, 0);
     const overallBand = getBand(totalScore);
 
+    // Ensure profile exists (handles accounts created before profile trigger)
+    await supabase
+      .from("profiles")
+      .upsert(
+        {
+          id: user.id,
+          email: user.email ?? "",
+          display_name:
+            (user.user_metadata?.full_name as string | undefined) ||
+            user.email?.split("@")[0] ||
+            null,
+        },
+        { onConflict: "id", ignoreDuplicates: true }
+      );
+
     // Insert attempt
     const { data: attempt, error: attemptErr } = await supabase
       .from("assessment_attempts")
@@ -94,7 +148,7 @@ export function AssessmentFlow({ questions }: Props) {
       .single();
 
     if (attemptErr || !attempt) {
-      setError("Failed to save assessment. Please try again.");
+      setError(attemptErr?.message ?? "Failed to save assessment. Please try again.");
       setSubmitting(false);
       return;
     }
