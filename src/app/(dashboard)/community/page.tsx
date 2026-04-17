@@ -36,8 +36,8 @@ export default async function CommunityPage() {
         <div>
           <h2 className="text-2xl font-bold text-gray-700">Community Look Book</h2>
           <p className="text-gray-500">
-            Share screenshots and videos of what you&apos;re building with AI.
-            See what peers across ASU are creating.
+            Share screenshots, videos, or decks of what you&apos;re building
+            with AI. See what peers across ASU are creating.
           </p>
         </div>
         <Link
@@ -74,6 +74,32 @@ export default async function CommunityPage() {
                     >
                       Your browser does not support video playback.
                     </video>
+                  ) : post.media_type === "document" ? (
+                    <a
+                      href={post.media_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-asu-maroon/5 to-asu-maroon/15 hover:from-asu-maroon/10 hover:to-asu-maroon/20 transition-colors"
+                    >
+                      <svg
+                        className="w-12 h-12 text-asu-maroon"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      <span className="text-xs font-medium text-asu-maroon uppercase tracking-wide">
+                        {post.media_url.split(".").pop()?.toUpperCase() ?? "FILE"}{" "}
+                        · Open
+                      </span>
+                    </a>
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img

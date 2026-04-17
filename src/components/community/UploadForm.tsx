@@ -24,6 +24,28 @@ interface Props {
 
 const MAX_BYTES = 50 * 1024 * 1024; // 50MB
 
+const DOC_MIME_TYPES = new Set([
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+  "application/vnd.ms-powerpoint", // .ppt
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+  "application/msword", // .doc
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  "application/vnd.ms-excel", // .xls
+]);
+
+function classifyFile(file: File): "image" | "video" | "document" | null {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (DOC_MIME_TYPES.has(file.type)) return "document";
+  // Fallback to extension — some browsers send blank type for .pptx etc.
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (["pdf", "ppt", "pptx", "doc", "docx", "xls", "xlsx"].includes(ext)) {
+    return "document";
+  }
+  return null;
+}
+
 export function UploadForm({
   skills,
   activities,
@@ -32,7 +54,9 @@ export function UploadForm({
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [preview, setPreview] = useState<string | null>(null);
-  const [previewType, setPreviewType] = useState<"image" | "video" | null>(null);
+  const [previewType, setPreviewType] = useState<
+    "image" | "video" | "document" | null
+  >(null);
   const [error, setError] = useState("");
   const [selectedSkill, setSelectedSkill] = useState(initialSkillId);
   const [selectedActivity, setSelectedActivity] = useState(initialActivityId);
@@ -52,17 +76,17 @@ export function UploadForm({
       setFileName(null);
       return false;
     }
-    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
-      setError("Please drop an image or video file");
+    const kind = classifyFile(file);
+    if (!kind) {
+      setError("Unsupported file type. Images, videos, PDFs, and Office docs are accepted.");
       return false;
     }
     if (file.size > MAX_BYTES) {
       setError("File is larger than 50MB");
       return false;
     }
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-    setPreviewType(file.type.startsWith("video/") ? "video" : "image");
+    setPreview(kind === "document" ? null : URL.createObjectURL(file));
+    setPreviewType(kind);
     setFileName(file.name);
     return true;
   };
@@ -144,12 +168,13 @@ export function UploadForm({
         return;
       }
 
+      const kind = classifyFile(file) ?? "image";
       setUploadStatus("Saving post…");
       const res = await createPost({
         title,
         description,
         mediaPath: path,
-        mediaType: file.type.startsWith("video/") ? "video" : "image",
+        mediaType: kind,
         skillId: skillIdRaw ? parseInt(skillIdRaw, 10) : null,
         activityId: activityIdRaw ? parseInt(activityIdRaw, 10) : null,
       });
@@ -166,7 +191,8 @@ export function UploadForm({
       {/* Media upload */}
       <div>
         <p className="block text-sm font-medium text-gray-700 mb-2">
-          Screenshot or video <span className="text-red-500">*</span>
+          Screenshot, video, or document{" "}
+          <span className="text-red-500">*</span>
         </p>
         <label
           htmlFor="media"
@@ -203,7 +229,7 @@ export function UploadForm({
             or <span className="font-semibold text-asu-maroon">click to browse</span>
           </p>
           <p className="text-xs text-gray-400 pointer-events-none">
-            Images or videos, up to 50MB
+            Images, videos, PDFs, or Office docs — up to 50MB
           </p>
           {fileName && (
             <p className="text-xs text-gray-600 mt-1 pointer-events-none break-all">
@@ -215,13 +241,13 @@ export function UploadForm({
             id="media"
             name="media"
             type="file"
-            accept="image/*,video/*"
+            accept="image/*,video/*,application/pdf,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx"
             required
             onChange={handleFileChange}
             className="sr-only"
           />
         </label>
-        {preview && (
+        {preview && previewType !== "document" && (
           <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 max-w-sm">
             {previewType === "video" ? (
               <video src={preview} controls className="w-full" />
@@ -229,6 +255,25 @@ export function UploadForm({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={preview} alt="Preview" className="w-full" />
             )}
+          </div>
+        )}
+        {previewType === "document" && fileName && (
+          <div className="mt-3 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 max-w-sm">
+            <svg
+              className="w-6 h-6 text-asu-maroon flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <span className="text-sm text-gray-700 break-all">{fileName}</span>
           </div>
         )}
       </div>
