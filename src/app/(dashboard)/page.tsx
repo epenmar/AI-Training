@@ -188,50 +188,62 @@ export default async function DashboardHome() {
 
       {/* Top stats */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-            Latest Score
-          </p>
-          {latestAttempt ? (
-            <>
-              <p className="text-2xl font-bold text-asu-maroon mt-1">
-                {latestAttempt.total_score}
-                <span className="text-sm font-normal text-gray-400">/42</span>
-              </p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {latestAttempt.overall_band}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-2xl font-bold text-gray-300 mt-1">—</p>
-              <p className="text-xs text-gray-400 mt-0.5">Not taken yet</p>
-            </>
-          )}
-        </div>
+        {latestAttempt ? (
+          <Link
+            href="/skill-summary"
+            className="bg-asu-maroon text-white rounded-lg p-5 hover:bg-sidebar-hover transition-colors"
+          >
+            <p className="text-xs uppercase tracking-wide font-medium opacity-80">
+              Latest Score
+            </p>
+            <p className="text-2xl font-bold mt-1">
+              {latestAttempt.total_score}
+              <span className="text-sm font-normal opacity-70">/42</span>
+            </p>
+            <p className="text-xs opacity-80 mt-0.5">
+              {latestAttempt.overall_band} · Skill summary →
+            </p>
+          </Link>
+        ) : (
+          <Link
+            href="/assessment"
+            className="bg-asu-maroon text-white rounded-lg p-5 hover:bg-sidebar-hover transition-colors"
+          >
+            <p className="text-xs uppercase tracking-wide font-medium opacity-80">
+              Latest Score
+            </p>
+            <p className="text-2xl font-bold mt-1">—</p>
+            <p className="text-xs opacity-80 mt-0.5">Take assessment →</p>
+          </Link>
+        )}
 
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+        <Link
+          href={
+            latestAttempt ? "/activities?filter=recommended" : "/activities"
+          }
+          className="bg-asu-green text-white rounded-lg p-5 hover:bg-asu-green/90 transition-colors"
+        >
+          <p className="text-xs uppercase tracking-wide font-medium opacity-80">
             Skills Practiced
           </p>
-          <p className="text-2xl font-bold text-asu-maroon mt-1">
+          <p className="text-2xl font-bold mt-1">
             {skillsCovered}
-            <span className="text-sm font-normal text-gray-400">
+            <span className="text-sm font-normal opacity-70">
               /{TOTAL_SKILLS}
             </span>
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {skillsCovered === 0
-              ? "Complete one activity per skill"
-              : "Skills with at least one activity done"}
+          <p className="text-xs opacity-80 mt-0.5">
+            {latestAttempt
+              ? "Your next activities →"
+              : "Browse activities →"}
           </p>
-          <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+          <div className="mt-2 w-full bg-white/25 rounded-full h-1.5">
             <div
-              className="bg-asu-green h-1.5 rounded-full transition-all"
+              className="bg-white h-1.5 rounded-full transition-all"
               style={{ width: `${skillsPct}%` }}
             />
           </div>
-        </div>
+        </Link>
 
         <Link
           href="/learning-paths?filter=recommended"
