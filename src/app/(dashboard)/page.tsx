@@ -252,10 +252,10 @@ export default async function DashboardHome() {
           <p className="text-xs uppercase tracking-wide font-medium opacity-80">
             Your Learning Path
           </p>
-          <p className="text-2xl font-bold mt-1">
+          <p className="text-lg font-bold mt-1 leading-tight">
             {latestAttempt ? "Personalized" : "Take assessment"}
           </p>
-          <p className="text-xs opacity-80 mt-0.5">
+          <p className="text-xs opacity-80 mt-1">
             {latestAttempt
               ? "Resources picked for you →"
               : "Unlock your path →"}
