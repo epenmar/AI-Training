@@ -41,7 +41,7 @@ export function CommunityFilters({
 
   return (
     <div className="mb-5 flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg p-3">
-      <div className="flex flex-col">
+      <div className="flex flex-col w-full sm:w-auto min-w-0">
         <label
           htmlFor="skill-filter"
           className="text-xs text-gray-500 font-medium mb-0.5"
@@ -52,7 +52,7 @@ export function CommunityFilters({
           id="skill-filter"
           value={activeSkillId}
           onChange={(e) => pushParams({ skill: e.target.value })}
-          className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:border-transparent min-w-[14rem]"
+          className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:border-transparent w-full sm:w-56"
         >
           <option value="">All skills</option>
           {skills.map((s) => (
@@ -63,7 +63,7 @@ export function CommunityFilters({
         </select>
       </div>
 
-      <div className="flex flex-col">
+      <div className="flex flex-col w-full sm:w-auto min-w-0">
         <label
           htmlFor="band-filter"
           className="text-xs text-gray-500 font-medium mb-0.5"
@@ -74,7 +74,7 @@ export function CommunityFilters({
           id="band-filter"
           value={activeBand}
           onChange={(e) => pushParams({ band: e.target.value })}
-          className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:border-transparent"
+          className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:border-transparent w-full sm:w-64"
         >
           {BAND_OPTIONS.map((b) => (
             <option key={b.value} value={b.value}>
