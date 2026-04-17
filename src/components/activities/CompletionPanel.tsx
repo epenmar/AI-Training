@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toggleCompletion, saveNotes } from "@/app/(dashboard)/activities/actions";
 
@@ -8,6 +9,7 @@ interface Props {
   isComplete: boolean;
   initialNotes: string;
   completedAt: string | null;
+  deliverable: string | null;
 }
 
 export function CompletionPanel({
@@ -15,6 +17,7 @@ export function CompletionPanel({
   isComplete,
   initialNotes,
   completedAt,
+  deliverable,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [notes, setNotes] = useState(initialNotes);
@@ -52,13 +55,16 @@ export function CompletionPanel({
           : "border-gray-200 bg-white"
       }`}
     >
-      <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
-        <div>
+      <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
+        <div className="flex-1 min-w-0">
           <h3 className="text-base font-semibold text-gray-700">
-            {isComplete ? "Completed" : "Track your progress"}
+            {isComplete ? "Completed" : "Deliverable"}
           </h3>
+          {deliverable && (
+            <p className="text-sm text-gray-600 mt-1">{deliverable}</p>
+          )}
           {isComplete && completedAt && (
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 mt-2">
               Marked complete{" "}
               {new Date(completedAt).toLocaleDateString("en-US", {
                 month: "short",
@@ -68,6 +74,9 @@ export function CompletionPanel({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-4">
         <button
           onClick={handleToggle}
           disabled={pending}
@@ -83,6 +92,26 @@ export function CompletionPanel({
               ? "Mark as not complete"
               : "Mark as complete"}
         </button>
+        <Link
+          href={`/community/new?activity=${activityId}`}
+          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          Share to Look Book
+        </Link>
       </div>
 
       {/* Deliverable notes */}
