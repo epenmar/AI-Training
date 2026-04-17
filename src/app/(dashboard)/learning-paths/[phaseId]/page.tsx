@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { buildRecommendations } from "@/lib/recommendations";
 
 const LEVEL_COLORS: Record<string, string> = {
   Foundational: "bg-asu-blue/15 text-asu-blue",
@@ -18,10 +19,14 @@ const MODALITY_ICONS: Record<string, string> = {
 
 export default async function PhaseDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ phaseId: string }>;
+  searchParams: Promise<{ filter?: string }>;
 }) {
   const { phaseId: phaseIdStr } = await params;
+  const { filter } = await searchParams;
+  const recommendedOnly = filter === "recommended";
   const phaseId = parseInt(phaseIdStr, 10);
   if (isNaN(phaseId)) notFound();
 
@@ -38,7 +43,7 @@ export default async function PhaseDetailPage({
     .single();
   if (!phase) notFound();
 
-  const { data: items } = await supabase
+  const { data: allItems } = await supabase
     .from("lesson_flow")
     .select("*")
     .eq("bloom_phase_id", phaseId)
@@ -46,6 +51,47 @@ export default async function PhaseDetailPage({
 
   const { data: skills } = await supabase.from("skills").select("*");
   const skillMap = new Map((skills ?? []).map((s) => [s.id, s]));
+
+  // Build the user's skill -> target level map if we're filtering to
+  // personalized content.
+  let skillToLevel = new Map<number, string>();
+  if (recommendedOnly) {
+    const { data: latestAttempt } = await supabase
+      .from("assessment_attempts")
+      .select("id")
+      .eq("user_id", user.id)
+      .order("completed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (latestAttempt) {
+      const [{ data: responses }, { data: questions }] = await Promise.all([
+        supabase
+          .from("assessment_responses")
+          .select("question_id, score")
+          .eq("attempt_id", latestAttempt.id),
+        supabase.from("assessment_questions").select("id, skill_id"),
+      ]);
+      const qSkillMap = new Map(
+        (questions ?? []).map((q) => [q.id, q.skill_id])
+      );
+      skillToLevel = new Map(
+        buildRecommendations(responses ?? [], qSkillMap).map((t) => [
+          t.skillId,
+          t.targetLevel,
+        ])
+      );
+    }
+  }
+
+  const items = recommendedOnly
+    ? (allItems ?? []).filter(
+        (item) =>
+          item.learning_level != null &&
+          (item.skill_ids ?? []).some(
+            (sid) => skillToLevel.get(sid) === item.learning_level
+          )
+      )
+    : allItems;
 
   // Group items by topic for nicer layout
   const topicGroups = new Map<string, typeof items>();
@@ -67,17 +113,19 @@ export default async function PhaseDetailPage({
       ? allPhases![currentIdx + 1]
       : null;
 
+  const qs = recommendedOnly ? "?filter=recommended" : "";
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Back link */}
       <Link
-        href="/learning-paths"
+        href={`/learning-paths${qs}`}
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-asu-maroon mb-4"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        All learning paths
+        {recommendedOnly ? "Your learning path" : "All learning paths"}
       </Link>
 
       {/* Header */}
@@ -95,7 +143,20 @@ export default async function PhaseDetailPage({
           <p className="text-gray-500 mt-1">{phase.description}</p>
         )}
         <p className="text-sm text-gray-400 mt-2">
-          {items?.length ?? 0} learning {items?.length === 1 ? "item" : "items"}
+          {recommendedOnly
+            ? `${items?.length ?? 0} ${items?.length === 1 ? "item" : "items"} at your level`
+            : `${items?.length ?? 0} learning ${items?.length === 1 ? "item" : "items"}`}
+          {recommendedOnly && (
+            <>
+              {" · "}
+              <Link
+                href={`/learning-paths/${phase.id}`}
+                className="underline hover:text-asu-maroon"
+              >
+                show all {allItems?.length ?? 0}
+              </Link>
+            </>
+          )}
         </p>
       </div>
 
@@ -241,7 +302,19 @@ export default async function PhaseDetailPage({
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
-          <p className="text-gray-500">No items in this phase yet.</p>
+          <p className="text-gray-500">
+            {recommendedOnly
+              ? "No items at your level in this phase."
+              : "No items in this phase yet."}
+          </p>
+          {recommendedOnly && (allItems?.length ?? 0) > 0 && (
+            <Link
+              href={`/learning-paths/${phase.id}`}
+              className="inline-block mt-3 text-sm text-asu-maroon hover:underline font-medium"
+            >
+              Show all {allItems?.length ?? 0} items in this phase →
+            </Link>
+          )}
         </div>
       )}
 
@@ -249,7 +322,7 @@ export default async function PhaseDetailPage({
       <nav className="flex items-center justify-between gap-3 mt-10 pt-6 border-t border-gray-200">
         {prevPhase ? (
           <Link
-            href={`/learning-paths/${prevPhase.id}`}
+            href={`/learning-paths/${prevPhase.id}${qs}`}
             className="flex-1 max-w-xs p-3 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
           >
             <p className="text-xs text-gray-400 uppercase tracking-wide">
@@ -264,7 +337,7 @@ export default async function PhaseDetailPage({
         )}
         {nextPhase ? (
           <Link
-            href={`/learning-paths/${nextPhase.id}`}
+            href={`/learning-paths/${nextPhase.id}${qs}`}
             className="flex-1 max-w-xs p-3 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors text-right"
           >
             <p className="text-xs text-gray-400 uppercase tracking-wide">

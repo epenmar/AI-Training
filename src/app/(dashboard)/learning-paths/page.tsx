@@ -16,20 +16,6 @@ const PHASE_COLORS = [
   { bg: "bg-asu-maroon/10", accent: "bg-asu-maroon", text: "text-asu-maroon" },
 ];
 
-const LEVEL_COLORS: Record<string, string> = {
-  Foundational: "bg-asu-blue/15 text-asu-blue",
-  Intermediate: "bg-asu-green/15 text-green-800",
-  Advanced: "bg-asu-gold/20 text-yellow-800",
-};
-
-const MODALITY_ICONS: Record<string, string> = {
-  Video: "▶",
-  PDF: "📄",
-  Article: "📰",
-  Course: "🎓",
-  Interactive: "⚡",
-};
-
 export default async function LearningPathsPage({
   searchParams,
 }: {
@@ -87,15 +73,15 @@ export default async function LearningPathsPage({
       </div>
 
       {recommendedOnly ? (
-        <PersonalizedView userId={user.id} />
+        <PersonalizedPhaseGrid userId={user.id} />
       ) : (
-        <AllPhasesView />
+        <AllPhaseGrid />
       )}
     </div>
   );
 }
 
-async function AllPhasesView() {
+async function AllPhaseGrid() {
   const supabase = await createClient();
   const { data: phases } = await supabase
     .from("bloom_phases")
@@ -116,69 +102,25 @@ async function AllPhasesView() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {(phases ?? []).map((phase) => {
-        const color = PHASE_COLORS[phase.id] ?? PHASE_COLORS[0];
-        const itemCount = countByPhase.get(phase.id) ?? 0;
-        return (
-          <Link
-            key={phase.id}
-            href={`/learning-paths/${phase.id}`}
-            className={`group relative block rounded-lg border border-gray-200 bg-white overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:ring-offset-2`}
-          >
-            <div className={`h-1.5 w-full ${color.accent}`} />
-            <div className="p-5">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div
-                  className={`inline-flex items-center justify-center w-9 h-9 rounded-lg ${color.bg} ${color.text} font-bold text-sm`}
-                >
-                  {phase.id}
-                </div>
-                <span className="text-xs text-gray-400 font-medium">
-                  {itemCount} {itemCount === 1 ? "item" : "items"}
-                </span>
-              </div>
-              <h3 className="text-base font-semibold text-gray-700 group-hover:text-asu-maroon transition-colors">
-                {phase.name}
-              </h3>
-              <p className="text-xs text-gray-400 mt-0.5 uppercase tracking-wide font-medium">
-                {phase.bloom_levels}
-              </p>
-              {phase.description && (
-                <p className="text-sm text-gray-500 mt-2 line-clamp-2">
-                  {phase.description}
-                </p>
-              )}
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-asu-maroon mt-3 group-hover:gap-2 transition-all">
-                Explore phase
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  />
-                </svg>
-              </span>
-            </div>
-          </Link>
-        );
-      })}
+      {(phases ?? []).map((phase) => (
+        <PhaseCard
+          key={phase.id}
+          phase={phase}
+          itemCount={countByPhase.get(phase.id) ?? 0}
+          href={`/learning-paths/${phase.id}`}
+          countLabel={(n) => `${n} ${n === 1 ? "item" : "items"}`}
+        />
+      ))}
     </div>
   );
 }
 
-async function PersonalizedView({ userId }: { userId: string }) {
+async function PersonalizedPhaseGrid({ userId }: { userId: string }) {
   const supabase = await createClient();
 
   const { data: latestAttempt } = await supabase
     .from("assessment_attempts")
-    .select("id, completed_at, overall_band")
+    .select("id, completed_at")
     .eq("user_id", userId)
     .order("completed_at", { ascending: false })
     .limit(1)
@@ -191,8 +133,8 @@ async function PersonalizedView({ userId }: { userId: string }) {
           Take the self-assessment to get a personalized path
         </h3>
         <p className="text-sm text-gray-500 mb-4">
-          Answer 14 quick scenarios and we&apos;ll pull the specific
-          resources — ordered by skill — that will move you up a level.
+          Answer 14 quick scenarios and we&apos;ll filter each phase down to
+          just the resources that match your current level.
         </p>
         <Link
           href="/assessment"
@@ -207,7 +149,6 @@ async function PersonalizedView({ userId }: { userId: string }) {
   const [
     { data: responses },
     { data: questions },
-    { data: skills },
     { data: phases },
     { data: lessonItems },
   ] = await Promise.all([
@@ -216,15 +157,18 @@ async function PersonalizedView({ userId }: { userId: string }) {
       .select("question_id, score")
       .eq("attempt_id", latestAttempt.id),
     supabase.from("assessment_questions").select("id, skill_id"),
-    supabase.from("skills").select("*"),
-    supabase.from("bloom_phases").select("id, name"),
-    supabase.from("lesson_flow").select("*").order("seq"),
+    supabase.from("bloom_phases").select("*").order("sort_order"),
+    supabase
+      .from("lesson_flow")
+      .select("id, bloom_phase_id, learning_level, skill_ids"),
   ]);
 
   const qSkillMap = new Map((questions ?? []).map((q) => [q.id, q.skill_id]));
-  const skillMap = new Map((skills ?? []).map((s) => [s.id, s]));
-  const phaseMap = new Map((phases ?? []).map((p) => [p.id, p]));
   const targets = buildRecommendations(responses ?? [], qSkillMap);
+  // skillId -> targetLevel (e.g. 1 -> "Advanced")
+  const skillToLevel = new Map(
+    targets.map((t) => [t.skillId, t.targetLevel])
+  );
 
   if (targets.length === 0) {
     return (
@@ -233,13 +177,36 @@ async function PersonalizedView({ userId }: { userId: string }) {
           You&apos;re at Advanced on every skill
         </h3>
         <p className="text-sm text-gray-600">
-          Nothing to bridge up to. Browse all phases if you want to
-          revisit anything, or retake the assessment to re-score.
+          No bridge content left. Switch to &ldquo;Browse all phases&rdquo; to
+          revisit anything, or retake the assessment.
         </p>
       </div>
     );
   }
 
+  // Count "at your level" items per phase
+  const countByPhase = new Map<number, number>();
+  (lessonItems ?? []).forEach((item) => {
+    if (!item.learning_level) return;
+    const matches = (item.skill_ids ?? []).some(
+      (sid) => skillToLevel.get(sid) === item.learning_level
+    );
+    if (matches) {
+      countByPhase.set(
+        item.bloom_phase_id,
+        (countByPhase.get(item.bloom_phase_id) ?? 0) + 1
+      );
+    }
+  });
+
+  const visiblePhases = (phases ?? []).filter(
+    (p) => (countByPhase.get(p.id) ?? 0) > 0
+  );
+  const totalCount = Array.from(countByPhase.values()).reduce(
+    (a, b) => a + b,
+    0
+  );
+  const hiddenCount = (phases?.length ?? 0) - visiblePhases.length;
   const completedAt = new Date(latestAttempt.completed_at).toLocaleDateString(
     "en-US",
     { month: "short", day: "numeric", year: "numeric" }
@@ -248,118 +215,99 @@ async function PersonalizedView({ userId }: { userId: string }) {
   return (
     <div>
       <p className="text-sm text-gray-500 mb-6">
-        Based on your assessment from {completedAt}. Skills with the lowest
-        scores are first. Each section lists the resources at the next level
-        up — the ones that will move you into a new band.
+        Based on your assessment from {completedAt}, {totalCount} resources
+        across {visiblePhases.length} phases match your current level.
+        {hiddenCount > 0 && (
+          <>
+            {" "}
+            {hiddenCount} {hiddenCount === 1 ? "phase is" : "phases are"}{" "}
+            hidden — you&apos;ve already leveled past the content there.
+          </>
+        )}
       </p>
 
-      <div className="space-y-8">
-        {targets.map((target) => {
-          const skill = skillMap.get(target.skillId);
-          if (!skill) return null;
-
-          const items = (lessonItems ?? []).filter(
-            (item) =>
-              (item.skill_ids ?? []).includes(target.skillId) &&
-              item.learning_level === target.targetLevel
-          );
-
-          return (
-            <section
-              key={target.skillId}
-              aria-labelledby={`skill-${target.skillId}-heading`}
-            >
-              <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
-                <div>
-                  <h3
-                    id={`skill-${target.skillId}-heading`}
-                    className="text-base font-semibold text-gray-700"
-                  >
-                    <span className="text-asu-maroon">
-                      Skill {target.skillId}:
-                    </span>{" "}
-                    {skill.short_name}
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-0.5">
-                    {skill.statement}
-                  </p>
-                </div>
-                <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                    LEVEL_COLORS[target.targetLevel] ?? "bg-gray-100"
-                  }`}
-                >
-                  Target: {target.targetLevel}
-                </span>
-              </div>
-
-              {items.length > 0 ? (
-                <ul className="space-y-2">
-                  {items.map((item) => {
-                    const phase = phaseMap.get(item.bloom_phase_id);
-                    const modalityIcon =
-                      MODALITY_ICONS[item.modality ?? ""] ?? "•";
-                    return (
-                      <li key={item.id}>
-                        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:border-asu-maroon/40 hover:shadow-sm transition-all">
-                          <div className="flex items-start gap-3">
-                            <span
-                              className="text-lg flex-shrink-0 mt-0.5"
-                              aria-hidden="true"
-                            >
-                              {modalityIcon}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-base font-medium text-gray-700 group-hover:text-asu-maroon transition-colors">
-                                {item.link ? (
-                                  <a
-                                    href={item.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="before:content-[''] before:absolute before:inset-0 before:rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-asu-maroon focus-visible:ring-offset-2"
-                                  >
-                                    {item.item_title}
-                                  </a>
-                                ) : (
-                                  item.item_title
-                                )}
-                              </h4>
-                              {item.purpose && (
-                                <p className="text-sm text-gray-500 mt-1">
-                                  {item.purpose}
-                                </p>
-                              )}
-                              <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-400">
-                                {item.modality && <span>{item.modality}</span>}
-                                {phase && (
-                                  <>
-                                    <span aria-hidden="true">·</span>
-                                    <Link
-                                      href={`/learning-paths/${phase.id}`}
-                                      className="hover:text-asu-maroon underline relative z-10 w-fit"
-                                    >
-                                      Phase {phase.id}: {phase.name}
-                                    </Link>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-400 italic">
-                  No {target.targetLevel}-level items tagged to this skill
-                  yet. Check the Activities tab for a hands-on bridge.
-                </p>
-              )}
-            </section>
-          );
-        })}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {visiblePhases.map((phase) => (
+          <PhaseCard
+            key={phase.id}
+            phase={phase}
+            itemCount={countByPhase.get(phase.id) ?? 0}
+            href={`/learning-paths/${phase.id}?filter=recommended`}
+            countLabel={(n) =>
+              `${n} at your level`
+            }
+          />
+        ))}
       </div>
     </div>
+  );
+}
+
+type PhaseRow = {
+  id: number;
+  name: string;
+  bloom_levels: string;
+  description: string | null;
+};
+
+function PhaseCard({
+  phase,
+  itemCount,
+  href,
+  countLabel,
+}: {
+  phase: PhaseRow;
+  itemCount: number;
+  href: string;
+  countLabel: (n: number) => string;
+}) {
+  const color = PHASE_COLORS[phase.id] ?? PHASE_COLORS[0];
+  return (
+    <Link
+      href={href}
+      className="group relative block rounded-lg border border-gray-200 bg-white overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:ring-offset-2"
+    >
+      <div className={`h-1.5 w-full ${color.accent}`} />
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div
+            className={`inline-flex items-center justify-center w-9 h-9 rounded-lg ${color.bg} ${color.text} font-bold text-sm`}
+          >
+            {phase.id}
+          </div>
+          <span className="text-xs text-gray-400 font-medium">
+            {countLabel(itemCount)}
+          </span>
+        </div>
+        <h3 className="text-base font-semibold text-gray-700 group-hover:text-asu-maroon transition-colors">
+          {phase.name}
+        </h3>
+        <p className="text-xs text-gray-400 mt-0.5 uppercase tracking-wide font-medium">
+          {phase.bloom_levels}
+        </p>
+        {phase.description && (
+          <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+            {phase.description}
+          </p>
+        )}
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-asu-maroon mt-3 group-hover:gap-2 transition-all">
+          Explore phase
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
+          </svg>
+        </span>
+      </div>
+    </Link>
   );
 }
