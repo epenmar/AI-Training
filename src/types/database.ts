@@ -223,16 +223,19 @@ export interface Database {
           activity_id: number;
           step_number: number;
           instruction: string;
+          detailed_help: string | null;
         };
         Insert: {
           activity_id: number;
           step_number: number;
           instruction: string;
+          detailed_help?: string | null;
         };
         Update: {
           activity_id?: number;
           step_number?: number;
           instruction?: string;
+          detailed_help?: string | null;
         };
         Relationships: [];
       };

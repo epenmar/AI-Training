@@ -152,19 +152,50 @@ export default async function ActivityDetailPage({
           </h3>
           {steps && steps.length > 0 && (
             <ol className="space-y-3">
-              {steps.map((step) => (
-                <li
-                  key={step.id}
-                  className="bg-white border border-gray-200 rounded-lg p-4 flex gap-3"
-                >
-                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-asu-maroon text-white text-sm font-bold flex items-center justify-center">
-                    {step.step_number}
-                  </span>
-                  <p className="text-sm text-gray-700 whitespace-pre-line flex-1">
-                    {step.instruction}
-                  </p>
-                </li>
-              ))}
+              {steps.map((step) => {
+                const showHelp =
+                  activity.band === "New → Foundational" &&
+                  !!step.detailed_help?.trim();
+                return (
+                  <li
+                    key={step.id}
+                    className="bg-white border border-gray-200 rounded-lg p-4"
+                  >
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-7 h-7 rounded-full bg-asu-maroon text-white text-sm font-bold flex items-center justify-center">
+                        {step.step_number}
+                      </span>
+                      <p className="text-sm text-gray-700 whitespace-pre-line flex-1">
+                        {step.instruction}
+                      </p>
+                    </div>
+                    {showHelp && (
+                      <details className="group mt-3 ml-10">
+                        <summary className="cursor-pointer list-none text-xs font-medium text-asu-maroon hover:underline inline-flex items-center gap-1">
+                          <svg
+                            className="w-3.5 h-3.5 transition-transform group-open:rotate-90"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                          More details &amp; examples
+                        </summary>
+                        <div className="mt-2 text-sm text-gray-600 whitespace-pre-line border-l-2 border-asu-maroon/20 pl-3">
+                          {step.detailed_help}
+                        </div>
+                      </details>
+                    )}
+                  </li>
+                );
+              })}
             </ol>
           )}
 
