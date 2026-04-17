@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { CompletionPanel } from "@/components/activities/CompletionPanel";
 import { ToolSuggester } from "@/components/activities/ToolSuggester";
+import { AsuPlatformCallouts } from "@/components/activities/AsuPlatformCallouts";
 
 const BAND_COLORS: Record<string, string> = {
   "New → Foundational": "bg-asu-blue/10 text-asu-blue",
@@ -131,6 +132,13 @@ export default async function ActivityDetailPage({
         <h2 className="text-2xl font-bold text-gray-700">{activity.title}</h2>
         <p className="text-gray-600 mt-2">{coreDescription}</p>
       </div>
+
+      {/* ASU-sanctioned platform callouts (curated, shown by skill match) */}
+      <AsuPlatformCallouts
+        skillId={activity.skill_id}
+        activityTitle={activity.title}
+        activityDeliverable={activity.deliverable ?? null}
+      />
 
       {/* AI tool suggester */}
       <ToolSuggester activityId={activityId} />

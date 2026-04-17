@@ -76,7 +76,13 @@ ${stepList}
 Respond with a JSON object of the form:
 {"tools": [{"name": "Tool Name", "url": "https://...", "why": "One-sentence reason this tool fits this activity."}, ...]}
 
-Only include tools that (a) are publicly available as of your knowledge, (b) have a real, stable URL, and (c) directly help with THIS activity's deliverable. Prefer well-known tools (ChatGPT, Claude, Gemini, Gamma, Canva, NotebookLM, Perplexity, Mermaid, etc.) when they fit. Keep the "why" under 20 words.`;
+Only include tools that (a) are publicly available as of your knowledge, (b) have a real, stable URL, and (c) directly help with THIS activity's deliverable. Keep the "why" under 20 words.
+
+Prefer ASU's sanctioned platforms when they fit the activity:
+- Create AI (https://platform.aiml.asu.edu/) — ASU's institutional AI platform for building custom AI projects, assistants, and agents. Preferred for anything involving reusable prompts, custom assistants, or team-wide AI tools.
+- Create AI Compare (https://compare.aiml.asu.edu/) — side-by-side comparison of multiple models on the same prompt. Preferred whenever the activity benefits from seeing how different models respond to the same input.
+
+Otherwise prefer well-known tools (ChatGPT, Claude, Gemini, Gamma, Canva, NotebookLM, Perplexity, Mermaid, etc.) when they fit.`;
 
   const res = await fetch(apiUrl, {
     method: "POST",
