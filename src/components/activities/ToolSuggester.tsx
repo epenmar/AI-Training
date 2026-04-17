@@ -26,7 +26,7 @@ export function ToolSuggester({ activityId }: Props) {
       if (!res.ok) {
         if (data.error === "not_configured") {
           setError(
-            "Tool suggestions are not configured yet — ask an admin to add an Anthropic API key."
+            "Tool suggestions are not configured yet — ask an admin to set the Create AI env vars."
           );
         } else {
           setError("Couldn't fetch suggestions. Try again in a moment.");
