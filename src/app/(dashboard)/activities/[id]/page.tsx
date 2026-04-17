@@ -136,6 +136,7 @@ export default async function ActivityDetailPage({
       {/* ASU-sanctioned platform callouts (curated, shown by skill match) */}
       <AsuPlatformCallouts
         skillId={activity.skill_id}
+        band={activity.band}
         activityTitle={activity.title}
         activityDeliverable={activity.deliverable ?? null}
       />

@@ -1,19 +1,32 @@
 interface Props {
   skillId: number;
+  band: string;
   activityTitle: string;
   activityDeliverable: string | null;
 }
 
 const BUILDER_SKILLS = new Set([6, 11, 14]);
-const COMPARE_SKILLS = new Set([1, 2, 10, 11]);
+
+// Compare shines when the pedagogical goal is "see how different models
+// respond to the same prompt" — less so for go-deep-on-one-thing Advanced
+// work. Skill 2 is the exception: anti-anchoring stays on-point at Advanced.
+const COMPARE_NON_ADVANCED_SKILLS = new Set([1, 3, 4, 10, 11]);
+const ADVANCED_BAND = "Intermediate → Advanced";
+
+function shouldShowCompare(skillId: number, band: string): boolean {
+  if (skillId === 2) return true;
+  if (!COMPARE_NON_ADVANCED_SKILLS.has(skillId)) return false;
+  return band !== ADVANCED_BAND;
+}
 
 export function AsuPlatformCallouts({
   skillId,
+  band,
   activityTitle,
   activityDeliverable,
 }: Props) {
   const showBuilder = BUILDER_SKILLS.has(skillId);
-  const showCompare = COMPARE_SKILLS.has(skillId);
+  const showCompare = shouldShowCompare(skillId, band);
   if (!showBuilder && !showCompare) return null;
 
   const compareQuery = activityDeliverable
