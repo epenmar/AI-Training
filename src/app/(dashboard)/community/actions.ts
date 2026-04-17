@@ -38,7 +38,7 @@ type CreatePostInput = {
   title: string;
   description: string | null;
   mediaPath: string;
-  mediaType: "image" | "video" | "document";
+  mediaType: "image" | "video" | "audio" | "document";
   skillId: number | null;
   activityId: number | null;
 };

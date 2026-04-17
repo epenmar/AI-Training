@@ -141,6 +141,31 @@ export default async function CommunityPage({
                     >
                       Your browser does not support video playback.
                     </video>
+                  ) : post.media_type === "audio" ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-asu-turquoise/10 to-asu-blue/15 px-4">
+                      <svg
+                        className="w-12 h-12 text-asu-blue"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M9 19V6l12-3v13M9 19a3 3 0 11-6 0 3 3 0 016 0zm12-3a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      <audio
+                        src={post.media_url}
+                        controls
+                        preload="none"
+                        className="w-full"
+                      >
+                        Your browser does not support audio playback.
+                      </audio>
+                    </div>
                   ) : post.media_type === "document" ? (
                     <a
                       href={post.media_url}

@@ -93,6 +93,31 @@ export default async function CommunityPostPage({
             >
               Your browser does not support video playback.
             </video>
+          ) : post.media_type === "audio" ? (
+            <div className="flex flex-col items-center justify-center gap-4 py-12 px-6 bg-gradient-to-br from-asu-turquoise/10 to-asu-blue/15">
+              <svg
+                className="w-16 h-16 text-asu-blue"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 19V6l12-3v13M9 19a3 3 0 11-6 0 3 3 0 016 0zm12-3a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <audio
+                src={post.media_url}
+                controls
+                preload="metadata"
+                className="w-full max-w-lg"
+              >
+                Your browser does not support audio playback.
+              </audio>
+            </div>
           ) : post.media_type === "document" ? (
             <a
               href={post.media_url}

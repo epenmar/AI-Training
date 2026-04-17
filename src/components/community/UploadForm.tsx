@@ -34,12 +34,18 @@ const DOC_MIME_TYPES = new Set([
   "application/vnd.ms-excel", // .xls
 ]);
 
-function classifyFile(file: File): "image" | "video" | "document" | null {
+const AUDIO_EXTS = ["mp3", "wav", "m4a", "aac", "ogg", "oga", "flac", "weba"];
+
+function classifyFile(
+  file: File
+): "image" | "video" | "audio" | "document" | null {
   if (file.type.startsWith("image/")) return "image";
   if (file.type.startsWith("video/")) return "video";
+  if (file.type.startsWith("audio/")) return "audio";
   if (DOC_MIME_TYPES.has(file.type)) return "document";
-  // Fallback to extension — some browsers send blank type for .pptx etc.
+  // Fallback to extension — some browsers send blank type for .pptx, .m4a, etc.
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (AUDIO_EXTS.includes(ext)) return "audio";
   if (["pdf", "ppt", "pptx", "doc", "docx", "xls", "xlsx"].includes(ext)) {
     return "document";
   }
@@ -55,7 +61,7 @@ export function UploadForm({
   const [pending, startTransition] = useTransition();
   const [preview, setPreview] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<
-    "image" | "video" | "document" | null
+    "image" | "video" | "audio" | "document" | null
   >(null);
   const [error, setError] = useState("");
   const [selectedSkill, setSelectedSkill] = useState(initialSkillId);
@@ -78,7 +84,9 @@ export function UploadForm({
     }
     const kind = classifyFile(file);
     if (!kind) {
-      setError("Unsupported file type. Images, videos, PDFs, and Office docs are accepted.");
+      setError(
+        "Unsupported file type. Images, videos, audio, PDFs, and Office docs are accepted."
+      );
       return false;
     }
     if (file.size > MAX_BYTES) {
@@ -191,7 +199,7 @@ export function UploadForm({
       {/* Media upload */}
       <div>
         <p className="block text-sm font-medium text-gray-700 mb-2">
-          Screenshot, video, or document{" "}
+          Screenshot, video, audio, or document{" "}
           <span className="text-red-500">*</span>
         </p>
         <label
@@ -229,7 +237,7 @@ export function UploadForm({
             or <span className="font-semibold text-asu-maroon">click to browse</span>
           </p>
           <p className="text-xs text-gray-400 pointer-events-none">
-            Images, videos, PDFs, or Office docs — up to 50MB
+            Images, videos, audio, PDFs, or Office docs — up to 50MB
           </p>
           {fileName && (
             <p className="text-xs text-gray-600 mt-1 pointer-events-none break-all">
@@ -241,7 +249,7 @@ export function UploadForm({
             id="media"
             name="media"
             type="file"
-            accept="image/*,video/*,application/pdf,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx"
+            accept="image/*,video/*,audio/*,application/pdf,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.mp3,.wav,.m4a,.aac,.ogg,.oga,.flac,.weba"
             required
             onChange={handleFileChange}
             className="sr-only"
@@ -251,6 +259,8 @@ export function UploadForm({
           <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 max-w-sm">
             {previewType === "video" ? (
               <video src={preview} controls className="w-full" />
+            ) : previewType === "audio" ? (
+              <audio src={preview} controls className="w-full p-3 bg-gray-50" />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={preview} alt="Preview" className="w-full" />
