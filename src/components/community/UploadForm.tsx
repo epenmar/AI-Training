@@ -17,16 +17,24 @@ interface Activity {
 interface Props {
   skills: Skill[];
   activities: Activity[];
+  initialSkillId?: string;
+  initialActivityId?: string;
 }
 
 const MAX_BYTES = 50 * 1024 * 1024; // 50MB
 
-export function UploadForm({ skills, activities }: Props) {
+export function UploadForm({
+  skills,
+  activities,
+  initialSkillId = "",
+  initialActivityId = "",
+}: Props) {
   const [pending, startTransition] = useTransition();
   const [preview, setPreview] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<"image" | "video" | null>(null);
   const [error, setError] = useState("");
-  const [selectedSkill, setSelectedSkill] = useState("");
+  const [selectedSkill, setSelectedSkill] = useState(initialSkillId);
+  const [selectedActivity, setSelectedActivity] = useState(initialActivityId);
 
   const filteredActivities = selectedSkill
     ? activities.filter((a) => a.skill_id === parseInt(selectedSkill, 10))
@@ -148,7 +156,10 @@ export function UploadForm({ skills, activities }: Props) {
             id="skill_id"
             name="skill_id"
             value={selectedSkill}
-            onChange={(e) => setSelectedSkill(e.target.value)}
+            onChange={(e) => {
+              setSelectedSkill(e.target.value);
+              setSelectedActivity("");
+            }}
             className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:border-transparent"
           >
             <option value="">— None —</option>
@@ -170,6 +181,8 @@ export function UploadForm({ skills, activities }: Props) {
           <select
             id="activity_id"
             name="activity_id"
+            value={selectedActivity}
+            onChange={(e) => setSelectedActivity(e.target.value)}
             disabled={!selectedSkill}
             className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:border-transparent disabled:opacity-50"
           >
