@@ -49,35 +49,176 @@ export function AssessmentFlow({ questions }: Props) {
     return (
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          <h1 className="text-2xl font-bold text-gray-700 mb-4">
-            Before you begin
+          <h1 className="text-2xl font-bold text-gray-700 mb-2">
+            There&apos;s no right answer.
           </h1>
-          <div className="space-y-4 text-gray-600 leading-relaxed">
-            <p>
-              This assessment works best when you answer honestly about where
-              you are <strong>right now</strong> — not where you want to be, or
-              where you think you should be.
-            </p>
-            <p>
-              Your responses shape the learning path we recommend. An inflated
-              score points you toward activities that will feel too abstract;
-              an underestimate points you toward things you&apos;ve already
-              mastered. Neither helps you grow.
-            </p>
-            <p>
-              There are no wrong answers, and nothing you select is shared with
-              anyone. You can retake this at any time as your skills develop.
-            </p>
+          <p className="text-gray-500 mb-6">
+            Your honest starting point is what makes the path useful.
+          </p>
+
+          {/* Visual: honest answer today → personalized path → growth */}
+          <figure className="mb-6">
+            <svg
+              viewBox="0 0 480 140"
+              className="w-full h-auto"
+              role="img"
+              aria-labelledby="journey-title journey-desc"
+            >
+              <title id="journey-title">
+                Where you are today connects through personalized steps to
+                where you&apos;re growing
+              </title>
+              <desc id="journey-desc">
+                Your honest answer about your current skill level feeds into
+                a tailored learning path.
+              </desc>
+              {/* Dashed path */}
+              <path
+                d="M 90 80 Q 240 20 390 80"
+                fill="none"
+                stroke="#8C1D40"
+                strokeWidth="2"
+                strokeDasharray="5 5"
+              />
+              {/* Milestone dots along the path */}
+              <circle cx="180" cy="55" r="4" fill="#FFC627" />
+              <circle cx="240" cy="45" r="4" fill="#FFC627" />
+              <circle cx="300" cy="55" r="4" fill="#FFC627" />
+              {/* Left marker: YOU today */}
+              <circle cx="90" cy="80" r="28" fill="#00A3E0" />
+              <circle cx="90" cy="70" r="7" fill="#ffffff" />
+              <path
+                d="M 76 96 Q 90 82 104 96 Z"
+                fill="#ffffff"
+              />
+              <text
+                x="90"
+                y="130"
+                textAnchor="middle"
+                fontSize="12"
+                fontWeight="600"
+                fill="#191919"
+              >
+                You today
+              </text>
+              {/* Right marker: YOU growing */}
+              <circle cx="390" cy="80" r="28" fill="#FFC627" />
+              <path
+                d="M 390 60 L 394 74 L 408 74 L 397 82 L 401 96 L 390 88 L 379 96 L 383 82 L 372 74 L 386 74 Z"
+                fill="#ffffff"
+              />
+              <text
+                x="390"
+                y="130"
+                textAnchor="middle"
+                fontSize="12"
+                fontWeight="600"
+                fill="#191919"
+              >
+                You growing
+              </text>
+              {/* Path label */}
+              <text
+                x="240"
+                y="15"
+                textAnchor="middle"
+                fontSize="11"
+                fontStyle="italic"
+                fill="#747474"
+              >
+                Your personalized next steps
+              </text>
+            </svg>
+          </figure>
+
+          <p className="text-gray-600 leading-relaxed mb-5">
+            Pick the option that sounds most like what you&apos;d actually do{" "}
+            <strong>today</strong> — not what you want to do, or think you
+            should do. Inflating your answers sends you to activities that
+            feel too abstract; underselling sends you to things
+            you&apos;ve already mastered.
+          </p>
+
+          <ul className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            <li className="flex items-start gap-2 text-sm text-gray-600">
+              <svg
+                className="w-5 h-5 text-asu-green flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              <span>
+                <strong className="text-gray-700">No wrong answers</strong>
+                <span className="block text-xs text-gray-500">
+                  It&apos;s not a test
+                </span>
+              </span>
+            </li>
+            <li className="flex items-start gap-2 text-sm text-gray-600">
+              <svg
+                className="w-5 h-5 text-asu-blue flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+              <span>
+                <strong className="text-gray-700">Private</strong>
+                <span className="block text-xs text-gray-500">
+                  Nothing is shared
+                </span>
+              </span>
+            </li>
+            <li className="flex items-start gap-2 text-sm text-gray-600">
+              <svg
+                className="w-5 h-5 text-asu-maroon flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              <span>
+                <strong className="text-gray-700">Retake anytime</strong>
+                <span className="block text-xs text-gray-500">
+                  Track growth over time
+                </span>
+              </span>
+            </li>
+          </ul>
+
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <p className="text-sm text-gray-500">
-              14 scenario questions · about 10 minutes
+              14 scenarios · about 10 minutes
             </p>
+            <button
+              onClick={() => setStarted(true)}
+              className="px-5 py-2.5 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover cursor-pointer transition-colors"
+            >
+              Start assessment
+            </button>
           </div>
-          <button
-            onClick={() => setStarted(true)}
-            className="mt-6 px-5 py-2.5 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover cursor-pointer transition-colors"
-          >
-            Start assessment
-          </button>
         </div>
       </div>
     );
