@@ -20,15 +20,34 @@ export function scoreToRecommendedBand(score: number): string | null {
   }
 }
 
+/**
+ * Maps a score to the lesson_flow `learning_level` the user should consume
+ * next to move up one band. Used for the personalized learning-paths view.
+ */
+export function scoreToTargetLevel(score: number): string | null {
+  switch (score) {
+    case 0:
+      return "Foundational";
+    case 1:
+      return "Intermediate";
+    case 2:
+      return "Advanced";
+    default:
+      return null;
+  }
+}
+
 export type RecommendationTarget = {
   skillId: number;
   score: number;
   band: string;
+  targetLevel: string;
 };
 
 /**
  * Given the latest assessment responses (with score + question->skill map),
- * return one recommended (skillId, band) target per skill, lowest score first.
+ * return one recommended (skillId, band, targetLevel) target per skill,
+ * lowest score first.
  */
 export function buildRecommendations(
   responses: { question_id: number; score: number }[],
@@ -43,8 +62,9 @@ export function buildRecommendations(
     const skillId = questionSkillMap.get(r.question_id);
     if (!skillId || seenSkills.has(skillId)) continue;
     const band = scoreToRecommendedBand(r.score);
-    if (!band) continue;
-    targets.push({ skillId, score: r.score, band });
+    const targetLevel = scoreToTargetLevel(r.score);
+    if (!band || !targetLevel) continue;
+    targets.push({ skillId, score: r.score, band, targetLevel });
     seenSkills.add(skillId);
   }
   return targets;

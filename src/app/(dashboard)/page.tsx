@@ -234,14 +234,20 @@ export default async function DashboardHome() {
         </div>
 
         <Link
-          href="/learning-paths"
+          href="/learning-paths?filter=recommended"
           className="bg-asu-blue text-white rounded-lg p-5 hover:bg-asu-blue/90 transition-colors"
         >
           <p className="text-xs uppercase tracking-wide font-medium opacity-80">
-            Learning Paths
+            Your Learning Path
           </p>
-          <p className="text-2xl font-bold mt-1">9 phases</p>
-          <p className="text-xs opacity-80 mt-0.5">Browse all →</p>
+          <p className="text-2xl font-bold mt-1">
+            {latestAttempt ? "Personalized" : "Take assessment"}
+          </p>
+          <p className="text-xs opacity-80 mt-0.5">
+            {latestAttempt
+              ? "Resources picked for you →"
+              : "Unlock your path →"}
+          </p>
         </Link>
 
         <Link
