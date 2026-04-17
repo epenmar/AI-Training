@@ -70,6 +70,15 @@ export default async function CommunityPostPage({
   const showName = !post.anonymous && author?.display_name;
   const authorName = showName ? author.display_name : "Anonymous";
   const publicContact = showName ? author?.public_contact ?? null : null;
+  const avatarUrl = showName ? author?.avatar_url ?? null : null;
+  const avatarInitials = showName
+    ? (author.display_name ?? "?")
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : null;
   const canDelete = post.user_id === user.id || !!viewerProfile?.is_admin;
   const bandClass = activity ? BAND_COLORS[activity.band] : null;
   const fileExt = post.media_url.split(".").pop()?.toUpperCase() ?? "FILE";
@@ -275,25 +284,54 @@ export default async function CommunityPostPage({
 
           {/* Footer */}
           <div className="flex items-start justify-between gap-4 mt-6 pt-4 border-t border-gray-100">
-            <div className="text-xs text-gray-500">
-              <div>
-                Shared by{" "}
-                <span className="font-medium text-gray-700">{authorName}</span>{" "}
-                on{" "}
-                {new Date(post.created_at).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </div>
-              {publicContact && (
-                <div className="mt-1 text-gray-600">
-                  Contact:{" "}
-                  <span className="font-medium text-gray-700">
-                    {publicContact}
-                  </span>
+            <div className="flex items-start gap-3 min-w-0">
+              {showName ? (
+                avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-asu-maroon text-white flex items-center justify-center text-xs font-medium flex-shrink-0">
+                    {avatarInitials}
+                  </div>
+                )
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
                 </div>
               )}
+              <div className="text-xs text-gray-500 min-w-0">
+                <div>
+                  Shared by{" "}
+                  <span className="font-medium text-gray-700">
+                    {authorName}
+                  </span>{" "}
+                  on{" "}
+                  {new Date(post.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </div>
+                {publicContact && (
+                  <div className="mt-1 text-gray-600">
+                    Contact:{" "}
+                    <span className="font-medium text-gray-700">
+                      {publicContact}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
             {canDelete && (
               <div className="flex items-center gap-4">

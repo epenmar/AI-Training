@@ -79,7 +79,7 @@ export default async function CommunityPage({
     authorIds.length > 0
       ? await supabase
           .from("profiles")
-          .select("id, display_name, public_contact")
+          .select("id, display_name, avatar_url, public_contact")
           .in("id", authorIds)
       : { data: [] };
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
@@ -134,6 +134,15 @@ export default async function CommunityPage({
             const showName = !post.anonymous && author?.display_name;
             const authorName = showName ? author.display_name : "Anonymous";
             const publicContact = showName ? author?.public_contact ?? null : null;
+            const avatarUrl = showName ? author?.avatar_url ?? null : null;
+            const avatarInitials = showName
+              ? (author.display_name ?? "?")
+                  .split(" ")
+                  .map((n: string) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)
+              : null;
             const skill = post.skill_id ? skillMap.get(post.skill_id) : null;
             const isOwnPost = post.user_id === user.id;
             const canEdit = isOwnPost || isAdmin;
@@ -311,19 +320,46 @@ export default async function CommunityPage({
                     )}
                   </div>
                   <div className="relative z-10 flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                    <div className="text-xs text-gray-400 min-w-0 flex-1 pointer-events-none">
-                      <div className="truncate">
-                        {authorName} ·{" "}
-                        {new Date(post.created_at).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
-                      {publicContact && (
-                        <div className="truncate text-gray-500">
-                          {publicContact}
+                    <div className="flex items-center gap-2 min-w-0 flex-1 pointer-events-none">
+                      {showName ? (
+                        avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={avatarUrl}
+                            alt=""
+                            className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-asu-maroon text-white flex items-center justify-center text-[10px] font-medium flex-shrink-0">
+                            {avatarInitials}
+                          </div>
+                        )
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center flex-shrink-0">
+                          <svg
+                            className="w-3.5 h-3.5"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                          </svg>
                         </div>
                       )}
+                      <div className="text-xs text-gray-400 min-w-0 flex-1">
+                        <div className="truncate">
+                          {authorName} ·{" "}
+                          {new Date(post.created_at).toLocaleDateString(
+                            "en-US",
+                            { month: "short", day: "numeric" }
+                          )}
+                        </div>
+                        {publicContact && (
+                          <div className="truncate text-gray-500">
+                            {publicContact}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     {(canEdit || canDelete) && (
                       <div className="flex items-center gap-3 flex-shrink-0 ml-2">
