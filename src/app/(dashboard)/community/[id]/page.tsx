@@ -43,7 +43,7 @@ export default async function CommunityPostPage({
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, email, avatar_url")
+      .select("display_name, avatar_url, show_in_community, public_contact")
       .eq("id", post.user_id)
       .single(),
     post.skill_id
@@ -67,8 +67,9 @@ export default async function CommunityPostPage({
       .single(),
   ]);
 
-  const authorName =
-    author?.display_name || author?.email?.split("@")[0] || "Anonymous";
+  const showName = author?.show_in_community && author?.display_name;
+  const authorName = showName ? author.display_name : "Anonymous";
+  const publicContact = showName ? author?.public_contact ?? null : null;
   const canDelete = post.user_id === user.id || !!viewerProfile?.is_admin;
   const bandClass = activity ? BAND_COLORS[activity.band] : null;
   const fileExt = post.media_url.split(".").pop()?.toUpperCase() ?? "FILE";
@@ -273,15 +274,26 @@ export default async function CommunityPostPage({
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+          <div className="flex items-start justify-between gap-4 mt-6 pt-4 border-t border-gray-100">
             <div className="text-xs text-gray-500">
-              Shared by <span className="font-medium text-gray-700">{authorName}</span>{" "}
-              on{" "}
-              {new Date(post.created_at).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+              <div>
+                Shared by{" "}
+                <span className="font-medium text-gray-700">{authorName}</span>{" "}
+                on{" "}
+                {new Date(post.created_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </div>
+              {publicContact && (
+                <div className="mt-1 text-gray-600">
+                  Contact:{" "}
+                  <span className="font-medium text-gray-700">
+                    {publicContact}
+                  </span>
+                </div>
+              )}
             </div>
             {canDelete && (
               <div className="flex items-center gap-4">

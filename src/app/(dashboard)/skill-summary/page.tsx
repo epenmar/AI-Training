@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { scoreToRecommendedBand } from "@/lib/recommendations";
 
 const LEVEL_NAMES = ["New", "Foundational", "Intermediate", "Advanced"] as const;
 
@@ -72,15 +73,27 @@ export default async function SkillSummaryPage() {
     );
   }
 
-  const [{ data: responses }, { data: questions }, { data: skills }] =
-    await Promise.all([
-      supabase
-        .from("assessment_responses")
-        .select("question_id, score")
-        .eq("attempt_id", latestAttempt.id),
-      supabase.from("assessment_questions").select("id, skill_id"),
-      supabase.from("skills").select("*").order("id"),
-    ]);
+  const [
+    { data: responses },
+    { data: questions },
+    { data: skills },
+    { data: activities },
+  ] = await Promise.all([
+    supabase
+      .from("assessment_responses")
+      .select("question_id, score")
+      .eq("attempt_id", latestAttempt.id),
+    supabase.from("assessment_questions").select("id, skill_id"),
+    supabase.from("skills").select("*").order("id"),
+    supabase.from("level_up_activities").select("id, skill_id, band"),
+  ]);
+
+  // (skill_id, band) → activity_id so we can link directly to the
+  // bridging activity for each skill at the user's level.
+  const activityBySkillBand = new Map<string, number>();
+  for (const a of activities ?? []) {
+    activityBySkillBand.set(`${a.skill_id}|${a.band}`, a.id);
+  }
 
   const qSkillMap = new Map((questions ?? []).map((q) => [q.id, q.skill_id]));
   const skillScore = new Map<number, number>();
@@ -151,6 +164,11 @@ export default async function SkillSummaryPage() {
           const level = score != null ? LEVEL_NAMES[score] : "New";
           const read = LEVEL_READS[level];
           const next = NEXT_STEP[level];
+          const nextBand =
+            score != null ? scoreToRecommendedBand(score) : null;
+          const nextActivityId = nextBand
+            ? activityBySkillBand.get(`${skill.id}|${nextBand}`) ?? null
+            : null;
           return (
             <li key={skill.id}>
               <article className="bg-white border border-gray-200 rounded-lg p-5">
@@ -178,6 +196,45 @@ export default async function SkillSummaryPage() {
                 {next && (
                   <p className="text-sm text-gray-500 mt-2 italic">{next}</p>
                 )}
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {nextActivityId ? (
+                    <Link
+                      href={`/activities/${nextActivityId}`}
+                      className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
+                    >
+                      Go to activity
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/activities"
+                      className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Browse activities
+                    </Link>
+                  )}
+                  {skill.bloom_phase_id != null && (
+                    <Link
+                      href={`/learning-paths/${skill.bloom_phase_id}`}
+                      className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      See resources
+                    </Link>
+                  )}
+                </div>
               </article>
             </li>
           );

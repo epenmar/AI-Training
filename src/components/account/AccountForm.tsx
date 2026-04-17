@@ -7,15 +7,20 @@ import { saveProfile, removeAvatar } from "@/app/(dashboard)/account/actions";
 interface Props {
   initialDisplayName: string;
   initialAvatarUrl: string | null;
+  initialShowInCommunity: boolean;
+  initialPublicContact: string;
   email: string;
   isSetup: boolean;
 }
 
 const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_CONTACT_CHARS = 200;
 
 export function AccountForm({
   initialDisplayName,
   initialAvatarUrl,
+  initialShowInCommunity,
+  initialPublicContact,
   email,
   isSetup,
 }: Props) {
@@ -24,6 +29,8 @@ export function AccountForm({
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [preview, setPreview] = useState<string | null>(null);
+  const [showInCommunity, setShowInCommunity] = useState(initialShowInCommunity);
+  const [publicContact, setPublicContact] = useState(initialPublicContact);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
 
@@ -167,6 +174,52 @@ export function AccountForm({
           Email
         </label>
         <p className="text-sm text-gray-500">{email}</p>
+      </div>
+
+      {/* Community visibility */}
+      <div className="pt-2 border-t border-gray-100">
+        <h3 className="text-sm font-medium text-gray-700 mb-2">
+          Community Look Book
+        </h3>
+        <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+          <input
+            type="checkbox"
+            name="show_in_community"
+            checked={showInCommunity}
+            onChange={(e) => setShowInCommunity(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-asu-maroon focus:ring-asu-maroon cursor-pointer"
+          />
+          <span>
+            Show my name on posts I share
+            <span className="block text-xs text-gray-400 font-normal mt-0.5">
+              When off, your posts appear as &quot;Anonymous&quot; to other users.
+            </span>
+          </span>
+        </label>
+
+        <div className={showInCommunity ? "mt-4" : "mt-4 opacity-50"}>
+          <label
+            htmlFor="public_contact"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Contact info{" "}
+            <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <input
+            id="public_contact"
+            name="public_contact"
+            type="text"
+            maxLength={MAX_CONTACT_CHARS}
+            value={publicContact}
+            onChange={(e) => setPublicContact(e.target.value)}
+            disabled={!showInCommunity}
+            placeholder="e.g., @yourhandle on Slack, or firstname@asu.edu"
+            className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Shown on your posts so peers can reach out about what you built.
+          </p>
+        </div>
       </div>
 
       {error && (

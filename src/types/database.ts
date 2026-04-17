@@ -246,6 +246,8 @@ export interface Database {
           display_name: string | null;
           avatar_url: string | null;
           is_admin: boolean;
+          show_in_community: boolean;
+          public_contact: string | null;
           created_at: string;
         };
         Insert: {
@@ -254,6 +256,8 @@ export interface Database {
           display_name?: string | null;
           avatar_url?: string | null;
           is_admin?: boolean;
+          show_in_community?: boolean;
+          public_contact?: string | null;
           created_at?: string;
         };
         Update: {
@@ -261,6 +265,8 @@ export interface Database {
           display_name?: string | null;
           avatar_url?: string | null;
           is_admin?: boolean;
+          show_in_community?: boolean;
+          public_contact?: string | null;
         };
         Relationships: [];
       };

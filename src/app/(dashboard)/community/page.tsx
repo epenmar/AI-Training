@@ -79,7 +79,7 @@ export default async function CommunityPage({
     authorIds.length > 0
       ? await supabase
           .from("profiles")
-          .select("id, display_name, email")
+          .select("id, display_name, show_in_community, public_contact")
           .in("id", authorIds)
       : { data: [] };
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
@@ -131,14 +131,17 @@ export default async function CommunityPage({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {posts.map((post) => {
             const author = profileMap.get(post.user_id);
-            const authorName =
-              author?.display_name || author?.email?.split("@")[0] || "Anonymous";
+            const showName = author?.show_in_community && author?.display_name;
+            const authorName = showName ? author.display_name : "Anonymous";
+            const publicContact = showName ? author?.public_contact ?? null : null;
             const skill = post.skill_id ? skillMap.get(post.skill_id) : null;
-            const canDelete = post.user_id === user.id || isAdmin;
+            const isOwnPost = post.user_id === user.id;
+            const canEdit = isOwnPost || isAdmin;
+            const canDelete = isOwnPost || isAdmin;
             return (
               <article
                 key={post.id}
-                className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col"
+                className="group relative bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col"
               >
                 <div className="aspect-video bg-gray-100 overflow-hidden">
                   {post.media_type === "video" ? (
@@ -285,44 +288,56 @@ export default async function CommunityPage({
                     />
                   )}
                 </div>
-                <div className="p-4 flex-1 flex flex-col">
+                <div className="relative p-4 flex-1 flex flex-col">
+                  {/* Stretched link: whole body area navigates to detail */}
                   <Link
                     href={`/community/${post.id}`}
-                    className="focus:outline-none focus:ring-2 focus:ring-asu-maroon rounded"
-                  >
-                    <h3 className="text-base font-semibold text-gray-700 hover:text-asu-maroon transition-colors">
-                      {post.title}
-                    </h3>
-                    {post.description && (
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-3">
-                        {post.description}
-                      </p>
-                    )}
-                  </Link>
-                  <div className="flex items-center flex-wrap gap-2 mt-3">
+                    aria-label={`Open ${post.title}`}
+                    className="absolute inset-0 z-0 focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:ring-inset rounded-b-lg"
+                  />
+                  <h3 className="relative z-[1] text-base font-semibold text-gray-700 group-hover:text-asu-maroon transition-colors pointer-events-none">
+                    {post.title}
+                  </h3>
+                  {post.description && (
+                    <p className="relative z-[1] text-sm text-gray-500 mt-1 line-clamp-3 pointer-events-none">
+                      {post.description}
+                    </p>
+                  )}
+                  <div className="relative z-[1] flex items-center flex-wrap gap-2 mt-3 pointer-events-none">
                     {skill && (
                       <span className="text-xs bg-asu-maroon/10 text-asu-maroon px-2 py-0.5 rounded font-medium">
                         {skill.short_name}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                    <div className="text-xs text-gray-400">
-                      {authorName} ·{" "}
-                      {new Date(post.created_at).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
+                  <div className="relative z-10 flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                    <div className="text-xs text-gray-400 min-w-0 flex-1 pointer-events-none">
+                      <div className="truncate">
+                        {authorName} ·{" "}
+                        {new Date(post.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </div>
+                      {publicContact && (
+                        <div className="truncate text-gray-500">
+                          {publicContact}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Link
-                        href={`/community/${post.id}`}
-                        className="text-xs font-medium text-asu-maroon hover:underline"
-                      >
-                        View details →
-                      </Link>
-                      {canDelete && <DeletePostButton postId={post.id} />}
-                    </div>
+                    {(canEdit || canDelete) && (
+                      <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+                        {canEdit && (
+                          <Link
+                            href={`/community/${post.id}/edit`}
+                            className="text-xs font-medium text-gray-500 hover:text-asu-maroon"
+                          >
+                            Edit
+                          </Link>
+                        )}
+                        {canDelete && <DeletePostButton postId={post.id} />}
+                      </div>
+                    )}
                   </div>
                 </div>
               </article>

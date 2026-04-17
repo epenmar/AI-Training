@@ -175,7 +175,7 @@ export function CommunityFilters({
         options={skillOptions}
         placeholder="All skills"
         onChange={(v) => pushParams({ skill: v })}
-        widthClass="sm:w-64"
+        widthClass="sm:w-80"
       />
 
       <FilterDropdown
@@ -185,7 +185,7 @@ export function CommunityFilters({
         options={BAND_OPTIONS}
         placeholder="All levels"
         onChange={(v) => pushParams({ band: v })}
-        widthClass="sm:w-64"
+        widthClass="sm:w-80"
       />
 
       {hasFilters && (
