@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { createPost } from "@/app/(dashboard)/community/actions";
+import { createLinkPost, createPost } from "@/app/(dashboard)/community/actions";
 import { createClient } from "@/lib/supabase/client";
+import { getDomain, getEmbedUrl, getLinkKind } from "@/lib/embed";
 
 interface Skill {
   id: number;
@@ -59,6 +60,8 @@ export function UploadForm({
   initialActivityId = "",
 }: Props) {
   const [pending, startTransition] = useTransition();
+  const [mode, setMode] = useState<"file" | "link">("file");
+  const [linkUrl, setLinkUrl] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<
     "image" | "video" | "audio" | "document" | null
@@ -135,18 +138,49 @@ export function UploadForm({
     setError("");
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const file = formData.get("media") as File | null;
     const title = formData.get("title")?.toString().trim() ?? "";
     const description = formData.get("description")?.toString().trim() || null;
     const skillIdRaw = formData.get("skill_id")?.toString();
     const activityIdRaw = formData.get("activity_id")?.toString();
 
-    if (!file || file.size === 0) {
-      setError("Choose a file to share");
-      return;
-    }
     if (!title) {
       setError("Give your post a title");
+      return;
+    }
+
+    if (mode === "link") {
+      const trimmedUrl = linkUrl.trim();
+      if (!trimmedUrl) {
+        setError("Paste a link to share");
+        return;
+      }
+      try {
+        const u = new URL(trimmedUrl);
+        if (u.protocol !== "http:" && u.protocol !== "https:") {
+          setError("Only http and https links are supported");
+          return;
+        }
+      } catch {
+        setError("That doesn't look like a valid URL");
+        return;
+      }
+
+      startTransition(async () => {
+        const res = await createLinkPost({
+          title,
+          description,
+          url: trimmedUrl,
+          skillId: skillIdRaw ? parseInt(skillIdRaw, 10) : null,
+          activityId: activityIdRaw ? parseInt(activityIdRaw, 10) : null,
+        });
+        if (res && "error" in res && res.error) setError(res.error);
+      });
+      return;
+    }
+
+    const file = formData.get("media") as File | null;
+    if (!file || file.size === 0) {
+      setError("Choose a file to share");
       return;
     }
 
@@ -196,81 +230,68 @@ export function UploadForm({
       onSubmit={handleSubmit}
       className="bg-white rounded-lg border border-gray-200 p-6 space-y-5"
     >
-      {/* Media upload */}
-      <div>
-        <p className="block text-sm font-medium text-gray-700 mb-2">
-          Screenshot, video, audio, or document{" "}
-          <span className="text-red-500">*</span>
-        </p>
-        <label
-          htmlFor="media"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragEnter={handleDragOver}
-          onDragLeave={handleDragLeave}
-          className={`relative flex flex-col items-center justify-center gap-2 w-full rounded-lg border-2 border-dashed px-4 py-8 text-center cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-asu-maroon focus-within:border-asu-maroon ${
-            isDragging
-              ? "border-asu-maroon bg-asu-maroon/5"
-              : "border-gray-300 bg-gray-50 hover:border-asu-maroon/50 hover:bg-gray-100"
+      {/* Mode toggle */}
+      <div
+        role="tablist"
+        aria-label="Post type"
+        className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-sm"
+      >
+        <button
+          role="tab"
+          type="button"
+          aria-selected={mode === "file"}
+          onClick={() => {
+            setMode("file");
+            setError("");
+          }}
+          className={`px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer ${
+            mode === "file"
+              ? "bg-white text-asu-maroon shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          <svg
-            className={`w-8 h-8 pointer-events-none ${
-              isDragging ? "text-asu-maroon" : "text-gray-400"
+          Upload file
+        </button>
+        <button
+          role="tab"
+          type="button"
+          aria-selected={mode === "link"}
+          onClick={() => {
+            setMode("link");
+            setError("");
+          }}
+          className={`px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer ${
+            mode === "link"
+              ? "bg-white text-asu-maroon shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Paste link
+        </button>
+      </div>
+
+      {mode === "file" ? (
+        <div>
+          <p className="block text-sm font-medium text-gray-700 mb-2">
+            Screenshot, video, audio, or document{" "}
+            <span className="text-red-500">*</span>
+          </p>
+          <label
+            htmlFor="media"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={`relative flex flex-col items-center justify-center gap-2 w-full rounded-lg border-2 border-dashed px-4 py-8 text-center cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-asu-maroon focus-within:border-asu-maroon ${
+              isDragging
+                ? "border-asu-maroon bg-asu-maroon/5"
+                : "border-gray-300 bg-gray-50 hover:border-asu-maroon/50 hover:bg-gray-100"
             }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.9A5 5 0 0115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
-            />
-          </svg>
-          <p className="text-sm text-gray-700 pointer-events-none">
-            <span className="font-semibold text-asu-maroon">
-              Drag and drop
-            </span>{" "}
-            or <span className="font-semibold text-asu-maroon">click to browse</span>
-          </p>
-          <p className="text-xs text-gray-400 pointer-events-none">
-            Images, videos, audio, PDFs, or Office docs — up to 50MB
-          </p>
-          {fileName && (
-            <p className="text-xs text-gray-600 mt-1 pointer-events-none break-all">
-              Selected: {fileName}
-            </p>
-          )}
-          <input
-            ref={inputRef}
-            id="media"
-            name="media"
-            type="file"
-            accept="image/*,video/*,audio/*,application/pdf,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.mp3,.wav,.m4a,.aac,.ogg,.oga,.flac,.weba"
-            required
-            onChange={handleFileChange}
-            className="sr-only"
-          />
-        </label>
-        {preview && previewType !== "document" && (
-          <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 max-w-sm">
-            {previewType === "video" ? (
-              <video src={preview} controls className="w-full" />
-            ) : previewType === "audio" ? (
-              <audio src={preview} controls className="w-full p-3 bg-gray-50" />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={preview} alt="Preview" className="w-full" />
-            )}
-          </div>
-        )}
-        {previewType === "document" && fileName && (
-          <div className="mt-3 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 max-w-sm">
             <svg
-              className="w-6 h-6 text-asu-maroon flex-shrink-0"
+              className={`w-8 h-8 pointer-events-none ${
+                isDragging ? "text-asu-maroon" : "text-gray-400"
+              }`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -280,13 +301,121 @@ export function UploadForm({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                d="M7 16a4 4 0 01-.88-7.9A5 5 0 0115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
               />
             </svg>
-            <span className="text-sm text-gray-700 break-all">{fileName}</span>
-          </div>
-        )}
-      </div>
+            <p className="text-sm text-gray-700 pointer-events-none">
+              <span className="font-semibold text-asu-maroon">
+                Drag and drop
+              </span>{" "}
+              or{" "}
+              <span className="font-semibold text-asu-maroon">click to browse</span>
+            </p>
+            <p className="text-xs text-gray-400 pointer-events-none">
+              Images, videos, audio, PDFs, or Office docs — up to 50MB
+            </p>
+            {fileName && (
+              <p className="text-xs text-gray-600 mt-1 pointer-events-none break-all">
+                Selected: {fileName}
+              </p>
+            )}
+            <input
+              ref={inputRef}
+              id="media"
+              name="media"
+              type="file"
+              accept="image/*,video/*,audio/*,application/pdf,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.mp3,.wav,.m4a,.aac,.ogg,.oga,.flac,.weba"
+              required
+              onChange={handleFileChange}
+              className="sr-only"
+            />
+          </label>
+          {preview && previewType !== "document" && (
+            <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 max-w-sm">
+              {previewType === "video" ? (
+                <video src={preview} controls className="w-full" />
+              ) : previewType === "audio" ? (
+                <audio src={preview} controls className="w-full p-3 bg-gray-50" />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={preview} alt="Preview" className="w-full" />
+              )}
+            </div>
+          )}
+          {previewType === "document" && fileName && (
+            <div className="mt-3 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 max-w-sm">
+              <svg
+                className="w-6 h-6 text-asu-maroon flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span className="text-sm text-gray-700 break-all">{fileName}</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div>
+          <label
+            htmlFor="link_url"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Link <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="link_url"
+            name="link_url"
+            type="url"
+            inputMode="url"
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            placeholder="https://docs.google.com/presentation/d/..."
+            className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:border-transparent"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Google Slides, Docs, Sheets, Drive files, YouTube, Vimeo, or any
+            public URL. Make sure Google links are set to{" "}
+            <span className="font-medium">anyone with the link can view</span>.
+          </p>
+          {linkUrl.trim() &&
+            (() => {
+              try {
+                new URL(linkUrl.trim());
+              } catch {
+                return null;
+              }
+              const embed = getEmbedUrl(linkUrl.trim());
+              const kind = getLinkKind(linkUrl.trim());
+              return (
+                <div className="mt-3 rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
+                  {embed ? (
+                    <iframe
+                      src={embed}
+                      title="Link preview"
+                      className="w-full aspect-video border-0"
+                      loading="lazy"
+                      allow="fullscreen"
+                    />
+                  ) : (
+                    <div className="p-3 text-xs text-gray-600">
+                      {kind === "generic"
+                        ? `Link to ${getDomain(linkUrl.trim())} — shared as a plain link.`
+                        : "Preview unavailable; link will still be shared."}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+        </div>
+      )}
 
       {/* Title */}
       <div>

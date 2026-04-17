@@ -93,6 +93,52 @@ export async function createPost(input: CreatePostInput) {
   redirect("/community");
 }
 
+type CreateLinkPostInput = {
+  title: string;
+  description: string | null;
+  url: string;
+  skillId: number | null;
+  activityId: number | null;
+};
+
+export async function createLinkPost(input: CreateLinkPostInput) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in" };
+
+  const title = input.title?.trim();
+  if (!title) return { error: "Title is required" };
+
+  const raw = input.url?.trim();
+  if (!raw) return { error: "Paste a link to share" };
+
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return { error: "That doesn't look like a valid URL" };
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return { error: "Only http and https links are supported" };
+  }
+
+  const { error } = await supabase.from("community_posts").insert({
+    user_id: user.id,
+    title,
+    description: input.description,
+    media_url: parsed.toString(),
+    media_type: "link",
+    skill_id: input.skillId,
+    activity_id: input.activityId,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/community");
+  redirect("/community");
+}
+
 type UpdatePostInput = {
   postId: string;
   title: string;
