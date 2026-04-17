@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { buildRecommendations } from "@/lib/recommendations";
 
 export default async function DashboardHome() {
   const supabase = await createClient();
@@ -47,7 +48,9 @@ export default async function DashboardHome() {
   const skillsCovered = skillsWithProgress.size;
   const skillsPct = Math.round((skillsCovered / TOTAL_SKILLS) * 100);
 
-  // Suggest a next activity — any incomplete activity in the skill that scored lowest
+  // Suggest a next activity — pick the lowest-scoring skill's band-matched
+  // bridging activity (the one that takes them from their current level to
+  // the next). Fall back to the next-lowest skill if that one is already done.
   const completedSet = new Set(
     (completions ?? []).map((c) => c.activity_id)
   );
@@ -59,23 +62,22 @@ export default async function DashboardHome() {
   } | null = null;
 
   if (latestAttempt) {
-    const { data: responses } = await supabase
-      .from("assessment_responses")
-      .select("*")
-      .eq("attempt_id", latestAttempt.id)
-      .order("score");
-    const { data: questions } = await supabase
-      .from("assessment_questions")
-      .select("id, skill_id");
+    const [{ data: responses }, { data: questions }] = await Promise.all([
+      supabase
+        .from("assessment_responses")
+        .select("question_id, score")
+        .eq("attempt_id", latestAttempt.id),
+      supabase.from("assessment_questions").select("id, skill_id"),
+    ]);
     const qSkillMap = new Map((questions ?? []).map((q) => [q.id, q.skill_id]));
+    const targets = buildRecommendations(responses ?? [], qSkillMap);
 
-    for (const r of responses ?? []) {
-      const skillId = qSkillMap.get(r.question_id);
-      if (!skillId) continue;
+    for (const target of targets) {
       const { data: acts } = await supabase
         .from("level_up_activities")
         .select("id, title, band, skill_id")
-        .eq("skill_id", skillId);
+        .eq("skill_id", target.skillId)
+        .eq("band", target.band);
       const incomplete = (acts ?? []).find((a) => !completedSet.has(a.id));
       if (incomplete) {
         suggestedActivity = incomplete;
@@ -126,6 +128,12 @@ export default async function DashboardHome() {
           className="px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
         >
           Open activity
+        </Link>
+        <Link
+          href="/activities?filter=recommended"
+          className="px-4 py-2 text-sm font-medium rounded-lg border border-asu-maroon/30 text-asu-maroon hover:bg-asu-maroon/5 transition-colors"
+        >
+          See all recommended
         </Link>
         <Link
           href="/activities"

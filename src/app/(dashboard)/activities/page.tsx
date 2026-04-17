@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { buildRecommendations } from "@/lib/recommendations";
 
 const BAND_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   "New → Foundational": {
@@ -26,7 +27,14 @@ const BAND_ORDER = [
   "Intermediate → Advanced",
 ];
 
-export default async function ActivitiesPage() {
+export default async function ActivitiesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
+  const { filter } = await searchParams;
+  const recommendedOnly = filter === "recommended";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -48,15 +56,50 @@ export default async function ActivitiesPage() {
     (completions ?? []).map((c) => c.activity_id)
   );
 
+  // Build the recommended (skill_id, band) targets from the user's latest
+  // assessment. Empty map → no assessment yet.
+  const { data: latestAttempt } = await supabase
+    .from("assessment_attempts")
+    .select("id")
+    .eq("user_id", user.id)
+    .order("completed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const recommendedBySkill = new Map<number, string>();
+  if (latestAttempt) {
+    const [{ data: responses }, { data: questions }] = await Promise.all([
+      supabase
+        .from("assessment_responses")
+        .select("question_id, score")
+        .eq("attempt_id", latestAttempt.id),
+      supabase.from("assessment_questions").select("id, skill_id"),
+    ]);
+    const qSkillMap = new Map((questions ?? []).map((q) => [q.id, q.skill_id]));
+    for (const t of buildRecommendations(responses ?? [], qSkillMap)) {
+      recommendedBySkill.set(t.skillId, t.band);
+    }
+  }
+
+  // Filter to recommended-only if requested (and user has taken an assessment)
+  const visibleActivities = recommendedOnly
+    ? (activities ?? []).filter(
+        (a) => recommendedBySkill.get(a.skill_id) === a.band
+      )
+    : activities ?? [];
+
   // Group activities by skill
   const bySkill = new Map<number, typeof activities>();
-  (activities ?? []).forEach((a) => {
+  visibleActivities.forEach((a) => {
     if (!bySkill.has(a.skill_id)) bySkill.set(a.skill_id, []);
     bySkill.get(a.skill_id)!.push(a);
   });
 
   const totalCount = activities?.length ?? 0;
   const completedCount = completedSet.size;
+  const recommendedCount = (activities ?? []).filter(
+    (a) => recommendedBySkill.get(a.skill_id) === a.band
+  ).length;
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -89,6 +132,74 @@ export default async function ActivitiesPage() {
           </div>
         </div>
       </div>
+
+      {/* Filter toggle */}
+      <div
+        role="tablist"
+        aria-label="Filter activities"
+        className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-lg mb-6"
+      >
+        <Link
+          href="/activities"
+          role="tab"
+          aria-selected={!recommendedOnly}
+          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+            !recommendedOnly
+              ? "bg-white text-gray-700 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Browse all
+          <span className="ml-1.5 text-xs text-gray-400">{totalCount}</span>
+        </Link>
+        <Link
+          href="/activities?filter=recommended"
+          role="tab"
+          aria-selected={recommendedOnly}
+          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+            recommendedOnly
+              ? "bg-white text-asu-maroon shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Recommended for me
+          {latestAttempt && (
+            <span className="ml-1.5 text-xs text-gray-400">
+              {recommendedCount}
+            </span>
+          )}
+        </Link>
+      </div>
+
+      {recommendedOnly && !latestAttempt && (
+        <div className="bg-asu-blue/5 border border-asu-blue/20 rounded-lg p-5 mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-1">
+            Take the self-assessment to get recommendations
+          </h3>
+          <p className="text-sm text-gray-500 mb-3">
+            Answer 14 quick scenarios and we&apos;ll highlight the one
+            bridging activity per skill that will move you up a level.
+          </p>
+          <Link
+            href="/assessment"
+            className="inline-block px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
+          >
+            Start Assessment
+          </Link>
+        </div>
+      )}
+
+      {recommendedOnly && latestAttempt && recommendedCount === 0 && (
+        <div className="bg-asu-green/10 border border-asu-green rounded-lg p-5 mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-1">
+            You&apos;re at Advanced on every skill
+          </h3>
+          <p className="text-sm text-gray-600">
+            No bridging activities left — browse all activities to keep
+            practicing, or retake the assessment.
+          </p>
+        </div>
+      )}
 
       <div className="space-y-6">
         {(skills ?? []).map((skill) => {
