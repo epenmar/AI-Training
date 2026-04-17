@@ -2,20 +2,70 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { DeletePostButton } from "@/components/community/DeletePostButton";
+import { CommunityFilters } from "@/components/community/CommunityFilters";
 
-export default async function CommunityPage() {
+const VALID_BANDS = new Set([
+  "New → Foundational",
+  "Foundational → Intermediate",
+  "Intermediate → Advanced",
+]);
+
+export default async function CommunityPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ skill?: string; band?: string }>;
+}) {
+  const params = await searchParams;
+  const skillFilter = params.skill ? parseInt(params.skill, 10) : null;
+  const bandFilter =
+    params.band && VALID_BANDS.has(params.band) ? params.band : "";
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: posts } = await supabase
+  const { data: allPosts } = await supabase
     .from("community_posts")
     .select("*")
     .order("created_at", { ascending: false });
 
-  const authorIds = Array.from(new Set((posts ?? []).map((p) => p.user_id)));
+  // Activity band lookup for band filtering
+  const postActivityIds = Array.from(
+    new Set(
+      (allPosts ?? [])
+        .map((p) => p.activity_id)
+        .filter((id): id is number => typeof id === "number")
+    )
+  );
+  const { data: activities } =
+    postActivityIds.length > 0
+      ? await supabase
+          .from("level_up_activities")
+          .select("id, band")
+          .in("id", postActivityIds)
+      : { data: [] };
+  const activityBandMap = new Map(
+    (activities ?? []).map((a) => [a.id, a.band])
+  );
+
+  const posts = (allPosts ?? []).filter((p) => {
+    if (
+      skillFilter !== null &&
+      !Number.isNaN(skillFilter) &&
+      p.skill_id !== skillFilter
+    ) {
+      return false;
+    }
+    if (bandFilter) {
+      if (!p.activity_id) return false;
+      if (activityBandMap.get(p.activity_id) !== bandFilter) return false;
+    }
+    return true;
+  });
+
+  const authorIds = Array.from(new Set(posts.map((p) => p.user_id)));
   const { data: profiles } =
     authorIds.length > 0
       ? await supabase
@@ -27,8 +77,12 @@ export default async function CommunityPage() {
 
   const { data: skills } = await supabase
     .from("skills")
-    .select("id, short_name");
+    .select("id, short_name")
+    .order("id");
   const skillMap = new Map((skills ?? []).map((s) => [s.id, s]));
+
+  const hasFilters = skillFilter !== null || !!bandFilter;
+  const totalCount = allPosts?.length ?? 0;
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -51,7 +105,20 @@ export default async function CommunityPage() {
         </Link>
       </div>
 
-      {posts && posts.length > 0 ? (
+      <CommunityFilters
+        skills={skills ?? []}
+        activeSkillId={skillFilter !== null ? String(skillFilter) : ""}
+        activeBand={bandFilter}
+        hasFilters={hasFilters}
+      />
+
+      {hasFilters && (
+        <p className="text-xs text-gray-500 mb-4">
+          Showing {posts.length} of {totalCount} posts
+        </p>
+      )}
+
+      {posts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {posts.map((post) => {
             const author = profileMap.get(post.user_id);
@@ -111,14 +178,19 @@ export default async function CommunityPage() {
                   )}
                 </div>
                 <div className="p-4 flex-1 flex flex-col">
-                  <h3 className="text-base font-semibold text-gray-700">
-                    {post.title}
-                  </h3>
-                  {post.description && (
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-3">
-                      {post.description}
-                    </p>
-                  )}
+                  <Link
+                    href={`/community/${post.id}`}
+                    className="focus:outline-none focus:ring-2 focus:ring-asu-maroon rounded"
+                  >
+                    <h3 className="text-base font-semibold text-gray-700 hover:text-asu-maroon transition-colors">
+                      {post.title}
+                    </h3>
+                    {post.description && (
+                      <p className="text-sm text-gray-500 mt-1 line-clamp-3">
+                        {post.description}
+                      </p>
+                    )}
+                  </Link>
                   <div className="flex items-center flex-wrap gap-2 mt-3">
                     {skill && (
                       <span className="text-xs bg-asu-maroon/10 text-asu-maroon px-2 py-0.5 rounded font-medium">
@@ -134,7 +206,15 @@ export default async function CommunityPage() {
                         day: "numeric",
                       })}
                     </div>
-                    {isOwner && <DeletePostButton postId={post.id} />}
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={`/community/${post.id}`}
+                        className="text-xs font-medium text-asu-maroon hover:underline"
+                      >
+                        View details →
+                      </Link>
+                      {isOwner && <DeletePostButton postId={post.id} />}
+                    </div>
                   </div>
                 </div>
               </article>
@@ -160,12 +240,24 @@ export default async function CommunityPage() {
             </svg>
           </div>
           <p className="text-gray-700 font-medium mb-1">
-            No posts yet — be the first!
+            {hasFilters ? "No posts match these filters" : "No posts yet — be the first!"}
           </p>
           <p className="text-gray-500 text-sm">
-            Use the <span className="font-medium">Share something</span>
-            {" "}button above to post a screenshot or short clip of what
-            you&apos;ve built with AI.
+            {hasFilters ? (
+              <>
+                Try clearing the filters, or{" "}
+                <Link href="/community" className="text-asu-maroon hover:underline font-medium">
+                  see all posts
+                </Link>
+                .
+              </>
+            ) : (
+              <>
+                Use the <span className="font-medium">Share something</span>
+                {" "}button above to post a screenshot or short clip of what
+                you&apos;ve built with AI.
+              </>
+            )}
           </p>
         </div>
       )}

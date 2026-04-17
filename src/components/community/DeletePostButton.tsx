@@ -1,15 +1,21 @@
 "use client";
 
 import { useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { deletePost } from "@/app/(dashboard)/community/actions";
 
 export function DeletePostButton({ postId }: { postId: string }) {
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleClick = () => {
     if (!window.confirm("Delete this post? This cannot be undone.")) return;
     startTransition(async () => {
-      await deletePost(postId);
+      const res = await deletePost(postId);
+      if (res && "success" in res && pathname !== "/community") {
+        router.push("/community");
+      }
     });
   };
 
