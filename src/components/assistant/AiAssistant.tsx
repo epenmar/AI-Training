@@ -5,16 +5,91 @@ import { usePathname } from "next/navigation";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
-const SUGGESTIONS: string[] = [
-  "Suggest a different activity at this level",
-  "Explain this in simpler terms",
-  "Give me a concrete example I can try now",
-  "What tool should I use for this?",
-  "How does this apply to instructional design?",
-];
+function suggestionsForPath(pathname: string): string[] {
+  const path = pathname.split("?")[0].replace(/\/$/, "") || "/";
+
+  if (/^\/activities\/\d+$/.test(path)) {
+    return [
+      "Suggest a different activity at this level",
+      "What tool should I use for this activity?",
+      "Give me a concrete example I can try now",
+      "What does a good finished deliverable look like?",
+      "Explain this activity in simpler terms",
+    ];
+  }
+  if (path === "/activities") {
+    return [
+      "Which activity should I start with?",
+      "What's a quick one I can finish today?",
+      "Suggest something for my weakest skill",
+      "Show me a creative activity",
+    ];
+  }
+  if (/^\/learning-paths\/\d+$/.test(path)) {
+    return [
+      "Summarize this phase in plain language",
+      "Which skill here should I focus on first?",
+      "Give me one small thing to try from this phase",
+      "What comes after this phase?",
+    ];
+  }
+  if (path === "/learning-paths") {
+    return [
+      "Which phase should I start with?",
+      "How long does the whole path take?",
+      "Which phase matches my day-to-day work?",
+    ];
+  }
+  if (path === "/skill-summary") {
+    return [
+      "Which skill should I work on first?",
+      "What's a quick win based on my results?",
+      "Explain what my level means for daily work",
+      "Suggest an activity for my weakest skill",
+    ];
+  }
+  if (/^\/assessment\/results\/.+$/.test(path)) {
+    return [
+      "What should I do first based on these results?",
+      "Explain what my overall band means",
+      "Suggest my next activity",
+    ];
+  }
+  if (path === "/assessment") {
+    return [
+      "How should I approach this quiz?",
+      "What if none of the options fit me exactly?",
+    ];
+  }
+  if (path === "/progress") {
+    return [
+      "How am I doing over time?",
+      "What should I focus on next?",
+    ];
+  }
+  if (path === "/community") {
+    return [
+      "Give me an idea for a post to share",
+      "What's worth sharing here?",
+    ];
+  }
+  if (path === "/account") {
+    return [
+      "How is my data used?",
+      "Where should I start in the dashboard?",
+    ];
+  }
+  return [
+    "Where should I start?",
+    "What's next for me?",
+    "Suggest an activity for today",
+    "What tool should I try first?",
+  ];
+}
 
 export function AiAssistant() {
   const pathname = usePathname();
+  const suggestions = suggestionsForPath(pathname);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -219,7 +294,7 @@ export function AiAssistant() {
           {messages.length === 0 && (
             <div className="px-4 py-2 border-t border-gray-200 bg-white">
               <div className="flex flex-wrap gap-1.5">
-                {SUGGESTIONS.map((s) => (
+                {suggestions.map((s) => (
                   <button
                     key={s}
                     type="button"
