@@ -11,6 +11,43 @@ const BAND_COLORS: Record<string, string> = {
   "Intermediate → Advanced": "bg-asu-gold/15 text-yellow-800",
 };
 
+// Render detailed_help / instruction strings with minimal markdown:
+// **bold**, [text](url). Anything else passes through as plain text.
+function renderRichText(text: string): React.ReactNode[] {
+  const tokenRegex = /\*\*([^*]+)\*\*|\[([^\]]+)\]\(([^)]+)\)/g;
+  const out: React.ReactNode[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+  while ((match = tokenRegex.exec(text)) !== null) {
+    if (match.index > last) {
+      out.push(text.slice(last, match.index));
+    }
+    if (match[1] !== undefined) {
+      out.push(
+        <strong key={`b${key++}`} className="font-semibold text-gray-700">
+          {match[1]}
+        </strong>
+      );
+    } else if (match[2] !== undefined && match[3] !== undefined) {
+      out.push(
+        <a
+          key={`a${key++}`}
+          href={match[3]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-asu-maroon underline hover:opacity-80"
+        >
+          {match[2]}
+        </a>
+      );
+    }
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
 export default async function ActivityDetailPage({
   params,
 }: {
@@ -189,7 +226,7 @@ export default async function ActivityDetailPage({
                           More details &amp; examples
                         </summary>
                         <div className="mt-2 text-sm text-gray-600 whitespace-pre-line border-l-2 border-asu-maroon/20 pl-3">
-                          {step.detailed_help}
+                          {renderRichText(step.detailed_help ?? "")}
                         </div>
                       </details>
                     )}
