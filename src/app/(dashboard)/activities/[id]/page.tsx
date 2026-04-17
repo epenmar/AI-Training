@@ -62,6 +62,11 @@ export default async function ActivityDetailPage({
   const bandClass =
     BAND_COLORS[activity.band] ?? "bg-gray-100 text-gray-600";
 
+  // Split off the optional extension (not counted in time_estimate)
+  const [coreDescription, extension] = (activity.description ?? "").split(
+    "\n\nOptional extension: "
+  );
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Back link */}
@@ -123,8 +128,22 @@ export default async function ActivityDetailPage({
           )}
         </div>
         <h2 className="text-2xl font-bold text-gray-700">{activity.title}</h2>
-        <p className="text-gray-600 mt-2">{activity.description}</p>
+        <p className="text-gray-600 mt-2">{coreDescription}</p>
       </div>
+
+      {/* Optional extension — doesn't count toward the 30-min estimate */}
+      {extension && (
+        <div className="bg-asu-gold/10 border-l-4 border-asu-gold rounded-r-lg p-4 mb-6">
+          <p className="text-xs font-semibold text-yellow-800 uppercase tracking-wide mb-1">
+            Optional extension
+          </p>
+          <p className="text-sm text-gray-700">{extension}</p>
+          <p className="text-xs text-gray-500 mt-2 italic">
+            Not included in the {activity.time_estimate} estimate above — for
+            anyone who wants to go further.
+          </p>
+        </div>
+      )}
 
       {/* Deliverable */}
       {activity.deliverable && (

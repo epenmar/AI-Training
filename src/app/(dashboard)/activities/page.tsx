@@ -160,7 +160,9 @@ export default async function ActivitiesPage() {
                         {activity.title}
                       </h4>
                       <p className="text-sm text-gray-500 line-clamp-2 mb-2">
-                        {activity.description}
+                        {(activity.description ?? "").split(
+                          "\n\nOptional extension: "
+                        )[0]}
                       </p>
                       {activity.time_estimate && (
                         <p className="text-xs text-gray-400 flex items-center gap-1">
