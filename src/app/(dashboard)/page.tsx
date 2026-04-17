@@ -264,127 +264,52 @@ export default async function DashboardHome() {
         </Link>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Primary action column */}
-        <div className="lg:col-span-2 space-y-5">
-          {/* Quick links */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-700 mb-3">
-              Explore
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Link
-                href="/progress"
-                className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
-              >
-                <p className="text-sm font-semibold text-gray-700">
-                  Progress over time
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  See how scores have changed
-                </p>
-              </Link>
-              <Link
-                href="/learning-paths"
-                className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
-              >
-                <p className="text-sm font-semibold text-gray-700">
-                  Learning paths
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  9 Bloom phases, 107+ items
-                </p>
-              </Link>
-              <Link
-                href="/activities"
-                className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
-              >
-                <p className="text-sm font-semibold text-gray-700">
-                  All activities
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  42 hands-on projects
-                </p>
-              </Link>
-              <Link
-                href="/slack"
-                className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
-              >
-                <p className="text-sm font-semibold text-gray-700">
-                  Slack channels
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Team conversations
-                </p>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Community sidebar */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-              Recent Community Posts
-            </h3>
-            <Link
-              href="/community"
-              className="text-xs text-asu-maroon hover:underline font-medium"
-            >
-              View all →
-            </Link>
-          </div>
-          {recentPosts && recentPosts.length > 0 ? (
-            <ul className="space-y-3">
-              {recentPosts.map((post) => (
-                <li
-                  key={post.id}
-                  className="flex gap-3 pb-3 last:pb-0 last:border-0 border-b border-gray-100"
-                >
-                  {post.media_type === "image" ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={post.media_url}
-                      alt=""
-                      className="w-16 h-16 rounded object-cover flex-shrink-0"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <svg
-                        className="w-6 h-6 text-gray-400"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-700 line-clamp-2">
-                      {post.title}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(post.created_at).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="text-center py-6">
-              <p className="text-sm text-gray-500 mb-2">No posts yet</p>
-              <Link
-                href="/community/new"
-                className="text-xs text-asu-maroon hover:underline font-medium"
-              >
-                Share the first one →
-              </Link>
-            </div>
-          )}
+      {/* Quick links */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-700 mb-3">Explore</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <Link
+            href="/progress"
+            className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-sm font-semibold text-gray-700">
+              Progress over time
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              See how scores have changed
+            </p>
+          </Link>
+          <Link
+            href="/learning-paths"
+            className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-sm font-semibold text-gray-700">
+              Learning paths
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              9 Bloom phases, 107+ items
+            </p>
+          </Link>
+          <Link
+            href="/activities"
+            className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-sm font-semibold text-gray-700">
+              All activities
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              42 hands-on projects
+            </p>
+          </Link>
+          <Link
+            href="/slack"
+            className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-sm font-semibold text-gray-700">
+              Slack channels
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Team conversations</p>
+          </Link>
         </div>
       </div>
     </div>
