@@ -132,44 +132,46 @@ export default async function ActivityDetailPage({
         <p className="text-gray-600 mt-2">{coreDescription}</p>
       </div>
 
-      {/* Optional extension — doesn't count toward the 30-min estimate */}
-      {extension && (
-        <div className="bg-asu-gold/10 border-l-4 border-asu-gold rounded-r-lg p-4 mb-6">
-          <p className="text-xs font-semibold text-yellow-800 uppercase tracking-wide mb-1">
-            Optional extension
-          </p>
-          <p className="text-sm text-gray-700">{extension}</p>
-          <p className="text-xs text-gray-500 mt-2 italic">
-            Not included in the {activity.time_estimate} estimate above — for
-            anyone who wants to go further.
-          </p>
-        </div>
-      )}
-
       {/* AI tool suggester */}
       <ToolSuggester activityId={activityId} />
 
       {/* Steps */}
-      {steps && steps.length > 0 && (
+      {((steps && steps.length > 0) || extension) && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-700 mb-3">
             Step-by-step
           </h3>
-          <ol className="space-y-3">
-            {steps.map((step) => (
-              <li
-                key={step.id}
-                className="bg-white border border-gray-200 rounded-lg p-4 flex gap-3"
-              >
-                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-asu-maroon text-white text-sm font-bold flex items-center justify-center">
-                  {step.step_number}
-                </span>
-                <p className="text-sm text-gray-700 whitespace-pre-line flex-1">
-                  {step.instruction}
-                </p>
-              </li>
-            ))}
-          </ol>
+          {steps && steps.length > 0 && (
+            <ol className="space-y-3">
+              {steps.map((step) => (
+                <li
+                  key={step.id}
+                  className="bg-white border border-gray-200 rounded-lg p-4 flex gap-3"
+                >
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-asu-maroon text-white text-sm font-bold flex items-center justify-center">
+                    {step.step_number}
+                  </span>
+                  <p className="text-sm text-gray-700 whitespace-pre-line flex-1">
+                    {step.instruction}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          )}
+
+          {/* Optional extension — shown at the end of the steps, not counted in the time estimate */}
+          {extension && (
+            <div className="mt-3 bg-asu-gold/10 border-l-4 border-asu-gold rounded-r-lg p-4">
+              <p className="text-xs font-semibold text-yellow-800 uppercase tracking-wide mb-1">
+                Optional extension
+              </p>
+              <p className="text-sm text-gray-700">{extension}</p>
+              <p className="text-xs text-gray-500 mt-2 italic">
+                Not included in the {activity.time_estimate} estimate above —
+                for anyone who wants to go further.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
