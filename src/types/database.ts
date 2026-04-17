@@ -245,6 +245,7 @@ export interface Database {
           email: string;
           display_name: string | null;
           avatar_url: string | null;
+          is_admin: boolean;
           created_at: string;
         };
         Insert: {
@@ -252,12 +253,14 @@ export interface Database {
           email: string;
           display_name?: string | null;
           avatar_url?: string | null;
+          is_admin?: boolean;
           created_at?: string;
         };
         Update: {
           email?: string;
           display_name?: string | null;
           avatar_url?: string | null;
+          is_admin?: boolean;
         };
         Relationships: [];
       };

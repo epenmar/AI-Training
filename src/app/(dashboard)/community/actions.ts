@@ -16,7 +16,16 @@ export async function deletePost(postId: string) {
     .select("media_url, user_id")
     .eq("id", postId)
     .single();
-  if (!post || post.user_id !== user.id) return { error: "Not allowed" };
+  if (!post) return { error: "Post not found" };
+
+  if (post.user_id !== user.id) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+    if (!profile?.is_admin) return { error: "Not allowed" };
+  }
 
   // Strip the public URL prefix to get the storage path
   const match = post.media_url.match(/community-media\/(.+)$/);

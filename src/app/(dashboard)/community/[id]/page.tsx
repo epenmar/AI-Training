@@ -29,32 +29,41 @@ export default async function CommunityPostPage({
     .maybeSingle();
   if (!post) notFound();
 
-  const [{ data: author }, { data: skill }, { data: activity }] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select("display_name, email, avatar_url")
-        .eq("id", post.user_id)
-        .single(),
-      post.skill_id
-        ? supabase
-            .from("skills")
-            .select("id, short_name, statement")
-            .eq("id", post.skill_id)
-            .single()
-        : Promise.resolve({ data: null }),
-      post.activity_id
-        ? supabase
-            .from("level_up_activities")
-            .select("id, title, band")
-            .eq("id", post.activity_id)
-            .single()
-        : Promise.resolve({ data: null }),
-    ]);
+  const [
+    { data: author },
+    { data: skill },
+    { data: activity },
+    { data: viewerProfile },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name, email, avatar_url")
+      .eq("id", post.user_id)
+      .single(),
+    post.skill_id
+      ? supabase
+          .from("skills")
+          .select("id, short_name, statement")
+          .eq("id", post.skill_id)
+          .single()
+      : Promise.resolve({ data: null }),
+    post.activity_id
+      ? supabase
+          .from("level_up_activities")
+          .select("id, title, band")
+          .eq("id", post.activity_id)
+          .single()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single(),
+  ]);
 
   const authorName =
     author?.display_name || author?.email?.split("@")[0] || "Anonymous";
-  const isOwner = post.user_id === user.id;
+  const canDelete = post.user_id === user.id || !!viewerProfile?.is_admin;
   const bandClass = activity ? BAND_COLORS[activity.band] : null;
   const fileExt = post.media_url.split(".").pop()?.toUpperCase() ?? "FILE";
 
@@ -201,7 +210,7 @@ export default async function CommunityPostPage({
                 year: "numeric",
               })}
             </div>
-            {isOwner && <DeletePostButton postId={post.id} />}
+            {canDelete && <DeletePostButton postId={post.id} />}
           </div>
         </div>
       </article>

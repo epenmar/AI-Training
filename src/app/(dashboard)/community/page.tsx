@@ -26,10 +26,18 @@ export default async function CommunityPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: allPosts } = await supabase
-    .from("community_posts")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [{ data: allPosts }, { data: viewerProfile }] = await Promise.all([
+    supabase
+      .from("community_posts")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single(),
+  ]);
+  const isAdmin = !!viewerProfile?.is_admin;
 
   // Activity band lookup for band filtering
   const postActivityIds = Array.from(
@@ -125,7 +133,7 @@ export default async function CommunityPage({
             const authorName =
               author?.display_name || author?.email?.split("@")[0] || "Anonymous";
             const skill = post.skill_id ? skillMap.get(post.skill_id) : null;
-            const isOwner = post.user_id === user.id;
+            const canDelete = post.user_id === user.id || isAdmin;
             return (
               <article
                 key={post.id}
@@ -238,7 +246,7 @@ export default async function CommunityPage({
                       >
                         View details →
                       </Link>
-                      {isOwner && <DeletePostButton postId={post.id} />}
+                      {canDelete && <DeletePostButton postId={post.id} />}
                     </div>
                   </div>
                 </div>
