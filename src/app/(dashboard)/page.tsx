@@ -13,7 +13,7 @@ export default async function DashboardHome() {
   const [
     { data: latestAttempt },
     { data: completions },
-    { count: totalActivities },
+    { data: allActivities },
     { data: recentPosts },
   ] = await Promise.all([
     supabase
@@ -27,9 +27,7 @@ export default async function DashboardHome() {
       .from("user_activity_completions")
       .select("activity_id")
       .eq("user_id", user.id),
-    supabase
-      .from("level_up_activities")
-      .select("*", { count: "exact", head: true }),
+    supabase.from("level_up_activities").select("id, skill_id"),
     supabase
       .from("community_posts")
       .select("id, title, media_url, media_type, user_id, created_at")
@@ -37,10 +35,17 @@ export default async function DashboardHome() {
       .limit(3),
   ]);
 
-  const completedCount = completions?.length ?? 0;
-  const activityPct = totalActivities
-    ? Math.round((completedCount / totalActivities) * 100)
-    : 0;
+  const TOTAL_SKILLS = 14;
+  const activitySkillMap = new Map(
+    (allActivities ?? []).map((a) => [a.id, a.skill_id])
+  );
+  const skillsWithProgress = new Set<number>();
+  for (const c of completions ?? []) {
+    const skillId = activitySkillMap.get(c.activity_id);
+    if (skillId) skillsWithProgress.add(skillId);
+  }
+  const skillsCovered = skillsWithProgress.size;
+  const skillsPct = Math.round((skillsCovered / TOTAL_SKILLS) * 100);
 
   // Suggest a next activity — any incomplete activity in the skill that scored lowest
   const completedSet = new Set(
@@ -84,6 +89,74 @@ export default async function DashboardHome() {
     user.email?.split("@")[0] ||
     "there";
 
+  const primaryCta = !latestAttempt ? (
+    <div className="bg-asu-maroon text-white rounded-lg p-6">
+      <h3 className="text-lg font-bold mb-1">
+        Take your first self-assessment
+      </h3>
+      <p className="text-sm opacity-90 mb-4">
+        14 scenario questions. About 10 minutes. You&apos;ll get a per-skill
+        breakdown and tailored next steps.
+      </p>
+      <Link
+        href="/assessment"
+        className="inline-block bg-white text-asu-maroon px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-gray-100 transition-colors"
+      >
+        Start Assessment
+      </Link>
+    </div>
+  ) : suggestedActivity ? (
+    <div className="bg-white border-2 border-asu-maroon rounded-lg p-6">
+      <p className="text-xs uppercase tracking-wide text-asu-maroon font-semibold mb-1">
+        Suggested next activity
+      </p>
+      <h3 className="text-lg font-bold text-gray-700 mb-1">
+        {suggestedActivity.title}
+      </h3>
+      <p className="text-sm text-gray-500 mb-4">
+        Based on your lowest scoring skill from the last assessment.
+      </p>
+      <div className="flex gap-2 flex-wrap">
+        <Link
+          href={`/activities/${suggestedActivity.id}`}
+          className="px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
+        >
+          Open activity
+        </Link>
+        <Link
+          href="/activities"
+          className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Browse all
+        </Link>
+      </div>
+    </div>
+  ) : (
+    <div className="bg-asu-green/10 border border-asu-green rounded-lg p-6">
+      <h3 className="text-lg font-bold text-gray-700 mb-1">
+        Great work — you&apos;ve covered every skill!
+      </h3>
+      <p className="text-sm text-gray-600 mb-4">
+        Retake the assessment to see how far you&apos;ve come, or browse more
+        activities.
+      </p>
+      <div className="flex gap-2 flex-wrap">
+        <Link
+          href="/assessment"
+          className="inline-block px-5 py-2.5 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
+        >
+          Retake Assessment
+        </Link>
+        <Link
+          href="/activities"
+          className="inline-block px-5 py-2.5 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Browse activities
+        </Link>
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Welcome */}
@@ -97,6 +170,9 @@ export default async function DashboardHome() {
             : "Start with a self-assessment to see where you stand across 14 AI skills."}
         </p>
       </section>
+
+      {/* Primary CTA — top priority */}
+      {primaryCta}
 
       {/* Top stats */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -124,18 +200,23 @@ export default async function DashboardHome() {
 
         <div className="bg-white rounded-lg border border-gray-200 p-5">
           <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-            Activities Completed
+            Skills Practiced
           </p>
           <p className="text-2xl font-bold text-asu-maroon mt-1">
-            {completedCount}
+            {skillsCovered}
             <span className="text-sm font-normal text-gray-400">
-              /{totalActivities ?? 0}
+              /{TOTAL_SKILLS}
             </span>
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {skillsCovered === 0
+              ? "Complete one activity per skill"
+              : "Skills with at least one activity done"}
           </p>
           <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
             <div
               className="bg-asu-green h-1.5 rounded-full transition-all"
-              style={{ width: `${activityPct}%` }}
+              style={{ width: `${skillsPct}%` }}
             />
           </div>
         </div>
@@ -168,66 +249,6 @@ export default async function DashboardHome() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Primary action column */}
         <div className="lg:col-span-2 space-y-5">
-          {/* Primary CTA */}
-          {!latestAttempt ? (
-            <div className="bg-asu-maroon text-white rounded-lg p-6">
-              <h3 className="text-lg font-bold mb-1">
-                Take your first self-assessment
-              </h3>
-              <p className="text-sm opacity-90 mb-4">
-                14 scenario questions. About 10 minutes. You&apos;ll get a
-                per-skill breakdown and tailored next steps.
-              </p>
-              <Link
-                href="/assessment"
-                className="inline-block bg-white text-asu-maroon px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-gray-100 transition-colors"
-              >
-                Start Assessment
-              </Link>
-            </div>
-          ) : suggestedActivity ? (
-            <div className="bg-white border-2 border-asu-maroon rounded-lg p-6">
-              <p className="text-xs uppercase tracking-wide text-asu-maroon font-semibold mb-1">
-                Suggested next activity
-              </p>
-              <h3 className="text-lg font-bold text-gray-700 mb-1">
-                {suggestedActivity.title}
-              </h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Based on your lowest scoring skill from the last assessment.
-              </p>
-              <div className="flex gap-2 flex-wrap">
-                <Link
-                  href={`/activities/${suggestedActivity.id}`}
-                  className="px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
-                >
-                  Open activity
-                </Link>
-                <Link
-                  href="/activities"
-                  className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Browse all
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-asu-green/10 border border-asu-green rounded-lg p-6">
-              <h3 className="text-lg font-bold text-gray-700 mb-1">
-                Great work — all suggested activities complete!
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Retake the assessment to see how far you&apos;ve come.
-              </p>
-              <Link
-                href="/assessment"
-                className="inline-block px-5 py-2.5 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
-              >
-                Retake Assessment
-              </Link>
-            </div>
-          )}
-
           {/* Quick links */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-3">
