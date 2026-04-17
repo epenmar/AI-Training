@@ -96,10 +96,18 @@ export default async function ActivitiesPage({
   });
 
   const totalCount = activities?.length ?? 0;
-  const completedCount = completedSet.size;
-  const recommendedCount = (activities ?? []).filter(
+  const recommendedActivities = (activities ?? []).filter(
     (a) => recommendedBySkill.get(a.skill_id) === a.band
+  );
+  const recommendedCount = recommendedActivities.length;
+  const recommendedCompletedCount = recommendedActivities.filter((a) =>
+    completedSet.has(a.id)
   ).length;
+
+  const scopedDenominator = recommendedOnly ? recommendedCount : totalCount;
+  const scopedNumerator = recommendedOnly
+    ? recommendedCompletedCount
+    : completedSet.size;
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -115,10 +123,10 @@ export default async function ActivitiesPage({
         <div className="bg-white rounded-lg border border-gray-200 px-5 py-3 flex items-center gap-4">
           <div className="text-center">
             <p className="text-2xl font-bold text-asu-maroon">
-              {completedCount}
+              {scopedNumerator}
             </p>
             <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">
-              of {totalCount}
+              of {scopedDenominator}
             </p>
           </div>
           <div
@@ -126,8 +134,8 @@ export default async function ActivitiesPage({
             aria-hidden="true"
           />
           <div className="text-sm text-gray-500">
-            {totalCount > 0
-              ? `${Math.round((completedCount / totalCount) * 100)}% complete`
+            {scopedDenominator > 0
+              ? `${Math.round((scopedNumerator / scopedDenominator) * 100)}% complete`
               : "No activities yet"}
           </div>
         </div>
