@@ -366,14 +366,10 @@ export function AssessmentFlow({ questions }: Props) {
                     value={opt.option_key}
                     checked={isSelected}
                     onChange={() => selectOption(q.id, opt.option_key)}
+                    autoComplete="off"
                     className="mt-1 accent-asu-maroon"
                   />
-                  <div>
-                    <span className="text-gray-700">{opt.option_text}</span>
-                    <span className="block text-xs text-gray-400 mt-1">
-                      {opt.level_label}
-                    </span>
-                  </div>
+                  <span className="text-gray-700">{opt.option_text}</span>
                 </label>
               );
             })}
