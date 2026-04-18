@@ -35,7 +35,7 @@ export default async function DashboardLayout({
         />
         <main
           id="main-content"
-          className="flex-1 overflow-y-auto bg-gray-100 p-6"
+          className="flex-1 overflow-y-auto bg-gray-100 p-6 pb-28 sm:pb-6"
         >
           {children}
         </main>
