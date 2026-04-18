@@ -25,9 +25,9 @@ export default async function DashboardLayout({
     .single();
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex min-h-screen md:h-screen md:overflow-hidden">
       <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col md:overflow-hidden">
         <TopNav
           email={user.email ?? ""}
           displayName={profile?.display_name ?? user.email ?? "User"}
@@ -35,7 +35,7 @@ export default async function DashboardLayout({
         />
         <main
           id="main-content"
-          className="flex-1 overflow-y-auto bg-gray-100 p-6 pb-28 sm:pb-6"
+          className="flex-1 bg-gray-100 p-6 pb-28 sm:pb-6 md:overflow-y-auto"
         >
           {children}
         </main>
