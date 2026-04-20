@@ -121,7 +121,7 @@ function FilterDropdown({
                     onChange(o.value);
                     setOpen(false);
                   }}
-                  className={`w-full text-left text-sm px-2.5 py-1.5 truncate cursor-pointer ${
+                  className={`w-full text-left text-sm px-2.5 py-1.5 whitespace-normal break-words cursor-pointer ${
                     isSelected
                       ? "bg-asu-maroon/10 text-asu-maroon font-medium"
                       : "text-gray-700 hover:bg-gray-100"
@@ -175,7 +175,7 @@ export function CommunityFilters({
         options={skillOptions}
         placeholder="All skills"
         onChange={(v) => pushParams({ skill: v })}
-        widthClass="sm:w-80"
+        widthClass="sm:w-72"
       />
 
       <FilterDropdown
@@ -185,7 +185,7 @@ export function CommunityFilters({
         options={BAND_OPTIONS}
         placeholder="All levels"
         onChange={(v) => pushParams({ band: v })}
-        widthClass="sm:w-80"
+        widthClass="sm:w-72"
       />
 
       {hasFilters && (

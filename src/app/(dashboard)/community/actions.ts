@@ -194,3 +194,82 @@ export async function updatePost(input: UpdatePostInput) {
   revalidatePath(`/community/${input.postId}`);
   redirect(`/community/${input.postId}`);
 }
+
+type AddCommentInput = {
+  postId: string;
+  body: string;
+  anonymous: boolean;
+  parentCommentId: string | null;
+};
+
+export async function addComment(input: AddCommentInput) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in" };
+
+  const body = input.body?.trim();
+  if (!body) return { error: "Say something first" };
+  if (body.length > 2000) return { error: "Keep it under 2000 characters" };
+
+  if (input.parentCommentId) {
+    const { data: parent } = await supabase
+      .from("community_post_comments")
+      .select("id, post_id, parent_comment_id")
+      .eq("id", input.parentCommentId)
+      .single();
+    if (!parent) return { error: "Parent comment not found" };
+    if (parent.post_id !== input.postId) return { error: "Invalid parent" };
+    if (parent.parent_comment_id) {
+      return { error: "Replies can only be one level deep" };
+    }
+  }
+
+  const { error } = await supabase.from("community_post_comments").insert({
+    post_id: input.postId,
+    user_id: user.id,
+    parent_comment_id: input.parentCommentId,
+    body,
+    anonymous: input.anonymous,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath(`/community/${input.postId}`);
+  revalidatePath("/community");
+  return { success: true };
+}
+
+export async function deleteComment(commentId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in" };
+
+  const { data: comment } = await supabase
+    .from("community_post_comments")
+    .select("id, post_id, user_id")
+    .eq("id", commentId)
+    .single();
+  if (!comment) return { error: "Comment not found" };
+
+  if (comment.user_id !== user.id) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+    if (!profile?.is_admin) return { error: "Not allowed" };
+  }
+
+  const { error } = await supabase
+    .from("community_post_comments")
+    .delete()
+    .eq("id", commentId);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/community/${comment.post_id}`);
+  revalidatePath("/community");
+  return { success: true };
+}

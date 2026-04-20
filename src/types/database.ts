@@ -372,6 +372,31 @@ export interface Database {
         };
         Relationships: [];
       };
+      community_post_comments: {
+        Row: {
+          id: string;
+          post_id: string;
+          user_id: string;
+          parent_comment_id: string | null;
+          body: string;
+          anonymous: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          post_id: string;
+          user_id: string;
+          parent_comment_id?: string | null;
+          body: string;
+          anonymous?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          body?: string;
+          anonymous?: boolean;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -394,3 +419,4 @@ export type AssessmentAttempt = Database["public"]["Tables"]["assessment_attempt
 export type AssessmentResponse = Database["public"]["Tables"]["assessment_responses"]["Row"];
 export type UserActivityCompletion = Database["public"]["Tables"]["user_activity_completions"]["Row"];
 export type CommunityPost = Database["public"]["Tables"]["community_posts"]["Row"];
+export type CommunityPostComment = Database["public"]["Tables"]["community_post_comments"]["Row"];

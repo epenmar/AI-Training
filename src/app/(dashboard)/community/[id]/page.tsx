@@ -3,6 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { DeletePostButton } from "@/components/community/DeletePostButton";
 import {
+  CommentSection,
+  type CommentAuthor,
+} from "@/components/community/CommentSection";
+import {
   getDomain,
   getEmbedUrl,
   getOfficeEmbedUrl,
@@ -40,6 +44,7 @@ export default async function CommunityPostPage({
     { data: skill },
     { data: activity },
     { data: viewerProfile },
+    { data: commentsData },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -65,7 +70,30 @@ export default async function CommunityPostPage({
       .select("is_admin")
       .eq("id", user.id)
       .single(),
+    supabase
+      .from("community_post_comments")
+      .select("id, user_id, parent_comment_id, body, anonymous, created_at")
+      .eq("post_id", id)
+      .order("created_at", { ascending: true }),
   ]);
+
+  const comments = commentsData ?? [];
+  const commenterIds = Array.from(new Set(comments.map((c) => c.user_id)));
+  const { data: commenterProfiles } =
+    commenterIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url")
+          .in("id", commenterIds)
+      : { data: [] };
+  const commentAuthors: Record<string, CommentAuthor> = {};
+  for (const p of commenterProfiles ?? []) {
+    commentAuthors[p.id] = {
+      id: p.id,
+      display_name: p.display_name,
+      avatar_url: p.avatar_url,
+    };
+  }
 
   const showName = !post.anonymous && author?.display_name;
   const authorName = showName ? author.display_name : "Anonymous";
@@ -347,6 +375,14 @@ export default async function CommunityPostPage({
           </div>
         </div>
       </article>
+
+      <CommentSection
+        postId={post.id}
+        comments={comments}
+        authors={commentAuthors}
+        currentUserId={user.id}
+        isAdmin={!!viewerProfile?.is_admin}
+      />
     </div>
   );
 }
