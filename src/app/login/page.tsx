@@ -4,36 +4,32 @@ import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "redirecting" | "error">(
+    "idle"
+  );
   const [errorMsg, setErrorMsg] = useState("");
 
   const isTestMode = process.env.NEXT_PUBLIC_ALLOW_TEST_ACCOUNTS === "true";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGoogleSignIn = async () => {
     setErrorMsg("");
-
-    // Domain check
-    if (!isTestMode && !email.endsWith("@asu.edu")) {
-      setErrorMsg("Please use your @asu.edu email address.");
-      return;
-    }
-
-    setStatus("sending");
+    setStatus("redirecting");
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback`,
+        // Hint Google to scope the account chooser to ASU. Not a
+        // hard gate — the server-side callback also rejects non-ASU
+        // emails — but it keeps personal Google accounts out of the
+        // chooser for users signed into both.
+        queryParams: isTestMode ? {} : { hd: "asu.edu" },
       },
     });
 
     if (error) {
       setStatus("error");
       setErrorMsg(error.message);
-    } else {
-      setStatus("sent");
     }
   };
 
@@ -66,81 +62,61 @@ export default function LoginPage() {
 
         {/* Login Card */}
         <div className="bg-white rounded-lg shadow-md p-8">
-          {status === "sent" ? (
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-asu-green"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-lg font-semibold text-gray-700 mb-2">
-                Check your email
-              </h2>
-              <p className="text-gray-500 text-sm mb-4">
-                We sent a sign-in link to <strong>{email}</strong>.
-                Click the link in the email to access the dashboard.
-              </p>
-              <button
-                onClick={() => { setStatus("idle"); setEmail(""); }}
-                className="text-sm text-asu-blue hover:underline cursor-pointer"
-              >
-                Use a different email
-              </button>
-            </div>
-          ) : (
-            <>
-              <h2 className="text-lg font-semibold text-gray-700 mb-4 text-center">
-                Sign in to continue
-              </h2>
-              <form onSubmit={handleSubmit}>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={isTestMode ? "you@example.com" : "you@asu.edu"}
-                  className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:border-asu-maroon transition-colors"
-                  disabled={status === "sending"}
-                  autoComplete="email"
-                />
-                {errorMsg && (
-                  <p className="text-sm text-red-600 mt-2" role="alert">{errorMsg}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={status === "sending"}
-                  className="w-full mt-4 bg-asu-maroon text-white rounded-lg px-6 py-3 font-medium hover:bg-sidebar-hover transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {status === "sending" ? "Sending link..." : "Send sign-in link"}
-                </button>
-              </form>
-              <div className="mt-4 text-center">
-                <p className="text-xs text-gray-400">
-                  No password needed — we&apos;ll email you a sign-in link
-                </p>
-                {isTestMode && (
-                  <p className="text-xs text-asu-orange mt-1 font-medium">
-                    Test mode: any email accepted
-                  </p>
-                )}
-              </div>
-            </>
+          <h2 className="text-lg font-semibold text-gray-700 mb-5 text-center">
+            Sign in to continue
+          </h2>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={status === "redirecting"}
+            className="w-full flex items-center justify-center gap-3 border-2 border-gray-200 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 hover:border-asu-maroon hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg
+              className="w-5 h-5"
+              viewBox="0 0 18 18"
+              aria-hidden="true"
+            >
+              <path
+                fill="#4285F4"
+                d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+              />
+              <path
+                fill="#34A853"
+                d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"
+              />
+              <path
+                fill="#EA4335"
+                d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"
+              />
+            </svg>
+            <span>
+              {status === "redirecting"
+                ? "Redirecting to Google…"
+                : "Continue with Google"}
+            </span>
+          </button>
+
+          {errorMsg && (
+            <p className="text-sm text-red-600 mt-3" role="alert">
+              {errorMsg}
+            </p>
           )}
+
+          <div className="mt-5 text-center space-y-1">
+            <p className="text-xs text-gray-400">
+              Use your @asu.edu Google account.
+            </p>
+            {isTestMode && (
+              <p className="text-xs text-asu-orange font-medium">
+                Test mode: non-ASU accounts accepted
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
