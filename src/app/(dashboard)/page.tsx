@@ -228,7 +228,7 @@ export default async function DashboardHome() {
           className="bg-asu-green text-white rounded-lg p-5 hover:bg-asu-green/90 transition-colors"
         >
           <p className="text-xs uppercase tracking-wide font-medium opacity-80">
-            Skills Practiced
+            My Activities
           </p>
           <p className="text-2xl font-bold mt-1">
             {skillsCovered}
