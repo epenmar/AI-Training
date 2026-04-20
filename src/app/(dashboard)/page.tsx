@@ -29,7 +29,7 @@ export default async function DashboardHome() {
       .from("user_activity_completions")
       .select("activity_id")
       .eq("user_id", user.id),
-    supabase.from("level_up_activities").select("id, skill_id"),
+    supabase.from("level_up_activities").select("id, title, skill_id, band"),
     supabase
       .from("community_posts")
       .select("id, title, media_url, media_type, user_id, created_at")
@@ -40,24 +40,14 @@ export default async function DashboardHome() {
       .select("id", { count: "exact", head: true }),
   ]);
 
-  const TOTAL_SKILLS = 14;
-  const activitySkillMap = new Map(
-    (allActivities ?? []).map((a) => [a.id, a.skill_id])
-  );
-  const skillsWithProgress = new Set<number>();
-  for (const c of completions ?? []) {
-    const skillId = activitySkillMap.get(c.activity_id);
-    if (skillId) skillsWithProgress.add(skillId);
-  }
-  const skillsCovered = skillsWithProgress.size;
-  const skillsPct = Math.round((skillsCovered / TOTAL_SKILLS) * 100);
-
-  // Suggest a next activity — pick the lowest-scoring skill's band-matched
-  // bridging activity (the one that takes them from their current level to
-  // the next). Fall back to the next-lowest skill if that one is already done.
   const completedSet = new Set(
     (completions ?? []).map((c) => c.activity_id)
   );
+
+  // Compute the user's recommended activities (activities matching each
+  // target skill's bridging band from their latest assessment). The green
+  // card shows progress against this personalized set, not all 14 skills.
+  const recommendedBySkill = new Map<number, string>();
   let suggestedActivity: {
     id: number;
     title: string;
@@ -75,20 +65,36 @@ export default async function DashboardHome() {
     ]);
     const qSkillMap = new Map((questions ?? []).map((q) => [q.id, q.skill_id]));
     const targets = buildRecommendations(responses ?? [], qSkillMap);
+    for (const t of targets) {
+      recommendedBySkill.set(t.skillId, t.band);
+    }
 
     for (const target of targets) {
-      const { data: acts } = await supabase
-        .from("level_up_activities")
-        .select("id, title, band, skill_id")
-        .eq("skill_id", target.skillId)
-        .eq("band", target.band);
-      const incomplete = (acts ?? []).find((a) => !completedSet.has(a.id));
-      if (incomplete) {
-        suggestedActivity = incomplete;
+      const match = (allActivities ?? []).find(
+        (a) =>
+          a.skill_id === target.skillId &&
+          a.band === target.band &&
+          !completedSet.has(a.id)
+      );
+      if (match) {
+        suggestedActivity = match;
         break;
       }
     }
   }
+
+  const recommendedActivities = latestAttempt
+    ? (allActivities ?? []).filter(
+        (a) => recommendedBySkill.get(a.skill_id) === a.band
+      )
+    : (allActivities ?? []);
+  const recommendedCount = recommendedActivities.length;
+  const recommendedCompletedCount = recommendedActivities.filter((a) =>
+    completedSet.has(a.id)
+  ).length;
+  const recommendedPct = recommendedCount
+    ? Math.round((recommendedCompletedCount / recommendedCount) * 100)
+    : 0;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -231,9 +237,9 @@ export default async function DashboardHome() {
             My Activities
           </p>
           <p className="text-2xl font-bold mt-1">
-            {skillsCovered}
+            {recommendedCompletedCount}
             <span className="text-sm font-normal opacity-70">
-              /{TOTAL_SKILLS}
+              /{recommendedCount}
             </span>
           </p>
           <p className="text-xs opacity-80 mt-0.5">
@@ -244,7 +250,7 @@ export default async function DashboardHome() {
           <div className="mt-2 w-full bg-white/25 rounded-full h-1.5">
             <div
               className="bg-white h-1.5 rounded-full transition-all"
-              style={{ width: `${skillsPct}%` }}
+              style={{ width: `${recommendedPct}%` }}
             />
           </div>
         </Link>
