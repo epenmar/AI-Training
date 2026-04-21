@@ -1,7 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { buildRecommendations } from "@/lib/recommendations";
+import {
+  buildRecommendations,
+  type RecommendationTarget,
+} from "@/lib/recommendations";
+import {
+  RecommendedRoadmap,
+  type RoadmapWaypoint,
+} from "@/components/activities/RecommendedRoadmap";
 
 const BAND_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   "New → Foundational": {
@@ -71,6 +78,7 @@ export default async function ActivitiesPage({
     filter === "recommended" || (filter !== "all" && !!latestAttempt);
 
   const recommendedBySkill = new Map<number, string>();
+  let targets: RecommendationTarget[] = [];
   if (latestAttempt) {
     const [{ data: responses }, { data: questions }] = await Promise.all([
       supabase
@@ -80,10 +88,35 @@ export default async function ActivitiesPage({
       supabase.from("assessment_questions").select("id, skill_id"),
     ]);
     const qSkillMap = new Map((questions ?? []).map((q) => [q.id, q.skill_id]));
-    for (const t of buildRecommendations(responses ?? [], qSkillMap)) {
+    targets = buildRecommendations(responses ?? [], qSkillMap);
+    for (const t of targets) {
       recommendedBySkill.set(t.skillId, t.band);
     }
   }
+
+  const skillById = new Map((skills ?? []).map((s) => [s.id, s]));
+  const waypoints: RoadmapWaypoint[] = targets.map((t) => {
+    const skillActivities = (activities ?? []).filter(
+      (a) => a.skill_id === t.skillId && a.band === t.band
+    );
+    const nextActivity =
+      skillActivities.find((a) => !completedSet.has(a.id)) ??
+      skillActivities[0] ??
+      null;
+    const allComplete =
+      skillActivities.length > 0 &&
+      skillActivities.every((a) => completedSet.has(a.id));
+    const skill = skillById.get(t.skillId);
+    return {
+      skillId: t.skillId,
+      skillName: skill?.short_name ?? `Skill ${t.skillId}`,
+      band: t.band,
+      targetLevel: t.targetLevel,
+      activityId: nextActivity?.id ?? null,
+      activityTitle: nextActivity?.title ?? null,
+      completed: allComplete,
+    };
+  });
 
   // Filter to recommended-only if requested (and user has taken an assessment)
   const visibleActivities = recommendedOnly
@@ -213,6 +246,9 @@ export default async function ActivitiesPage({
         </div>
       )}
 
+      {recommendedOnly && latestAttempt && recommendedCount > 0 ? (
+        <RecommendedRoadmap waypoints={waypoints} />
+      ) : (
       <div className="space-y-6">
         {(skills ?? []).map((skill) => {
           const skillActivities = bySkill.get(skill.id) ?? [];
@@ -314,6 +350,7 @@ export default async function ActivitiesPage({
           );
         })}
       </div>
+      )}
     </div>
   );
 }
