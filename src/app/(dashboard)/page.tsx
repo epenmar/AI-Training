@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { buildRecommendations } from "@/lib/recommendations";
+import { HowItWorks } from "@/components/HowItWorks";
 
 export default async function DashboardHome() {
   const supabase = await createClient();
@@ -195,6 +196,9 @@ export default async function DashboardHome() {
 
       {/* Primary CTA — top priority */}
       {primaryCta}
+
+      {/* How the platform works — shown on every load so the flow stays visible */}
+      <HowItWorks />
 
       {/* Top stats */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
