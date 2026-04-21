@@ -18,7 +18,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     n: 1,
-    title: "Self-assess",
+    title: "Take the assessment",
     body: "14 quick scenarios tell you where you land across the Maynard skills — Foundational, Intermediate, or Advanced on each.",
     href: "/assessment",
     linkLabel: "Start the assessment",
@@ -39,10 +39,10 @@ const STEPS: Step[] = [
   },
   {
     n: 2,
-    title: "Engage in suggested activities",
-    body: "Each score surfaces a hands-on activity that bridges you to the next level — with a step-by-step guide and a concrete deliverable.",
-    href: "/activities?filter=recommended",
-    linkLabel: "See your activities",
+    title: "Explore the activities",
+    body: "Each score surfaces hands-on activities that bridge you to the next level — each with a step-by-step guide and a concrete deliverable.",
+    href: "/activities",
+    linkLabel: "Browse activities",
     color: {
       ring: "ring-asu-green/30",
       bg: "bg-asu-green/10",
@@ -60,10 +60,10 @@ const STEPS: Step[] = [
   },
   {
     n: 3,
-    title: "Learn along the way",
-    body: "The learning paths line up the readings, videos, and tools that match each activity — browse by skill or by Bloom phase.",
-    href: "/learning-paths?filter=recommended",
-    linkLabel: "Open your learning path",
+    title: "Learn about AI through hands-on interaction",
+    body: "Doing is how the skills stick. As you work through activities, the learning paths line up readings, videos, and tools to deepen what you practiced.",
+    href: "/learning-paths",
+    linkLabel: "Open learning paths",
     color: {
       ring: "ring-asu-maroon/30",
       bg: "bg-asu-maroon/10",
@@ -95,8 +95,8 @@ export function HowItWorks() {
           How to use this platform
         </h3>
         <p className="text-sm text-gray-500 mt-0.5">
-          Three steps. The platform keeps what you do in step 1 shaping what
-          you see in steps 2 and 3.
+          Three steps. What you do in step 1 shapes what the platform
+          surfaces in steps 2 and 3.
         </p>
       </div>
 
