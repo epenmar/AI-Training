@@ -152,9 +152,6 @@ export default async function DashboardHome() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* How the platform works — shown on every load so the flow stays visible */}
-      <HowItWorks hasAssessment={!!latestAttempt} />
-
       {/* Welcome */}
       <section>
         <h2 className="text-2xl font-bold text-gray-700">
@@ -166,6 +163,9 @@ export default async function DashboardHome() {
             : "Start with a self-assessment to see where you stand across 14 AI skills."}
         </p>
       </section>
+
+      {/* How the platform works — shown on every load so the flow stays visible */}
+      <HowItWorks hasAssessment={!!latestAttempt} />
 
       {/* Primary CTA */}
       {primaryCta}
