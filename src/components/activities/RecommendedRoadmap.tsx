@@ -53,8 +53,12 @@ function truncate(s: string, max: number) {
 
 export function RecommendedRoadmap({
   waypoints,
+  completedCount,
+  totalCount,
 }: {
   waypoints: RoadmapWaypoint[];
+  completedCount: number;
+  totalCount: number;
 }) {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -342,35 +346,49 @@ export function RecommendedRoadmap({
             })()}
         </div>
 
-        <div className="flex items-center justify-center gap-5 mt-4 pt-3 border-t border-gray-200 text-xs text-gray-500">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-full bg-asu-maroon" />
-            To do
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-full bg-asu-green" />
-            Band complete
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <svg
-              width="24"
-              height="6"
-              viewBox="0 0 24 6"
-              className="text-gray-400"
-              aria-hidden="true"
-            >
-              <line
-                x1="2"
-                y1="3"
-                x2="22"
-                y2="3"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeDasharray="3 4"
-                strokeLinecap="round"
-              />
-            </svg>
-            Suggested order
+        <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-gray-200 text-xs text-gray-500">
+          <div className="flex flex-wrap items-center gap-5">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block w-3 h-3 rounded-full bg-asu-maroon" />
+              To do
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block w-3 h-3 rounded-full bg-asu-green" />
+              Band complete
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <svg
+                width="24"
+                height="6"
+                viewBox="0 0 24 6"
+                className="text-gray-400"
+                aria-hidden="true"
+              >
+                <line
+                  x1="2"
+                  y1="3"
+                  x2="22"
+                  y2="3"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeDasharray="3 4"
+                  strokeLinecap="round"
+                />
+              </svg>
+              Suggested order
+            </span>
+          </div>
+          <span
+            className="font-medium text-gray-600"
+            aria-label={`${completedCount} of ${totalCount} recommended activities completed`}
+          >
+            {completedCount} of {totalCount} complete
+            {totalCount > 0 && (
+              <span className="text-gray-400">
+                {" "}
+                · {Math.round((completedCount / totalCount) * 100)}%
+              </span>
+            )}
           </span>
         </div>
       </div>

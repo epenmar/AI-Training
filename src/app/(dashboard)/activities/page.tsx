@@ -141,81 +141,54 @@ export default async function ActivitiesPage({
     completedSet.has(a.id)
   ).length;
 
-  const scopedDenominator = recommendedOnly ? recommendedCount : totalCount;
-  const scopedNumerator = recommendedOnly
-    ? recommendedCompletedCount
-    : completedSet.size;
-
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-700">Activities</h2>
-          <p className="text-gray-500">
-            42 hands-on activities across 14 skills and 3 level-up bands.
-            Each activity includes step-by-step instructions and a concrete
-            deliverable.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div
-            role="tablist"
-            aria-label="Filter activities"
-            className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-lg"
-          >
-            <Link
-              href="/activities?filter=all"
-              role="tab"
-              aria-selected={!recommendedOnly}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                !recommendedOnly
-                  ? "bg-white text-gray-700 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Browse all
-              <span className="ml-1.5 text-xs text-gray-400">
-                {totalCount}
-              </span>
-            </Link>
-            <Link
-              href="/activities?filter=recommended"
-              role="tab"
-              aria-selected={recommendedOnly}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                recommendedOnly
-                  ? "bg-white text-asu-maroon shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Recommended for me
-              {latestAttempt && (
-                <span className="ml-1.5 text-xs text-gray-400">
-                  {recommendedCount}
-                </span>
-              )}
-            </Link>
-          </div>
-          <div className="bg-white rounded-lg border border-gray-200 px-5 py-3 flex items-center gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-asu-maroon">
-                {scopedNumerator}
-              </p>
-              <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">
-                of {scopedDenominator}
-              </p>
-            </div>
-            <div
-              className="w-px h-8 bg-gray-200"
-              aria-hidden="true"
-            />
-            <div className="text-sm text-gray-500">
-              {scopedDenominator > 0
-                ? `${Math.round((scopedNumerator / scopedDenominator) * 100)}% complete`
-                : "No activities yet"}
-            </div>
-          </div>
-        </div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-700">Activities</h2>
+        <p className="text-gray-500">
+          42 hands-on activities across 14 skills and 3 level-up bands.
+          Each activity includes step-by-step instructions and a concrete
+          deliverable.
+        </p>
+      </div>
+
+      <div
+        role="tablist"
+        aria-label="Filter activities"
+        className="inline-flex items-center gap-1.5 p-1.5 bg-gray-100 rounded-xl mb-5"
+      >
+        <Link
+          href="/activities?filter=all"
+          role="tab"
+          aria-selected={!recommendedOnly}
+          className={`px-5 py-2.5 text-base font-semibold rounded-lg transition-colors ${
+            !recommendedOnly
+              ? "bg-white text-gray-700 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Browse all
+          <span className="ml-2 text-sm font-medium text-gray-400">
+            {totalCount}
+          </span>
+        </Link>
+        <Link
+          href="/activities?filter=recommended"
+          role="tab"
+          aria-selected={recommendedOnly}
+          className={`px-5 py-2.5 text-base font-semibold rounded-lg transition-colors ${
+            recommendedOnly
+              ? "bg-white text-asu-maroon shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Recommended for me
+          {latestAttempt && (
+            <span className="ml-2 text-sm font-medium text-gray-400">
+              {recommendedCount}
+            </span>
+          )}
+        </Link>
       </div>
 
       {recommendedOnly && !latestAttempt && (
@@ -249,7 +222,11 @@ export default async function ActivitiesPage({
       )}
 
       {recommendedOnly && latestAttempt && recommendedCount > 0 ? (
-        <RecommendedRoadmap waypoints={waypoints} />
+        <RecommendedRoadmap
+          waypoints={waypoints}
+          completedCount={recommendedCompletedCount}
+          totalCount={recommendedCount}
+        />
       ) : (
       <div className="space-y-6">
         {(skills ?? []).map((skill) => {
