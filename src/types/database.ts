@@ -342,11 +342,12 @@ export interface Database {
           user_id: string;
           title: string;
           description: string | null;
-          media_url: string;
-          media_type: string;
+          media_url: string | null;
+          media_type: string | null;
           skill_id: number | null;
           activity_id: number | null;
           anonymous: boolean;
+          post_type: "project" | "question";
           created_at: string;
         };
         Insert: {
@@ -354,21 +355,23 @@ export interface Database {
           user_id: string;
           title: string;
           description?: string | null;
-          media_url: string;
-          media_type?: string;
+          media_url?: string | null;
+          media_type?: string | null;
           skill_id?: number | null;
           activity_id?: number | null;
           anonymous?: boolean;
+          post_type?: "project" | "question";
           created_at?: string;
         };
         Update: {
           title?: string;
           description?: string | null;
-          media_url?: string;
-          media_type?: string;
+          media_url?: string | null;
+          media_type?: string | null;
           skill_id?: number | null;
           activity_id?: number | null;
           anonymous?: boolean;
+          post_type?: "project" | "question";
         };
         Relationships: [];
       };

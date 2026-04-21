@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { DeletePostButton } from "@/components/community/DeletePostButton";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
+import { AskQuestionForm } from "@/components/community/AskQuestionForm";
 import { getDomain, getEmbedUrl, getOfficeEmbedUrl, isPdf } from "@/lib/embed";
 
 const VALID_BANDS = new Set([
@@ -32,31 +33,14 @@ export default async function CommunityPage({
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Section-neutral header */}
-      <div className="mb-4">
+      <div className="mb-5">
         <h2 className="text-2xl font-bold text-gray-700">Community</h2>
         <p className="text-gray-500">
           Share what you&apos;re building and ask questions across ASU.
         </p>
       </div>
 
-      {/* Tabs */}
-      <div
-        role="tablist"
-        aria-label="Community sections"
-        className="flex gap-1 border-b border-gray-200 mb-6"
-      >
-        <TabLink
-          href="/community"
-          active={tab === "projects"}
-          label="Project Sharing"
-        />
-        <TabLink
-          href="/community?tab=questions"
-          active={tab === "questions"}
-          label="Ask a Question"
-        />
-      </div>
+      <Tabs active={tab} />
 
       {tab === "projects" ? (
         <ProjectSharing
@@ -65,62 +49,239 @@ export default async function CommunityPage({
           bandFilter={bandFilter}
         />
       ) : (
-        <AskAQuestion />
+        <AskTab userId={user.id} />
       )}
     </div>
   );
 }
 
-function TabLink({
-  href,
-  active,
-  label,
-}: {
-  href: string;
-  active: boolean;
-  label: string;
-}) {
+function Tabs({ active }: { active: TabKey }) {
   return (
-    <Link
-      href={href}
-      role="tab"
-      aria-selected={active}
-      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-        active
-          ? "border-asu-maroon text-asu-maroon"
-          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-      }`}
+    <div
+      role="tablist"
+      aria-label="Community sections"
+      className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-lg mb-6"
     >
-      {label}
-    </Link>
-  );
-}
-
-function AskAQuestion() {
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 p-10 text-center">
-      <div className="w-16 h-16 bg-asu-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
-        <svg
-          className="w-8 h-8 text-asu-blue"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
+      <TabButton
+        href="/community"
+        active={active === "projects"}
+        label="Project Sharing"
+        icon={
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        }
+      />
+      <TabButton
+        href="/community?tab=questions"
+        active={active === "questions"}
+        label="Ask a Question"
+        icon={
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
             d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
           />
-        </svg>
-      </div>
-      <p className="text-gray-700 font-medium mb-1">Coming soon</p>
-      <p className="text-gray-500 text-sm max-w-md mx-auto">
-        Post a question to the ASU AI community — and, once Slack is connected,
-        search past Slack conversations with AI to find answers that already
-        exist before asking.
+        }
+      />
+    </div>
+  );
+}
+
+function TabButton({
+  href,
+  active,
+  label,
+  icon,
+}: {
+  href: string;
+  active: boolean;
+  label: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      role="tab"
+      aria-selected={active}
+      className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
+        active
+          ? "bg-asu-maroon text-white shadow-sm"
+          : "text-gray-600 hover:text-asu-maroon hover:bg-white"
+      }`}
+    >
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        {icon}
+      </svg>
+      {label}
+    </Link>
+  );
+}
+
+async function AskTab({ userId }: { userId: string }) {
+  const supabase = await createClient();
+
+  const [
+    { data: questions },
+    { data: viewerProfile },
+    { data: skills },
+  ] = await Promise.all([
+    supabase
+      .from("community_posts")
+      .select(
+        "id, user_id, title, description, skill_id, anonymous, created_at"
+      )
+      .eq("post_type", "question")
+      .order("created_at", { ascending: false }),
+    supabase.from("profiles").select("is_admin").eq("id", userId).single(),
+    supabase.from("skills").select("id, short_name").order("id"),
+  ]);
+  const isAdmin = !!viewerProfile?.is_admin;
+
+  const authorIds = Array.from(
+    new Set((questions ?? []).map((q) => q.user_id))
+  );
+  const { data: profiles } =
+    authorIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, display_name")
+          .in("id", authorIds)
+      : { data: [] };
+  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+  const skillMap = new Map((skills ?? []).map((s) => [s.id, s]));
+
+  const questionIds = (questions ?? []).map((q) => q.id);
+  const { data: commentRows } =
+    questionIds.length > 0
+      ? await supabase
+          .from("community_post_comments")
+          .select("post_id")
+          .in("post_id", questionIds)
+      : { data: [] };
+  const commentCounts = new Map<string, number>();
+  for (const row of commentRows ?? []) {
+    commentCounts.set(row.post_id, (commentCounts.get(row.post_id) ?? 0) + 1);
+  }
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-gray-500">
+        Ask the community a question. Once Slack is connected, past Slack
+        conversations will also be searchable here.
       </p>
+
+      <AskQuestionForm skills={skills ?? []} />
+
+      {(questions ?? []).length > 0 ? (
+        <ul className="space-y-3">
+          {(questions ?? []).map((q) => {
+            const author = profileMap.get(q.user_id);
+            const showName = !q.anonymous && author?.display_name;
+            const authorName = showName ? author.display_name : "Anonymous";
+            const skill = q.skill_id ? skillMap.get(q.skill_id) : null;
+            const commentCount = commentCounts.get(q.id) ?? 0;
+            const canDelete = q.user_id === userId || isAdmin;
+            return (
+              <li key={q.id}>
+                <article className="group bg-white border border-gray-200 rounded-lg p-4 hover:border-asu-blue/40 hover:shadow-sm transition-all relative">
+                  <Link
+                    href={`/community/${q.id}?from=questions`}
+                    aria-label={`Open question: ${q.title}`}
+                    className="absolute inset-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-asu-blue focus:ring-inset"
+                  />
+                  <div className="relative z-[1] pointer-events-none">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-base font-semibold text-gray-700 group-hover:text-asu-blue transition-colors">
+                        {q.title}
+                      </h3>
+                      <span className="inline-flex items-center gap-1 text-xs text-gray-500 flex-shrink-0">
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
+                        </svg>
+                        {commentCount}
+                        <span className="sr-only">
+                          {" "}
+                          {commentCount === 1 ? "reply" : "replies"}
+                        </span>
+                      </span>
+                    </div>
+                    {q.description && (
+                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                        {q.description}
+                      </p>
+                    )}
+                    <div className="flex items-center flex-wrap gap-2 mt-3 text-xs text-gray-400">
+                      {skill && (
+                        <span className="bg-asu-blue/10 text-asu-blue px-2 py-0.5 rounded font-medium">
+                          {skill.short_name}
+                        </span>
+                      )}
+                      <span>
+                        {authorName} ·{" "}
+                        {new Date(q.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                  {canDelete && (
+                    <div className="relative z-10 flex justify-end mt-2">
+                      <DeletePostButton postId={q.id} />
+                    </div>
+                  )}
+                </article>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+          <div className="w-14 h-14 bg-asu-blue/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg
+              className="w-7 h-7 text-asu-blue"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-700 font-medium mb-1">No questions yet</p>
+          <p className="text-gray-500 text-sm max-w-md mx-auto">
+            Be the first to ask something. Questions can be general or tagged
+            to a specific skill.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -140,6 +301,7 @@ async function ProjectSharing({
     supabase
       .from("community_posts")
       .select("*")
+      .eq("post_type", "project")
       .order("created_at", { ascending: false }),
     supabase.from("profiles").select("is_admin").eq("id", userId).single(),
   ]);
@@ -276,6 +438,7 @@ async function ProjectSharing({
             const isOwnPost = post.user_id === userId;
             const canEdit = isOwnPost || isAdmin;
             const canDelete = isOwnPost || isAdmin;
+            const mediaUrl = post.media_url ?? "";
             return (
               <article
                 key={post.id}
@@ -284,7 +447,7 @@ async function ProjectSharing({
                 <div className="aspect-video bg-gray-100 overflow-hidden">
                   {post.media_type === "video" ? (
                     <video
-                      src={post.media_url}
+                      src={mediaUrl}
                       controls
                       className="w-full h-full object-cover"
                       preload="metadata"
@@ -308,7 +471,7 @@ async function ProjectSharing({
                         />
                       </svg>
                       <audio
-                        src={post.media_url}
+                        src={mediaUrl}
                         controls
                         preload="none"
                         className="w-full"
@@ -318,7 +481,7 @@ async function ProjectSharing({
                     </div>
                   ) : post.media_type === "link" ? (
                     (() => {
-                      const embed = getEmbedUrl(post.media_url);
+                      const embed = getEmbedUrl(mediaUrl);
                       if (embed) {
                         return (
                           <div className="relative w-full h-full bg-white">
@@ -358,18 +521,18 @@ async function ProjectSharing({
                             />
                           </svg>
                           <span className="text-xs font-medium text-asu-blue tracking-wide">
-                            {getDomain(post.media_url)}
+                            {getDomain(mediaUrl)}
                           </span>
                         </Link>
                       );
                     })()
                   ) : post.media_type === "document" ? (
                     (() => {
-                      const officeEmbed = getOfficeEmbedUrl(post.media_url);
+                      const officeEmbed = getOfficeEmbedUrl(mediaUrl);
                       const embedSrc = officeEmbed
                         ? officeEmbed
-                        : isPdf(post.media_url)
-                          ? post.media_url
+                        : isPdf(mediaUrl)
+                          ? mediaUrl
                           : null;
                       if (embedSrc) {
                         return (
@@ -410,7 +573,7 @@ async function ProjectSharing({
                             />
                           </svg>
                           <span className="text-xs font-medium text-asu-maroon uppercase tracking-wide">
-                            {post.media_url.split(".").pop()?.toUpperCase() ??
+                            {mediaUrl.split(".").pop()?.toUpperCase() ??
                               "FILE"}{" "}
                             · Open
                           </span>
@@ -420,7 +583,7 @@ async function ProjectSharing({
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={post.media_url}
+                      src={mediaUrl}
                       alt={post.title}
                       className="w-full h-full object-cover"
                       loading="lazy"

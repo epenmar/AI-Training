@@ -27,10 +27,13 @@ export async function deletePost(postId: string) {
     if (!profile?.is_admin) return { error: "Not allowed" };
   }
 
-  // Strip the public URL prefix to get the storage path
-  const match = post.media_url.match(/community-media\/(.+)$/);
-  if (match) {
-    await supabase.storage.from("community-media").remove([match[1]]);
+  // Strip the public URL prefix to get the storage path. Questions have
+  // no media, so skip storage cleanup in that case.
+  if (post.media_url) {
+    const match = post.media_url.match(/community-media\/(.+)$/);
+    if (match) {
+      await supabase.storage.from("community-media").remove([match[1]]);
+    }
   }
 
   const { error } = await supabase
@@ -141,6 +144,44 @@ export async function createLinkPost(input: CreateLinkPostInput) {
 
   revalidatePath("/community");
   redirect("/community");
+}
+
+type CreateQuestionInput = {
+  title: string;
+  body: string;
+  skillId: number | null;
+  anonymous: boolean;
+};
+
+export async function createQuestion(input: CreateQuestionInput) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in" };
+
+  const title = input.title?.trim();
+  const body = input.body?.trim();
+  if (!title) return { error: "Give your question a title" };
+  if (!body) return { error: "Write the details of your question" };
+  if (title.length > 200) return { error: "Keep the title under 200 characters" };
+  if (body.length > 5000) return { error: "Keep the details under 5000 characters" };
+
+  const { error } = await supabase.from("community_posts").insert({
+    user_id: user.id,
+    title,
+    description: body,
+    media_url: null,
+    media_type: null,
+    skill_id: input.skillId,
+    activity_id: null,
+    anonymous: input.anonymous,
+    post_type: "question",
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/community");
+  return { success: true };
 }
 
 type UpdatePostInput = {
