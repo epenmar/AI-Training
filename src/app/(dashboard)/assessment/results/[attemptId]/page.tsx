@@ -158,13 +158,7 @@ export default async function ResultsPage({
           href="/assessment"
           className="flex-1 text-center px-5 py-3 rounded-lg bg-asu-maroon text-white font-medium hover:bg-sidebar-hover transition-colors"
         >
-          Retake Assessment
-        </Link>
-        <Link
-          href="/progress"
-          className="flex-1 text-center px-5 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-        >
-          View Progress Over Time
+          Retake &amp; view progress
         </Link>
         <Link
           href="/learning-paths"

@@ -90,15 +90,11 @@ async function buildPageContext(sb: Sb, pathname: string): Promise<string> {
   }
 
   if (path === "/assessment") {
-    return "User is on the self-assessment (14 scenario questions mapping to 14 ASU AI skills).";
+    return "User is on the self-assessment page — 14 scenario questions mapping to 14 ASU AI skills, plus their progress history and skill growth charts once they've taken it.";
   }
 
   if (path === "/community") {
     return "User is on the community Look Book — where ASU learners share screenshots/videos of AI work they've built.";
-  }
-
-  if (path === "/progress") {
-    return "User is on the progress page showing their assessment history and skill growth charts.";
   }
 
   if (path === "/") {

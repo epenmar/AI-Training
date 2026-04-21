@@ -65,7 +65,7 @@ function buildSteps(hasAssessment: boolean): Step[] {
     body: "Each score surfaces hands-on activities that bridge you to the next level, each with a step-by-step guide and a concrete deliverable.",
     ctas: [
       { href: "/activities?filter=recommended", label: "See my activities" },
-      { href: "/activities", label: "Browse all activities" },
+      { href: "/activities?filter=all", label: "Browse all activities" },
     ],
     color: {
       ringBg: "bg-asu-green/10",
@@ -99,7 +99,7 @@ function buildSteps(hasAssessment: boolean): Step[] {
     body: "Doing is how the skills stick. Learning paths line up readings, videos, and tools to deepen what you practiced.",
     ctas: [
       { href: "/learning-paths?filter=recommended", label: "View my learning" },
-      { href: "/learning-paths", label: "Browse all skills" },
+      { href: "/learning-paths?filter=all", label: "Browse all skills" },
     ],
     color: {
       ringBg: "bg-asu-maroon/10",

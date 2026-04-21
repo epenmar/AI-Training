@@ -58,13 +58,7 @@ function suggestionsForPath(pathname: string): string[] {
   if (path === "/assessment") {
     return [
       "How should I approach this quiz?",
-      "What if none of the options fit me exactly?",
-    ];
-  }
-  if (path === "/progress") {
-    return [
       "How am I doing over time?",
-      "What should I focus on next?",
     ];
   }
   if (path === "/community") {

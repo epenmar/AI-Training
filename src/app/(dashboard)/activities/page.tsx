@@ -33,7 +33,6 @@ export default async function ActivitiesPage({
   searchParams: Promise<{ filter?: string }>;
 }) {
   const { filter } = await searchParams;
-  const recommendedOnly = filter === "recommended";
 
   const supabase = await createClient();
   const {
@@ -65,6 +64,11 @@ export default async function ActivitiesPage({
     .order("completed_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  // Default to recommended view if the user has an attempt; explicit
+  // `filter=all` opts into browse-all.
+  const recommendedOnly =
+    filter === "recommended" || (filter !== "all" && !!latestAttempt);
 
   const recommendedBySkill = new Map<number, string>();
   if (latestAttempt) {
@@ -148,7 +152,7 @@ export default async function ActivitiesPage({
         className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-lg mb-6"
       >
         <Link
-          href="/activities"
+          href="/activities?filter=all"
           role="tab"
           aria-selected={!recommendedOnly}
           className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${

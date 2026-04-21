@@ -117,7 +117,7 @@ export default async function DashboardHome() {
           See all recommended
         </Link>
         <Link
-          href="/activities"
+          href="/activities?filter=all"
           className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
         >
           Browse all
@@ -141,7 +141,7 @@ export default async function DashboardHome() {
           Retake Assessment
         </Link>
         <Link
-          href="/activities"
+          href="/activities?filter=all"
           className="inline-block px-5 py-2.5 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
         >
           Browse activities

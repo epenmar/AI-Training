@@ -22,13 +22,25 @@ export default async function LearningPathsPage({
   searchParams: Promise<{ filter?: string }>;
 }) {
   const { filter } = await searchParams;
-  const recommendedOnly = filter === "recommended";
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const { data: latestAttempt } = await supabase
+    .from("assessment_attempts")
+    .select("id, completed_at")
+    .eq("user_id", user.id)
+    .order("completed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Default to personalized view if the user has an attempt; explicit
+  // `filter=all` opts into browse-all.
+  const recommendedOnly =
+    filter === "recommended" || (filter !== "all" && !!latestAttempt);
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -59,7 +71,7 @@ export default async function LearningPathsPage({
           Personalized for me
         </Link>
         <Link
-          href="/learning-paths"
+          href="/learning-paths?filter=all"
           role="tab"
           aria-selected={!recommendedOnly}
           className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -73,7 +85,7 @@ export default async function LearningPathsPage({
       </div>
 
       {recommendedOnly ? (
-        <PersonalizedPhaseGrid userId={user.id} />
+        <PersonalizedPhaseGrid latestAttempt={latestAttempt} />
       ) : (
         <AllPhaseGrid />
       )}
@@ -115,16 +127,12 @@ async function AllPhaseGrid() {
   );
 }
 
-async function PersonalizedPhaseGrid({ userId }: { userId: string }) {
+async function PersonalizedPhaseGrid({
+  latestAttempt,
+}: {
+  latestAttempt: { id: string; completed_at: string } | null;
+}) {
   const supabase = await createClient();
-
-  const { data: latestAttempt } = await supabase
-    .from("assessment_attempts")
-    .select("id, completed_at")
-    .eq("user_id", userId)
-    .order("completed_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
 
   if (!latestAttempt) {
     return (

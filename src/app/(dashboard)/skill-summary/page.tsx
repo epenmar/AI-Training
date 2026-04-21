@@ -220,7 +220,7 @@ export default async function SkillSummaryPage() {
                     </Link>
                   ) : (
                     <Link
-                      href="/activities"
+                      href="/activities?filter=all"
                       className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       Browse activities
@@ -249,16 +249,10 @@ export default async function SkillSummaryPage() {
           See recommended activities
         </Link>
         <Link
-          href="/progress"
-          className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          View progress charts
-        </Link>
-        <Link
           href="/assessment"
           className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
         >
-          Retake assessment
+          Retake assessment &amp; view progress
         </Link>
       </div>
     </div>

@@ -32,18 +32,6 @@ export const navigation: NavItem[] = [
     ),
   },
   {
-    name: "Progress",
-    href: "/progress",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-      />
-    ),
-  },
-  {
     name: "Learning Paths",
     href: "/learning-paths",
     icon: (
