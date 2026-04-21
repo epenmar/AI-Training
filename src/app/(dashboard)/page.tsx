@@ -16,8 +16,6 @@ export default async function DashboardHome() {
     { data: latestAttempt },
     { data: completions },
     { data: allActivities },
-    { data: recentPosts },
-    { count: totalPostCount },
   ] = await Promise.all([
     supabase
       .from("assessment_attempts")
@@ -31,24 +29,12 @@ export default async function DashboardHome() {
       .select("activity_id")
       .eq("user_id", user.id),
     supabase.from("level_up_activities").select("id, title, skill_id, band"),
-    supabase
-      .from("community_posts")
-      .select("id, title, media_url, media_type, user_id, created_at")
-      .order("created_at", { ascending: false })
-      .limit(3),
-    supabase
-      .from("community_posts")
-      .select("id", { count: "exact", head: true }),
   ]);
 
   const completedSet = new Set(
     (completions ?? []).map((c) => c.activity_id)
   );
 
-  // Compute the user's recommended activities (activities matching each
-  // target skill's bridging band from their latest assessment). The green
-  // card shows progress against this personalized set, not all 14 skills.
-  const recommendedBySkill = new Map<number, string>();
   let suggestedActivity: {
     id: number;
     title: string;
@@ -66,9 +52,6 @@ export default async function DashboardHome() {
     ]);
     const qSkillMap = new Map((questions ?? []).map((q) => [q.id, q.skill_id]));
     const targets = buildRecommendations(responses ?? [], qSkillMap);
-    for (const t of targets) {
-      recommendedBySkill.set(t.skillId, t.band);
-    }
 
     for (const target of targets) {
       const match = (allActivities ?? []).find(
@@ -83,19 +66,6 @@ export default async function DashboardHome() {
       }
     }
   }
-
-  const recommendedActivities = latestAttempt
-    ? (allActivities ?? []).filter(
-        (a) => recommendedBySkill.get(a.skill_id) === a.band
-      )
-    : (allActivities ?? []);
-  const recommendedCount = recommendedActivities.length;
-  const recommendedCompletedCount = recommendedActivities.filter((a) =>
-    completedSet.has(a.id)
-  ).length;
-  const recommendedPct = recommendedCount
-    ? Math.round((recommendedCompletedCount / recommendedCount) * 100)
-    : 0;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -182,6 +152,9 @@ export default async function DashboardHome() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      {/* How the platform works — shown on every load so the flow stays visible */}
+      <HowItWorks hasAssessment={!!latestAttempt} />
+
       {/* Welcome */}
       <section>
         <h2 className="text-2xl font-bold text-gray-700">
@@ -194,102 +167,8 @@ export default async function DashboardHome() {
         </p>
       </section>
 
-      {/* Primary CTA — top priority */}
+      {/* Primary CTA */}
       {primaryCta}
-
-      {/* How the platform works — shown on every load so the flow stays visible */}
-      <HowItWorks hasAssessment={!!latestAttempt} />
-
-      {/* Top stats */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {latestAttempt ? (
-          <Link
-            href="/skill-summary"
-            className="bg-asu-maroon text-white rounded-lg p-5 hover:bg-sidebar-hover transition-colors"
-          >
-            <p className="text-xs uppercase tracking-wide font-medium opacity-80">
-              Latest Score
-            </p>
-            <p className="text-2xl font-bold mt-1">
-              {latestAttempt.total_score}
-              <span className="text-sm font-normal opacity-70">/42</span>
-            </p>
-            <p className="text-xs opacity-80 mt-0.5">
-              {latestAttempt.overall_band} · Skill summary →
-            </p>
-          </Link>
-        ) : (
-          <Link
-            href="/assessment"
-            className="bg-asu-maroon text-white rounded-lg p-5 hover:bg-sidebar-hover transition-colors"
-          >
-            <p className="text-xs uppercase tracking-wide font-medium opacity-80">
-              Latest Score
-            </p>
-            <p className="text-2xl font-bold mt-1">—</p>
-            <p className="text-xs opacity-80 mt-0.5">Take assessment →</p>
-          </Link>
-        )}
-
-        <Link
-          href={
-            latestAttempt ? "/activities?filter=recommended" : "/activities"
-          }
-          className="bg-asu-green text-white rounded-lg p-5 hover:bg-asu-green/90 transition-colors"
-        >
-          <p className="text-xs uppercase tracking-wide font-medium opacity-80">
-            My Activities
-          </p>
-          <p className="text-2xl font-bold mt-1">
-            {recommendedCompletedCount}
-            <span className="text-sm font-normal opacity-70">
-              /{recommendedCount}
-            </span>
-          </p>
-          <p className="text-xs opacity-80 mt-0.5">
-            {latestAttempt
-              ? "Your next activities →"
-              : "Browse activities →"}
-          </p>
-          <div className="mt-2 w-full bg-white/25 rounded-full h-1.5">
-            <div
-              className="bg-white h-1.5 rounded-full transition-all"
-              style={{ width: `${recommendedPct}%` }}
-            />
-          </div>
-        </Link>
-
-        <Link
-          href="/learning-paths?filter=recommended"
-          className="bg-asu-blue text-white rounded-lg p-5 hover:bg-asu-blue/90 transition-colors"
-        >
-          <p className="text-xs uppercase tracking-wide font-medium opacity-80">
-            Your Learning Path
-          </p>
-          <p className="text-lg font-bold mt-1 leading-tight">
-            {latestAttempt ? "Personalized" : "Take assessment"}
-          </p>
-          <p className="text-xs opacity-80 mt-1">
-            {latestAttempt
-              ? "Resources picked for you →"
-              : "Unlock your path →"}
-          </p>
-        </Link>
-
-        <Link
-          href="/community"
-          className="bg-asu-turquoise text-white rounded-lg p-5 hover:bg-asu-turquoise/90 transition-colors"
-        >
-          <p className="text-xs uppercase tracking-wide font-medium opacity-80">
-            Community
-          </p>
-          <p className="text-2xl font-bold mt-1">
-            {totalPostCount ?? 0} posts
-          </p>
-          <p className="text-xs opacity-80 mt-0.5">See what others built →</p>
-        </Link>
-      </section>
-
     </div>
   );
 }
