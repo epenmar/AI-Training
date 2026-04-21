@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { SKILL_ICON_PATHS } from "./skillIcons";
 
 export type RoadmapWaypoint = {
   skillId: number;
@@ -54,6 +56,7 @@ export function RecommendedRoadmap({
 }: {
   waypoints: RoadmapWaypoint[];
 }) {
+  const router = useRouter();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -128,26 +131,39 @@ export function RecommendedRoadmap({
               const pos = positions[i];
               const isActive = activeIndex === i;
               const fill = w.completed ? "#78BE20" : "#8C1D40";
+              const iconPath = SKILL_ICON_PATHS[w.skillId];
+              const canNavigate = w.activityId != null;
+              const handleActivate = () => {
+                if (canNavigate) {
+                  router.push(`/activities/${w.activityId}`);
+                } else {
+                  setActiveIndex(activeIndex === i ? null : i);
+                }
+              };
               return (
                 <g
                   key={w.skillId}
                   transform={`translate(${pos.x}, ${pos.y})`}
                   tabIndex={0}
-                  role="button"
+                  role={canNavigate ? "link" : "button"}
                   aria-label={`Stop ${i + 1} of ${waypoints.length}. Skill ${
                     w.skillId
                   }: ${w.skillName}. ${w.band}${
                     w.completed ? ". All activities complete." : "."
-                  }`}
+                  }${canNavigate ? " Opens activity." : ""}`}
                   aria-expanded={isActive}
                   className="cursor-pointer focus:outline-none"
                   onMouseEnter={() => openTooltip(i)}
                   onMouseLeave={scheduleClose}
                   onFocus={() => openTooltip(i)}
                   onBlur={scheduleClose}
-                  onClick={() =>
-                    setActiveIndex(activeIndex === i ? null : i)
-                  }
+                  onClick={handleActivate}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleActivate();
+                    }
+                  }}
                 >
                   {/* Soft halo, larger when active */}
                   <circle
@@ -163,16 +179,47 @@ export function RecommendedRoadmap({
                     strokeWidth="3"
                   />
                   <circle r={NODE_RADIUS - 8} fill={fill} />
-                  <text
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fill="white"
-                    fontSize="18"
-                    fontWeight="bold"
-                    pointerEvents="none"
-                  >
-                    {w.completed ? "✓" : i + 1}
-                  </text>
+                  {iconPath ? (
+                    <svg
+                      x={-16}
+                      y={-16}
+                      width={32}
+                      height={32}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="white"
+                      strokeWidth={1.8}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      pointerEvents="none"
+                    >
+                      <path d={iconPath} />
+                    </svg>
+                  ) : (
+                    <text
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fill="white"
+                      fontSize="18"
+                      fontWeight="bold"
+                      pointerEvents="none"
+                    >
+                      {i + 1}
+                    </text>
+                  )}
+                  {w.completed && (
+                    <g transform={`translate(${NODE_RADIUS - 4}, ${-NODE_RADIUS + 4})`} pointerEvents="none">
+                      <circle r="9" fill="#78BE20" stroke="white" strokeWidth="2" />
+                      <path
+                        d="M -4 0 L -1 3 L 4 -3"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </g>
+                  )}
                   <text
                     y={NODE_RADIUS + 24}
                     textAnchor="middle"
@@ -181,7 +228,7 @@ export function RecommendedRoadmap({
                     fontWeight="600"
                     pointerEvents="none"
                   >
-                    {truncate(w.skillName, 22)}
+                    {`${i + 1}. ${truncate(w.skillName, 20)}`}
                   </text>
                 </g>
               );
