@@ -198,7 +198,7 @@ export default async function DashboardHome() {
       {primaryCta}
 
       {/* How the platform works — shown on every load so the flow stays visible */}
-      <HowItWorks />
+      <HowItWorks hasAssessment={!!latestAttempt} />
 
       {/* Top stats */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -290,54 +290,6 @@ export default async function DashboardHome() {
         </Link>
       </section>
 
-      {/* Quick links */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">Explore</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Link
-            href="/progress"
-            className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
-          >
-            <p className="text-sm font-semibold text-gray-700">
-              Progress over time
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              See how scores have changed
-            </p>
-          </Link>
-          <Link
-            href="/learning-paths"
-            className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
-          >
-            <p className="text-sm font-semibold text-gray-700">
-              Learning paths
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              9 Bloom phases, 107+ items
-            </p>
-          </Link>
-          <Link
-            href="/activities"
-            className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
-          >
-            <p className="text-sm font-semibold text-gray-700">
-              All activities
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              42 hands-on projects
-            </p>
-          </Link>
-          <Link
-            href="/slack"
-            className="p-4 rounded-lg border border-gray-200 hover:border-asu-maroon/40 hover:bg-gray-50 transition-colors"
-          >
-            <p className="text-sm font-semibold text-gray-700">
-              Slack channels
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">Team conversations</p>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }
