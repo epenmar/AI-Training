@@ -11,12 +11,15 @@ const VALID_BANDS = new Set([
   "Intermediate → Advanced",
 ]);
 
+type TabKey = "projects" | "questions";
+
 export default async function CommunityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ skill?: string; band?: string }>;
+  searchParams: Promise<{ skill?: string; band?: string; tab?: string }>;
 }) {
   const params = await searchParams;
+  const tab: TabKey = params.tab === "questions" ? "questions" : "projects";
   const skillFilter = params.skill ? parseInt(params.skill, 10) : null;
   const bandFilter =
     params.band && VALID_BANDS.has(params.band) ? params.band : "";
@@ -27,16 +30,118 @@ export default async function CommunityPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  return (
+    <div className="max-w-6xl mx-auto">
+      {/* Section-neutral header */}
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold text-gray-700">Community</h2>
+        <p className="text-gray-500">
+          Share what you&apos;re building and ask questions across ASU.
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <div
+        role="tablist"
+        aria-label="Community sections"
+        className="flex gap-1 border-b border-gray-200 mb-6"
+      >
+        <TabLink
+          href="/community"
+          active={tab === "projects"}
+          label="Project Sharing"
+        />
+        <TabLink
+          href="/community?tab=questions"
+          active={tab === "questions"}
+          label="Ask a Question"
+        />
+      </div>
+
+      {tab === "projects" ? (
+        <ProjectSharing
+          userId={user.id}
+          skillFilter={skillFilter}
+          bandFilter={bandFilter}
+        />
+      ) : (
+        <AskAQuestion />
+      )}
+    </div>
+  );
+}
+
+function TabLink({
+  href,
+  active,
+  label,
+}: {
+  href: string;
+  active: boolean;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      role="tab"
+      aria-selected={active}
+      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+        active
+          ? "border-asu-maroon text-asu-maroon"
+          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function AskAQuestion() {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-10 text-center">
+      <div className="w-16 h-16 bg-asu-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg
+          className="w-8 h-8 text-asu-blue"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
+        </svg>
+      </div>
+      <p className="text-gray-700 font-medium mb-1">Coming soon</p>
+      <p className="text-gray-500 text-sm max-w-md mx-auto">
+        Post a question to the ASU AI community — and, once Slack is connected,
+        search past Slack conversations with AI to find answers that already
+        exist before asking.
+      </p>
+    </div>
+  );
+}
+
+async function ProjectSharing({
+  userId,
+  skillFilter,
+  bandFilter,
+}: {
+  userId: string;
+  skillFilter: number | null;
+  bandFilter: string;
+}) {
+  const supabase = await createClient();
+
   const [{ data: allPosts }, { data: viewerProfile }] = await Promise.all([
     supabase
       .from("community_posts")
       .select("*")
       .order("created_at", { ascending: false }),
-    supabase
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", user.id)
-      .single(),
+    supabase.from("profiles").select("is_admin").eq("id", userId).single(),
   ]);
   const isAdmin = !!viewerProfile?.is_admin;
 
@@ -107,21 +212,29 @@ export default async function CommunityPage({
   const totalCount = allPosts?.length ?? 0;
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-700">Community Look Book</h2>
-          <p className="text-gray-500">
-            Share screenshots, videos, or decks of what you&apos;re building
-            with AI. See what peers across ASU are creating.
-          </p>
-        </div>
+    <>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+        <p className="text-sm text-gray-500 max-w-xl">
+          Share screenshots, videos, or decks of what you&apos;re building with
+          AI. See what peers across ASU are creating.
+        </p>
         <Link
           href="/community/new"
           className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Share something
         </Link>
@@ -146,7 +259,9 @@ export default async function CommunityPage({
             const author = profileMap.get(post.user_id);
             const showName = !post.anonymous && author?.display_name;
             const authorName = showName ? author.display_name : "Anonymous";
-            const publicContact = showName ? author?.public_contact ?? null : null;
+            const publicContact = showName
+              ? author?.public_contact ?? null
+              : null;
             const avatarUrl = showName ? author?.avatar_url ?? null : null;
             const avatarInitials = showName
               ? (author.display_name ?? "?")
@@ -158,7 +273,7 @@ export default async function CommunityPage({
               : null;
             const skill = post.skill_id ? skillMap.get(post.skill_id) : null;
             const commentCount = commentCounts.get(post.id) ?? 0;
-            const isOwnPost = post.user_id === user.id;
+            const isOwnPost = post.user_id === userId;
             const canEdit = isOwnPost || isAdmin;
             const canDelete = isOwnPost || isAdmin;
             return (
@@ -295,7 +410,8 @@ export default async function CommunityPage({
                             />
                           </svg>
                           <span className="text-xs font-medium text-asu-maroon uppercase tracking-wide">
-                            {post.media_url.split(".").pop()?.toUpperCase() ?? "FILE"}{" "}
+                            {post.media_url.split(".").pop()?.toUpperCase() ??
+                              "FILE"}{" "}
                             · Open
                           </span>
                         </Link>
@@ -436,27 +552,32 @@ export default async function CommunityPage({
             </svg>
           </div>
           <p className="text-gray-700 font-medium mb-1">
-            {hasFilters ? "No posts match these filters" : "No posts yet — be the first!"}
+            {hasFilters
+              ? "No posts match these filters"
+              : "No posts yet — be the first!"}
           </p>
           <p className="text-gray-500 text-sm">
             {hasFilters ? (
               <>
                 Try clearing the filters, or{" "}
-                <Link href="/community" className="text-asu-maroon hover:underline font-medium">
+                <Link
+                  href="/community"
+                  className="text-asu-maroon hover:underline font-medium"
+                >
                   see all posts
                 </Link>
                 .
               </>
             ) : (
               <>
-                Use the <span className="font-medium">Share something</span>
-                {" "}button above to post a screenshot or short clip of what
+                Use the <span className="font-medium">Share something</span>{" "}
+                button above to post a screenshot or short clip of what
                 you&apos;ve built with AI.
               </>
             )}
           </p>
         </div>
       )}
-    </div>
+    </>
   );
 }
