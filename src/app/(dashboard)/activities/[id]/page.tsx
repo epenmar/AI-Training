@@ -203,7 +203,7 @@ export default async function ActivityDetailPage({
                         {step.step_number}
                       </span>
                       <p className="text-sm text-gray-700 whitespace-pre-line flex-1">
-                        {step.instruction}
+                        {renderRichText(step.instruction)}
                       </p>
                     </div>
                     {showHelp && (
