@@ -18,9 +18,9 @@ export function Sidebar() {
         </div>
         <div>
           <p className="text-sm font-semibold text-white leading-tight">
-            AI Skills
+            AI Activate
           </p>
-          <p className="text-xs text-white/60">Training Dashboard</p>
+          <p className="text-xs text-white/60">AI Skills Training</p>
         </div>
       </div>
 
