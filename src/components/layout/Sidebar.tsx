@@ -25,7 +25,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1" aria-label="Main navigation">
+      <nav className="px-3 py-4 space-y-1" aria-label="Main navigation">
         {navigation.map((item) => {
           const isActive = isNavItemActive(item, pathname);
 
@@ -54,6 +54,16 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Mascot — fills remaining vertical space, anchored above the footer */}
+      <div className="flex-1 flex items-end justify-center px-4 pb-2 min-h-0">
+        <img
+          src="/mascot.png"
+          alt=""
+          aria-hidden="true"
+          className="max-h-72 w-auto object-contain select-none pointer-events-none drop-shadow-lg"
+        />
+      </div>
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-white/10">
