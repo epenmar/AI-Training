@@ -168,6 +168,33 @@ export default async function ActivityDetailPage({
         </div>
         <h2 className="text-2xl font-bold text-gray-700">{activity.title}</h2>
         <p className="text-gray-600 mt-2">{coreDescription}</p>
+
+        {(activity.value_add || (activity.objectives && activity.objectives.length > 0)) && (
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+            {activity.value_add && (
+              <div className="bg-asu-maroon/5 border border-asu-maroon/15 rounded-lg p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-asu-maroon mb-1.5">
+                  Value add
+                </p>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {activity.value_add}
+                </p>
+              </div>
+            )}
+            {activity.objectives && activity.objectives.length > 0 && (
+              <div className="bg-asu-blue/5 border border-asu-blue/20 rounded-lg p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-asu-blue mb-1.5">
+                  Objectives
+                </p>
+                <ul className="text-sm text-gray-700 leading-relaxed space-y-1 list-disc pl-5">
+                  {activity.objectives.map((obj, i) => (
+                    <li key={i}>{obj}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ASU-sanctioned platform callouts (curated, shown by skill match) */}

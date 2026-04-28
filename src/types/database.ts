@@ -196,6 +196,8 @@ export interface Database {
           time_estimate: string | null;
           deliverable: string | null;
           linked_phase_ids: number[];
+          value_add: string | null;
+          objectives: string[];
         };
         Insert: {
           skill_id: number;
@@ -205,6 +207,8 @@ export interface Database {
           time_estimate?: string | null;
           deliverable?: string | null;
           linked_phase_ids?: number[];
+          value_add?: string | null;
+          objectives?: string[];
         };
         Update: {
           skill_id?: number;
@@ -214,6 +218,8 @@ export interface Database {
           time_estimate?: string | null;
           deliverable?: string | null;
           linked_phase_ids?: number[];
+          value_add?: string | null;
+          objectives?: string[];
         };
         Relationships: [];
       };
