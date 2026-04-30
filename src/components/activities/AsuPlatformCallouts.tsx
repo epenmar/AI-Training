@@ -37,7 +37,7 @@ export function AsuPlatformCallouts({
   )}`;
 
   return (
-    <div className="mb-6 space-y-3">
+    <div className="space-y-3 mb-3">
       {showBuilder && (
         <a
           href="https://platform.aiml.asu.edu/"

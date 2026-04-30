@@ -42,12 +42,12 @@ export function ToolSuggester({ activityId }: Props) {
   };
 
   return (
-    <div className="bg-asu-blue/5 border border-asu-blue/20 rounded-lg p-4 mb-6">
+    <div className="bg-white border border-asu-green/30 rounded-lg p-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
             <svg
-              className="w-4 h-4 text-asu-blue"
+              className="w-4 h-4 text-asu-green"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -69,7 +69,7 @@ export function ToolSuggester({ activityId }: Props) {
         <button
           onClick={handleSuggest}
           disabled={loading}
-          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-asu-blue text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-asu-green text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
         >
           {loading
             ? "Thinking..."

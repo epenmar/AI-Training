@@ -230,18 +230,24 @@ export interface Database {
           step_number: number;
           instruction: string;
           detailed_help: string | null;
+          interactive_type: string | null;
+          interactive_data: unknown;
         };
         Insert: {
           activity_id: number;
           step_number: number;
           instruction: string;
           detailed_help?: string | null;
+          interactive_type?: string | null;
+          interactive_data?: unknown;
         };
         Update: {
           activity_id?: number;
           step_number?: number;
           instruction?: string;
           detailed_help?: string | null;
+          interactive_type?: string | null;
+          interactive_data?: unknown;
         };
         Relationships: [];
       };

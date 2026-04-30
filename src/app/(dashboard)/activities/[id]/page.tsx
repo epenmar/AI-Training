@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { CompletionPanel } from "@/components/activities/CompletionPanel";
-import { ToolSuggester } from "@/components/activities/ToolSuggester";
-import { AsuPlatformCallouts } from "@/components/activities/AsuPlatformCallouts";
+import { AsuResourcesPanel } from "@/components/activities/AsuResourcesPanel";
+import { StepInteractive } from "@/components/activities/interactives/StepInteractive";
 
 const BAND_COLORS: Record<string, string> = {
   "New → Foundational": "bg-asu-blue/10 text-asu-blue",
@@ -197,16 +197,14 @@ export default async function ActivityDetailPage({
         )}
       </div>
 
-      {/* ASU-sanctioned platform callouts (curated, shown by skill match) */}
-      <AsuPlatformCallouts
+      {/* ASU resources for this activity (curated callouts + AI suggester) */}
+      <AsuResourcesPanel
         skillId={activity.skill_id}
         band={activity.band}
+        activityId={activityId}
         activityTitle={activity.title}
         activityDeliverable={activity.deliverable ?? null}
       />
-
-      {/* AI tool suggester */}
-      <ToolSuggester activityId={activityId} />
 
       {/* Steps */}
       {((steps && steps.length > 0) || extension) && (
@@ -218,7 +216,8 @@ export default async function ActivityDetailPage({
             <ol className="space-y-3">
               {steps.map((step) => {
                 const showHelp =
-                  activity.band === "New → Foundational" &&
+                  (activity.band === "New → Foundational" ||
+                    activity.band === "Foundational → Intermediate") &&
                   !!step.detailed_help?.trim();
                 return (
                   <li
@@ -257,6 +256,14 @@ export default async function ActivityDetailPage({
                         </div>
                       </details>
                     )}
+                    {step.interactive_type != null && step.interactive_data != null ? (
+                      <div className="mt-3 ml-10">
+                        <StepInteractive
+                          type={step.interactive_type}
+                          data={step.interactive_data}
+                        />
+                      </div>
+                    ) : null}
                   </li>
                 );
               })}
