@@ -198,6 +198,7 @@ export interface Database {
           linked_phase_ids: number[];
           value_add: string | null;
           objectives: string[];
+          community_action: string;
         };
         Insert: {
           skill_id: number;
@@ -209,6 +210,7 @@ export interface Database {
           linked_phase_ids?: number[];
           value_add?: string | null;
           objectives?: string[];
+          community_action?: string;
         };
         Update: {
           skill_id?: number;
@@ -220,6 +222,7 @@ export interface Database {
           linked_phase_ids?: number[];
           value_add?: string | null;
           objectives?: string[];
+          community_action?: string;
         };
         Relationships: [];
       };
@@ -232,6 +235,7 @@ export interface Database {
           detailed_help: string | null;
           interactive_type: string | null;
           interactive_data: unknown;
+          show_asu_resources: boolean;
         };
         Insert: {
           activity_id: number;
@@ -240,6 +244,7 @@ export interface Database {
           detailed_help?: string | null;
           interactive_type?: string | null;
           interactive_data?: unknown;
+          show_asu_resources?: boolean;
         };
         Update: {
           activity_id?: number;
@@ -248,6 +253,7 @@ export interface Database {
           detailed_help?: string | null;
           interactive_type?: string | null;
           interactive_data?: unknown;
+          show_asu_resources?: boolean;
         };
         Relationships: [];
       };

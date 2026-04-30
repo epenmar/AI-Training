@@ -5,6 +5,11 @@ import { SortBuckets, type SortBucketsData } from "./SortBuckets";
 import { PromptSandbox, type PromptSandboxData } from "./PromptSandbox";
 import { SequenceOrder, type SequenceOrderData } from "./SequenceOrder";
 import { ClaimQuiz, type ClaimQuizData } from "./ClaimQuiz";
+import { TextListEntry, type TextListEntryData } from "./TextListEntry";
+import {
+  CitationTracker,
+  type CitationTrackerData,
+} from "./CitationTracker";
 
 export function StepInteractive({
   type,
@@ -24,6 +29,10 @@ export function StepInteractive({
       return <SequenceOrder data={data as SequenceOrderData} />;
     case "claim_quiz":
       return <ClaimQuiz data={data as ClaimQuizData} />;
+    case "text_list_entry":
+      return <TextListEntry data={data as TextListEntryData} />;
+    case "citation_tracker":
+      return <CitationTracker data={data as CitationTrackerData} />;
     default:
       return null;
   }

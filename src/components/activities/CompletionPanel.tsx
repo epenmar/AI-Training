@@ -10,7 +10,30 @@ interface Props {
   initialNotes: string;
   completedAt: string | null;
   deliverable: string | null;
+  communityAction: string;
 }
+
+const COMMUNITY_ACTIONS: Record<
+  string,
+  { label: string; href: (id: number) => string; icon: "share" | "ask" } | null
+> = {
+  lookbook: {
+    label: "Share to Look Book",
+    href: (id) => `/community/new?activity=${id}`,
+    icon: "share",
+  },
+  observation: {
+    label: "Post an observation",
+    href: (id) => `/community/new?activity=${id}`,
+    icon: "share",
+  },
+  ask: {
+    label: "Ask the community",
+    href: () => `/community?tab=questions`,
+    icon: "ask",
+  },
+  none: null,
+};
 
 export function CompletionPanel({
   activityId,
@@ -18,6 +41,7 @@ export function CompletionPanel({
   initialNotes,
   completedAt,
   deliverable,
+  communityAction,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [notes, setNotes] = useState(initialNotes);
@@ -92,26 +116,42 @@ export function CompletionPanel({
               ? "Mark as not complete"
               : "Mark as complete"}
         </button>
-        <Link
-          href={`/community/new?activity=${activityId}`}
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-          Share to Look Book
-        </Link>
+        {(() => {
+          const cfg = COMMUNITY_ACTIONS[communityAction] ?? COMMUNITY_ACTIONS.lookbook;
+          if (!cfg) return null;
+          const isAsk = cfg.icon === "ask";
+          return (
+            <Link
+              href={cfg.href(activityId)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                {isAsk ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                )}
+              </svg>
+              {cfg.label}
+            </Link>
+          );
+        })()}
       </div>
 
       {/* Deliverable notes */}

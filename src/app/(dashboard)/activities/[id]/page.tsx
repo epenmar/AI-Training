@@ -108,9 +108,10 @@ export default async function ActivityDetailPage({
 
   return (
     <div className="max-w-3xl mx-auto">
-      {/* Back link */}
+      {/* Back link — sends users back to the All Activities page anchored at
+          this activity's skill section. */}
       <Link
-        href="/activities"
+        href={`/activities?filter=all#skill-${activity.skill_id}-heading`}
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-asu-maroon mb-4"
       >
         <svg
@@ -140,7 +141,7 @@ export default async function ActivityDetailPage({
           </span>
           {skill && (
             <Link
-              href="/activities"
+              href={`/activities?filter=all#skill-${skill.id}-heading`}
               className="text-xs text-asu-maroon hover:underline font-medium"
             >
               Skill {skill.id}: {skill.short_name}
@@ -197,16 +198,9 @@ export default async function ActivityDetailPage({
         )}
       </div>
 
-      {/* ASU resources for this activity (curated callouts + AI suggester) */}
-      <AsuResourcesPanel
-        skillId={activity.skill_id}
-        band={activity.band}
-        activityId={activityId}
-        activityTitle={activity.title}
-        activityDeliverable={activity.deliverable ?? null}
-      />
-
-      {/* Steps */}
+      {/* Steps — instruction is the only thing visible by default. Everything
+          else (help text, ASU resources, interactives) lives inside the step's
+          single expandable section. */}
       {((steps && steps.length > 0) || extension) && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-700 mb-3">
@@ -215,10 +209,15 @@ export default async function ActivityDetailPage({
           {steps && steps.length > 0 && (
             <ol className="space-y-3">
               {steps.map((step) => {
-                const showHelp =
+                const hasHelp =
                   (activity.band === "New → Foundational" ||
                     activity.band === "Foundational → Intermediate") &&
                   !!step.detailed_help?.trim();
+                const hasInteractive =
+                  step.interactive_type != null &&
+                  step.interactive_data != null;
+                const showResources = !!step.show_asu_resources;
+                const hasExpand = hasHelp || hasInteractive || showResources;
                 return (
                   <li
                     key={step.id}
@@ -232,7 +231,7 @@ export default async function ActivityDetailPage({
                         {renderRichText(step.instruction)}
                       </p>
                     </div>
-                    {showHelp && (
+                    {hasExpand && (
                       <details className="group mt-3 ml-10">
                         <summary className="cursor-pointer list-none text-xs font-medium text-asu-maroon hover:underline inline-flex items-center gap-1">
                           <svg
@@ -249,21 +248,32 @@ export default async function ActivityDetailPage({
                               d="M9 5l7 7-7 7"
                             />
                           </svg>
-                          More details &amp; examples
+                          Show details, resources &amp; practice
                         </summary>
-                        <div className="mt-2 text-sm text-gray-600 whitespace-pre-line border-l-2 border-asu-maroon/20 pl-3">
-                          {renderRichText(step.detailed_help ?? "")}
+                        <div className="mt-3 space-y-3">
+                          {hasHelp && (
+                            <div className="text-sm text-gray-600 whitespace-pre-line border-l-2 border-asu-maroon/20 pl-3">
+                              {renderRichText(step.detailed_help ?? "")}
+                            </div>
+                          )}
+                          {showResources && (
+                            <AsuResourcesPanel
+                              skillId={activity.skill_id}
+                              band={activity.band}
+                              activityId={activityId}
+                              activityTitle={activity.title}
+                              activityDeliverable={activity.deliverable ?? null}
+                            />
+                          )}
+                          {hasInteractive && (
+                            <StepInteractive
+                              type={step.interactive_type as string}
+                              data={step.interactive_data}
+                            />
+                          )}
                         </div>
                       </details>
                     )}
-                    {step.interactive_type != null && step.interactive_data != null ? (
-                      <div className="mt-3 ml-10">
-                        <StepInteractive
-                          type={step.interactive_type}
-                          data={step.interactive_data}
-                        />
-                      </div>
-                    ) : null}
                   </li>
                 );
               })}
@@ -316,6 +326,7 @@ export default async function ActivityDetailPage({
         initialNotes={completion?.deliverable_notes ?? ""}
         completedAt={completion?.completed_at ?? null}
         deliverable={activity.deliverable ?? null}
+        communityAction={activity.community_action ?? "lookbook"}
       />
     </div>
   );
