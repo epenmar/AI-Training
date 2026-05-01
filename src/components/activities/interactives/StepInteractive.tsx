@@ -30,6 +30,10 @@ import {
   HighlighterWorkspace,
   type HighlighterWorkspaceData,
 } from "./HighlighterWorkspace";
+import {
+  StageFlowchart,
+  type StageFlowchartData,
+} from "./StageFlowchart";
 
 export function StepInteractive({
   type,
@@ -69,6 +73,8 @@ export function StepInteractive({
       return (
         <HighlighterWorkspace data={data as HighlighterWorkspaceData} />
       );
+    case "stage_flowchart":
+      return <StageFlowchart data={data as StageFlowchartData} />;
     default:
       return null;
   }
