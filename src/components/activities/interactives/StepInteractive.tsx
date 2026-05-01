@@ -26,6 +26,10 @@ import {
   ShortlistTable,
   type ShortlistTableData,
 } from "./ShortlistTable";
+import {
+  HighlighterWorkspace,
+  type HighlighterWorkspaceData,
+} from "./HighlighterWorkspace";
 
 export function StepInteractive({
   type,
@@ -61,6 +65,10 @@ export function StepInteractive({
       );
     case "shortlist_table":
       return <ShortlistTable data={data as ShortlistTableData} />;
+    case "highlighter_workspace":
+      return (
+        <HighlighterWorkspace data={data as HighlighterWorkspaceData} />
+      );
     default:
       return null;
   }

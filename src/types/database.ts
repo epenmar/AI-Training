@@ -240,6 +240,7 @@ export interface Database {
           interactive_data: unknown;
           show_asu_resources: boolean;
           show_external_tools: boolean;
+          pin_to_side: boolean;
         };
         Insert: {
           activity_id: number;
@@ -250,6 +251,7 @@ export interface Database {
           interactive_data?: unknown;
           show_asu_resources?: boolean;
           show_external_tools?: boolean;
+          pin_to_side?: boolean;
         };
         Update: {
           activity_id?: number;
@@ -260,6 +262,7 @@ export interface Database {
           interactive_data?: unknown;
           show_asu_resources?: boolean;
           show_external_tools?: boolean;
+          pin_to_side?: boolean;
         };
         Relationships: [];
       };

@@ -259,8 +259,18 @@ export default async function ActivityDetailPage({
     "\n\nOptional extension: "
   );
 
+  // If any step has pin_to_side=true, that step's interactive renders in a
+  // sticky right column on lg+ screens; the steps still scroll on the left.
+  const pinnedStep = (steps ?? []).find((s) => s.pin_to_side);
+  const hasPinned =
+    pinnedStep != null &&
+    pinnedStep.interactive_type != null &&
+    pinnedStep.interactive_data != null;
+
   return (
-    <div className="max-w-3xl mx-auto">
+    <div
+      className={hasPinned ? "max-w-7xl mx-auto" : "max-w-3xl mx-auto"}
+    >
       {/* Back link — sends users back to the All Activities page anchored at
           this activity's skill section. */}
       <Link
@@ -353,9 +363,18 @@ export default async function ActivityDetailPage({
 
       {/* Steps — instruction is the only thing visible by default. Everything
           else (help text, ASU resources, interactives) lives inside the step's
-          single expandable section. */}
+          single expandable section. When a step has pin_to_side=true, its
+          interactive is pulled out into the sticky right column and the
+          accordion shows a "see workspace" callout instead. */}
       {((steps && steps.length > 0) || extension) && (
-        <div className="mb-6">
+        <div
+          className={
+            hasPinned
+              ? "mb-6 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] gap-6"
+              : "mb-6"
+          }
+        >
+          <div>
           <h3 className="text-lg font-semibold text-gray-700 mb-3">
             Step-by-step
           </h3>
@@ -363,13 +382,18 @@ export default async function ActivityDetailPage({
             <ol className="space-y-3">
               {steps.map((step) => {
                 const hasHelp = !!step.detailed_help?.trim();
+                const isPinned = !!step.pin_to_side;
                 const hasInteractive =
                   step.interactive_type != null &&
                   step.interactive_data != null;
+                // The pinned step's interactive is rendered in the sticky
+                // sidebar, not inside the accordion.
+                const renderInteractiveInline = hasInteractive && !isPinned;
                 const showPlatform = !!step.show_asu_resources;
                 const showExternal = !!step.show_external_tools;
                 const showResources = showPlatform || showExternal;
-                const hasExpand = hasHelp || hasInteractive || showResources;
+                const hasExpand =
+                  hasHelp || renderInteractiveInline || showResources || isPinned;
                 return (
                   <li
                     key={step.id}
@@ -419,11 +443,19 @@ export default async function ActivityDetailPage({
                               showExternal={showExternal}
                             />
                           )}
-                          {hasInteractive && (
+                          {renderInteractiveInline && (
                             <StepInteractive
                               type={step.interactive_type as string}
                               data={step.interactive_data}
                             />
+                          )}
+                          {isPinned && hasInteractive && (
+                            <p className="text-xs text-asu-blue bg-asu-blue/5 border border-asu-blue/30 rounded-md px-3 py-2">
+                              The workspace for this step is pinned on the
+                              right (or below on narrow screens) so it stays
+                              visible as you scroll through the rest of the
+                              steps.
+                            </p>
                           )}
                         </div>
                       </details>
@@ -446,6 +478,30 @@ export default async function ActivityDetailPage({
                 for anyone who wants to go further.
               </p>
             </div>
+          )}
+          </div>
+
+          {/* Sticky workspace sidebar (when a step is pinned). */}
+          {hasPinned && pinnedStep && (
+            <aside aria-label="Pinned workspace" className="lg:sticky lg:top-4 lg:self-start">
+              <div className="rounded-xl border border-asu-blue/30 bg-white p-4 shadow-sm">
+                <header className="mb-3 flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-asu-blue text-white text-[10px] font-extrabold"
+                  >
+                    {pinnedStep.step_number}
+                  </span>
+                  <h4 className="text-sm font-semibold text-asu-blue uppercase tracking-wide">
+                    Workspace
+                  </h4>
+                </header>
+                <StepInteractive
+                  type={pinnedStep.interactive_type as string}
+                  data={pinnedStep.interactive_data}
+                />
+              </div>
+            </aside>
           )}
         </div>
       )}
