@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CompletionPanel } from "@/components/activities/CompletionPanel";
 import { AsuResourcesPanel } from "@/components/activities/AsuResourcesPanel";
 import { StepInteractive } from "@/components/activities/interactives/StepInteractive";
+import { VocabTerm } from "@/components/activities/VocabTerm";
 import { buildRecommendations } from "@/lib/recommendations";
 
 const BAND_COLORS: Record<string, string> = {
@@ -13,9 +14,13 @@ const BAND_COLORS: Record<string, string> = {
 };
 
 // Render detailed_help / instruction strings with minimal markdown:
-// **bold**, [text](url). Anything else passes through as plain text.
+//   **bold**
+//   [text](url)
+//   {{term:definition}} — inline click-to-reveal vocab term
+// Anything else passes through as plain text.
 function renderRichText(text: string): React.ReactNode[] {
-  const tokenRegex = /\*\*([^*]+)\*\*|\[([^\]]+)\]\(([^)]+)\)/g;
+  const tokenRegex =
+    /\*\*([^*]+)\*\*|\[([^\]]+)\]\(([^)]+)\)|\{\{([^:}]+):([^}]+)\}\}/g;
   const out: React.ReactNode[] = [];
   let last = 0;
   let match: RegExpExecArray | null;
@@ -41,6 +46,14 @@ function renderRichText(text: string): React.ReactNode[] {
         >
           {match[2]}
         </a>
+      );
+    } else if (match[4] !== undefined && match[5] !== undefined) {
+      out.push(
+        <VocabTerm
+          key={`v${key++}`}
+          term={match[4].trim()}
+          definition={match[5].trim()}
+        />
       );
     }
     last = match.index + match[0].length;

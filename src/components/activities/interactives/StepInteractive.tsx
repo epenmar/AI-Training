@@ -18,6 +18,10 @@ import {
   VitraInfographic,
   type VitraInfographicData,
 } from "./VitraInfographic";
+import {
+  PrincipledInnovationInfographic,
+  type PrincipledInnovationInfographicData,
+} from "./PrincipledInnovationInfographic";
 
 export function StepInteractive({
   type,
@@ -45,6 +49,12 @@ export function StepInteractive({
       return <ComparisonTable data={data as ComparisonTableData} />;
     case "vitra_infographic":
       return <VitraInfographic data={data as VitraInfographicData} />;
+    case "principled_innovation_infographic":
+      return (
+        <PrincipledInnovationInfographic
+          data={data as PrincipledInnovationInfographicData}
+        />
+      );
     default:
       return null;
   }
