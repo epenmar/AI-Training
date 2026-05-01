@@ -132,24 +132,17 @@ export function SortBuckets({ data }: { data: SortBucketsData }) {
                       >
                         <span className="flex-1">{it.text}</span>
                         {!checked && (
-                          <span
-                            role="button"
-                            tabIndex={0}
+                          <button
+                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setPlacement((p) => ({ ...p, [it.id]: null }));
                             }}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                setPlacement((p) => ({ ...p, [it.id]: null }));
-                              }
-                            }}
                             aria-label={`Remove ${it.text} from ${b.label}`}
-                            className="text-xs text-gray-400 hover:text-asu-maroon cursor-pointer"
+                            className="text-xs text-gray-500 hover:text-asu-maroon cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-asu-maroon focus-visible:ring-offset-1 rounded"
                           >
                             ✕
-                          </span>
+                          </button>
                         )}
                       </li>
                     );

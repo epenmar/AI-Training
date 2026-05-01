@@ -130,7 +130,7 @@ export function ComparisonTable({ data }: { data: ComparisonTableData }) {
           </tbody>
         </table>
       </div>
-      <p className="text-[11px] text-gray-400 mt-2">
+      <p className="text-[11px] text-gray-500 mt-2">
         Saved in your browser. Capture your reflection in the deliverable
         box at the bottom of this page.
       </p>

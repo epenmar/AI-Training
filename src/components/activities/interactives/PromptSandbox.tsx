@@ -24,14 +24,19 @@ export function PromptSandbox({ data }: { data: PromptSandboxData }) {
 
   return (
     <div className="rounded-lg border border-asu-maroon/25 bg-asu-maroon/5 p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-asu-maroon mb-2">
+      <label
+        htmlFor="prompt-sandbox-textarea"
+        className="block text-[11px] font-semibold uppercase tracking-wider text-asu-maroon mb-2"
+      >
         Try this prompt
-      </p>
+      </label>
       <textarea
+        id="prompt-sandbox-textarea"
+        aria-label="Editable starter prompt"
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={Math.max(3, Math.min(10, text.split("\n").length + 1))}
-        className="w-full text-sm text-gray-700 bg-white border border-gray-200 rounded-md p-3 font-mono leading-relaxed focus:border-asu-maroon focus:outline-none focus:ring-1 focus:ring-asu-maroon"
+        className="w-full text-sm text-gray-700 bg-white border border-gray-200 rounded-md p-3 font-mono leading-relaxed focus:border-asu-maroon focus:outline-none focus:ring-2 focus:ring-asu-maroon"
       />
       {data.hint && (
         <p className="text-xs text-gray-500 mt-2 italic">{data.hint}</p>

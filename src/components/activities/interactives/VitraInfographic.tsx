@@ -46,8 +46,8 @@ const STATUSES: {
   {
     key: "review",
     label: "Under review",
-    ring: "border-asu-orange/60 bg-asu-orange/5",
-    badge: "bg-asu-orange text-white",
+    ring: "border-amber-500 bg-amber-50",
+    badge: "bg-amber-700 text-white",
     meansShort: "Submitted; ASU IT hasn't finished assessment yet.",
     detail: {
       canDo: [
