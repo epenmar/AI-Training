@@ -13,26 +13,36 @@ interface Props {
   communityAction: string;
 }
 
-const COMMUNITY_ACTIONS: Record<
-  string,
-  { label: string; href: (id: number) => string; icon: "share" | "ask" } | null
-> = {
-  lookbook: {
-    label: "Share to Look Book",
-    href: (id) => `/community/new?activity=${id}`,
-    icon: "share",
-  },
-  observation: {
-    label: "Post to Discussions",
-    href: (id) => `/community?tab=questions&activity=${id}#new-post`,
-    icon: "ask",
-  },
-  ask: {
-    label: "Post to Discussions",
-    href: (id) => `/community?tab=questions&activity=${id}#new-post`,
-    icon: "ask",
-  },
-  none: null,
+type CommunityCta = {
+  label: string;
+  href: (id: number) => string;
+  icon: "share" | "ask";
+  // Visual treatment: "primary" maroon vs. "secondary" outlined
+  variant: "primary" | "secondary";
+};
+
+const LOOKBOOK_CTA: CommunityCta = {
+  label: "Share to Look Book",
+  href: (id) => `/community/new?activity=${id}`,
+  icon: "share",
+  variant: "primary",
+};
+
+const DISCUSSION_CTA: CommunityCta = {
+  label: "Post to Discussions",
+  href: (id) => `/community?tab=questions&activity=${id}#new-post`,
+  icon: "ask",
+  variant: "primary",
+};
+
+// Each entry returns the list of CTAs to show. "both" gets both — Look Book
+// as primary (visual artifact) and Discussion as secondary (reflection).
+const COMMUNITY_ACTIONS: Record<string, CommunityCta[]> = {
+  lookbook: [LOOKBOOK_CTA],
+  observation: [DISCUSSION_CTA],
+  ask: [DISCUSSION_CTA],
+  both: [LOOKBOOK_CTA, { ...DISCUSSION_CTA, variant: "secondary" }],
+  none: [],
 };
 
 export function CompletionPanel({
@@ -116,42 +126,43 @@ export function CompletionPanel({
               ? "Mark as not complete"
               : "Mark as complete"}
         </button>
-        {(() => {
-          const cfg = COMMUNITY_ACTIONS[communityAction] ?? COMMUNITY_ACTIONS.lookbook;
-          if (!cfg) return null;
-          const isAsk = cfg.icon === "ask";
-          return (
-            <Link
-              href={cfg.href(activityId)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                {isAsk ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                )}
-              </svg>
-              {cfg.label}
-            </Link>
-          );
-        })()}
+        {(COMMUNITY_ACTIONS[communityAction] ?? COMMUNITY_ACTIONS.lookbook).map(
+          (cta) => {
+            const isAsk = cta.icon === "ask";
+            const cls =
+              cta.variant === "primary"
+                ? "inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover transition-colors"
+                : "inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-asu-maroon/40 text-asu-maroon hover:bg-asu-maroon/5 transition-colors";
+            return (
+              <Link key={cta.label} href={cta.href(activityId)} className={cls}>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  {isAsk ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  )}
+                </svg>
+                {cta.label}
+              </Link>
+            );
+          }
+        )}
       </div>
 
       {/* Deliverable notes */}
