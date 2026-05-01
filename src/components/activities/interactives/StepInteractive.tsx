@@ -10,6 +10,10 @@ import {
   CitationTracker,
   type CitationTrackerData,
 } from "./CitationTracker";
+import {
+  ComparisonTable,
+  type ComparisonTableData,
+} from "./ComparisonTable";
 
 export function StepInteractive({
   type,
@@ -33,6 +37,8 @@ export function StepInteractive({
       return <TextListEntry data={data as TextListEntryData} />;
     case "citation_tracker":
       return <CitationTracker data={data as CitationTrackerData} />;
+    case "comparison_table":
+      return <ComparisonTable data={data as ComparisonTableData} />;
     default:
       return null;
   }
