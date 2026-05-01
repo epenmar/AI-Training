@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { buildRecommendations } from "@/lib/recommendations";
+import { SkillIcon } from "@/components/activities/skillIcons";
 
 // One color per Bloom phase — rotates through ASU palette
 const PHASE_COLORS = [
@@ -37,6 +38,14 @@ export default async function LearningPathsPage({
     .limit(1)
     .maybeSingle();
 
+  // The 14 Maynard skills, surfaced as an accordion above the
+  // how-it-works infographic so users can see the full skill set the
+  // curriculum is built around.
+  const { data: skills } = await supabase
+    .from("skills")
+    .select("id, statement, short_name, is_gap")
+    .order("id");
+
   // Default to personalized view if the user has an attempt; explicit
   // `filter=all` opts into browse-all.
   const recommendedOnly =
@@ -51,6 +60,69 @@ export default async function LearningPathsPage({
           Taxonomy from foundational understanding to advanced creation.
         </p>
       </div>
+
+      {/* The 14 Maynard skills the curriculum is built around */}
+      {skills && skills.length > 0 && (
+        <details className="group mb-6 rounded-xl border border-gray-200 bg-white">
+          <summary className="cursor-pointer list-none p-5 flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 inline-flex items-center gap-2">
+                The 14 AI skills this curriculum teaches
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-asu-maroon/10 text-[10px] font-bold text-asu-maroon">
+                  {skills.length}
+                </span>
+              </h3>
+              <p className="text-xs text-gray-600 mt-1 max-w-2xl">
+                The 9 Bloom phases below organize the source material;
+                these 14 skills are what the activities build. Tap to see
+                the full skill set.
+              </p>
+            </div>
+            <svg
+              className="w-4 h-4 mt-1 text-gray-500 transition-transform group-open:rotate-180 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </summary>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 px-5 pb-5">
+            {skills.map((skill) => (
+              <li
+                key={skill.id}
+                className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3"
+              >
+                <div className="flex-shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-md bg-asu-maroon/5 text-asu-maroon">
+                  <SkillIcon skillId={skill.id} size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-asu-maroon uppercase tracking-wider">
+                    Skill {skill.id}
+                    {skill.is_gap && (
+                      <span className="ml-2 text-[10px] font-medium normal-case tracking-normal text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                        gap-skill
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-sm font-semibold text-gray-700 leading-snug">
+                    {skill.short_name}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    {skill.statement}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
 
       {/* How activities and materials relate */}
       <section
