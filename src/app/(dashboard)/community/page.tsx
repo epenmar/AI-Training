@@ -17,13 +17,19 @@ type TabKey = "projects" | "questions";
 export default async function CommunityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ skill?: string; band?: string; tab?: string }>;
+  searchParams: Promise<{
+    skill?: string;
+    band?: string;
+    tab?: string;
+    q?: string;
+  }>;
 }) {
   const params = await searchParams;
   const tab: TabKey = params.tab === "questions" ? "questions" : "projects";
   const skillFilter = params.skill ? parseInt(params.skill, 10) : null;
   const bandFilter =
     params.band && VALID_BANDS.has(params.band) ? params.band : "";
+  const search = (params.q ?? "").trim();
 
   const supabase = await createClient();
   const {
@@ -49,7 +55,7 @@ export default async function CommunityPage({
           bandFilter={bandFilter}
         />
       ) : (
-        <AskTab userId={user.id} />
+        <AskTab userId={user.id} search={search} />
       )}
     </div>
   );
@@ -78,7 +84,7 @@ function Tabs({ active }: { active: TabKey }) {
       <TabButton
         href="/community?tab=questions"
         active={active === "questions"}
-        label="Ask a Question"
+        label="Discussion"
         icon={
           <path
             strokeLinecap="round"
@@ -128,21 +134,36 @@ function TabButton({
   );
 }
 
-async function AskTab({ userId }: { userId: string }) {
+async function AskTab({
+  userId,
+  search,
+}: {
+  userId: string;
+  search: string;
+}) {
   const supabase = await createClient();
+
+  let questionQuery = supabase
+    .from("community_posts")
+    .select(
+      "id, user_id, title, description, skill_id, anonymous, created_at"
+    )
+    .eq("post_type", "question");
+  if (search) {
+    // Postgres ilike via Supabase. Search both title and description.
+    const escaped = search.replace(/[%_]/g, (c) => `\\${c}`);
+    questionQuery = questionQuery.or(
+      `title.ilike.%${escaped}%,description.ilike.%${escaped}%`
+    );
+  }
+  questionQuery = questionQuery.order("created_at", { ascending: false });
 
   const [
     { data: questions },
     { data: viewerProfile },
     { data: skills },
   ] = await Promise.all([
-    supabase
-      .from("community_posts")
-      .select(
-        "id, user_id, title, description, skill_id, anonymous, created_at"
-      )
-      .eq("post_type", "question")
-      .order("created_at", { ascending: false }),
+    questionQuery,
     supabase.from("profiles").select("is_admin").eq("id", userId).single(),
     supabase.from("skills").select("id, short_name").order("id"),
   ]);
@@ -177,11 +198,77 @@ async function AskTab({ userId }: { userId: string }) {
   return (
     <div className="space-y-5">
       <p className="text-sm text-gray-500">
-        Ask the community a question. Once Slack is connected, past Slack
-        conversations will also be searchable here.
+        Ask a question, post an observation, or search what others have
+        already shared. Once Slack is connected, past Slack conversations
+        will also be searchable here.
       </p>
 
-      <AskQuestionForm skills={skills ?? []} />
+      {/* Search */}
+      <form
+        method="GET"
+        action="/community"
+        role="search"
+        className="flex items-center gap-2"
+      >
+        <input type="hidden" name="tab" value="questions" />
+        <label htmlFor="discussion-search" className="sr-only">
+          Search discussion
+        </label>
+        <div className="relative flex-1">
+          <span
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            aria-hidden="true"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+              />
+            </svg>
+          </span>
+          <input
+            id="discussion-search"
+            name="q"
+            type="search"
+            defaultValue={search}
+            placeholder="Search discussion (questions, observations, replies)..."
+            className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:border-asu-blue focus:outline-none focus:ring-1 focus:ring-asu-blue"
+          />
+        </div>
+        <button
+          type="submit"
+          className="px-4 py-2 text-sm font-semibold rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover cursor-pointer"
+        >
+          Search
+        </button>
+        {search && (
+          <Link
+            href="/community?tab=questions"
+            className="text-xs text-gray-500 hover:text-asu-maroon"
+          >
+            Clear
+          </Link>
+        )}
+      </form>
+
+      {search && (
+        <p className="text-xs text-gray-500">
+          {(questions ?? []).length}{" "}
+          {(questions ?? []).length === 1 ? "result" : "results"} for
+          &ldquo;{search}&rdquo;
+        </p>
+      )}
+
+      <div id="new-post" className="scroll-mt-24">
+        <AskQuestionForm skills={skills ?? []} />
+      </div>
 
       {(questions ?? []).length > 0 ? (
         <ul className="space-y-3">

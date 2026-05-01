@@ -32,7 +32,7 @@ export const navigation: NavItem[] = [
     ),
   },
   {
-    name: "Learning Paths",
+    name: "Learning Materials",
     href: "/learning-paths",
     icon: (
       <path

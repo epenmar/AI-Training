@@ -98,6 +98,25 @@ export default async function ActivityDetailPage({
           .in("id", activity.linked_phase_ids)
       : { data: [] };
 
+  // Sources to "explore further" — pulled live from lesson_flow rows that
+  // match this activity's skill + linked phases. The activity teaches by
+  // doing; this callout lets the learner read the underlying material
+  // directly when they want to go deeper.
+  const phaseIds = activity.linked_phase_ids ?? [];
+  const { data: lessonItems } =
+    phaseIds.length > 0
+      ? await supabase
+          .from("lesson_flow")
+          .select(
+            "id,item_title,link,source_url,source,learning_level,modality,specific_location,skill_ids"
+          )
+          .in("bloom_phase_id", phaseIds)
+      : { data: [] };
+  const exploreSources = (lessonItems ?? [])
+    .filter((it) => (it.skill_ids ?? []).includes(activity.skill_id))
+    .filter((it) => !!(it.link || it.source_url))
+    .slice(0, 6);
+
   const bandClass =
     BAND_COLORS[activity.band] ?? "bg-gray-100 text-gray-600";
 
@@ -293,11 +312,81 @@ export default async function ActivityDetailPage({
         </div>
       )}
 
+      {/* Explore the Sources — pale ASU green callout under the steps. */}
+      {exploreSources.length > 0 && (
+        <section
+          aria-label="Underlying source material for this activity"
+          className="mb-6 rounded-xl border border-asu-green/30 bg-asu-green/5 p-5"
+        >
+          <header className="mb-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-green-800">
+              Explore the Sources
+            </h3>
+            <p className="text-xs text-gray-600 mt-1">
+              The activity above teaches you by doing. If you want to read
+              the underlying material directly, here&apos;s what it draws
+              from.
+            </p>
+          </header>
+          <ul className="space-y-2">
+            {exploreSources.map((item) => {
+              const url = item.link ?? item.source_url ?? "";
+              const meta = [item.learning_level, item.modality]
+                .filter(Boolean)
+                .join(" · ");
+              const where = item.specific_location?.trim();
+              return (
+                <li
+                  key={item.id}
+                  className="rounded-lg bg-white border border-gray-200 p-3"
+                >
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-semibold text-asu-maroon hover:underline inline-flex items-center gap-1"
+                  >
+                    {item.item_title}
+                    <svg
+                      className="w-3 h-3 text-gray-400 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-label="opens in new tab"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </a>
+                  {(meta || where || item.source) && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {item.source && <span>{item.source}</span>}
+                      {item.source && (meta || where) && <span> · </span>}
+                      {meta && <span>{meta}</span>}
+                      {where && (
+                        <>
+                          {meta && <span> · </span>}
+                          <span>{where}</span>
+                        </>
+                      )}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {/* Linked phases */}
       {linkedPhases && linkedPhases.length > 0 && (
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
-            Related Learning Paths
+            Related Learning Materials
           </h3>
           <div className="flex flex-wrap gap-2">
             {linkedPhases.map((p) => (

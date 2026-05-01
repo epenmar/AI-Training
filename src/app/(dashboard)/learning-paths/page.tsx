@@ -45,12 +45,112 @@ export default async function LearningPathsPage({
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-700">Learning Paths</h2>
+        <h2 className="text-2xl font-bold text-gray-700">Learning Materials</h2>
         <p className="text-gray-500">
-          9 phases organized by Bloom&apos;s Taxonomy, from foundational
-          understanding to advanced creation.
+          9 phases of curated source material, organized by Bloom&apos;s
+          Taxonomy from foundational understanding to advanced creation.
         </p>
       </div>
+
+      {/* How activities and materials relate */}
+      <section
+        aria-label="How materials and activities work together"
+        className="mb-6 rounded-xl bg-gradient-to-br from-asu-green/5 via-white to-asu-blue/5 border border-gray-200 p-5"
+      >
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+          How materials and activities work together
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Step 1 — Materials */}
+          <div className="rounded-lg bg-white border border-asu-green/30 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-asu-green text-white">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+                  />
+                </svg>
+              </span>
+              <p className="text-sm font-bold text-gray-700">
+                Source material
+              </p>
+            </div>
+            <p className="text-xs text-gray-600 leading-relaxed">
+              ASU&apos;s GenAI course modules, vetted external guides, and
+              reference PDFs. The raw curriculum.
+            </p>
+          </div>
+
+          {/* Arrow / connector */}
+          <div className="rounded-lg bg-white border border-asu-maroon/30 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-asu-maroon text-white">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+                  />
+                </svg>
+              </span>
+              <p className="text-sm font-bold text-gray-700">
+                Activities → learning by doing
+              </p>
+            </div>
+            <p className="text-xs text-gray-600 leading-relaxed">
+              The 42 hands-on activities pull from these materials. As you
+              work through an activity, the relevant pages, lessons, and
+              tools surface inline, you learn through doing.
+            </p>
+          </div>
+
+          {/* Direct access */}
+          <div className="rounded-lg bg-white border border-asu-blue/30 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-asu-blue text-white">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                  />
+                </svg>
+              </span>
+              <p className="text-sm font-bold text-gray-700">
+                Or come back here
+              </p>
+            </div>
+            <p className="text-xs text-gray-600 leading-relaxed">
+              When you want to read a source straight through, or revisit a
+              specific lesson outside an activity, come to this page and
+              jump directly to the source.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Filter toggle */}
       <div

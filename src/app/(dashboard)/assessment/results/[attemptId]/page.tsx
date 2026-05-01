@@ -164,7 +164,7 @@ export default async function ResultsPage({
           href="/learning-paths"
           className="flex-1 text-center px-5 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
         >
-          Explore Learning Paths
+          Explore Learning Materials
         </Link>
       </div>
     </div>
