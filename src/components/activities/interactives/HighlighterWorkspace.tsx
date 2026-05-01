@@ -69,9 +69,13 @@ function writeStorage(key: string, value: Stored) {
   }
 }
 
-// Walk text nodes inside container; given a Range, return the absolute
-// offset within the concatenated text content.
-function offsetWithin(container: HTMLElement, node: Node, offset: number): number {
+// Walk text nodes inside container; given a Range start/end position,
+// return the absolute offset within the concatenated text content.
+function offsetWithin(
+  container: HTMLElement,
+  node: Node,
+  offset: number
+): number {
   let total = 0;
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
   let n = walker.nextNode();
@@ -84,7 +88,11 @@ function offsetWithin(container: HTMLElement, node: Node, offset: number): numbe
 }
 
 // Group consecutive same-color characters into spans for rendering.
-function buildSpans(stored: Stored): { start: number; end: number; color: ColorKey | null }[] {
+function buildSpans(stored: Stored): {
+  start: number;
+  end: number;
+  color: ColorKey | null;
+}[] {
   const spans: { start: number; end: number; color: ColorKey | null }[] = [];
   let i = 0;
   const { text, colors } = stored;
@@ -106,6 +114,9 @@ export function HighlighterWorkspace({
   const [state, setState] = useState<Stored>({ text: "", colors: [] });
   const [editing, setEditing] = useState(true);
   const [hydrated, setHydrated] = useState(false);
+  const [selRange, setSelRange] = useState<
+    { start: number; end: number } | null
+  >(null);
   const lastWritten = useRef<string>("");
   const renderRef = useRef<HTMLDivElement>(null);
   const legend = data.legend ?? DEFAULT_LEGEND;
@@ -141,6 +152,51 @@ export function HighlighterWorkspace({
     writeStorage(data.storageKey, state);
   }, [state, data.storageKey, hydrated]);
 
+  // Track the user's selection within the rendered text. Capture happens
+  // on mouseup / keyup / selectionchange so we have a known-good range
+  // before the user clicks a color button (which would otherwise shift
+  // focus and collapse the selection).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const captureSelection = () => {
+      const container = renderRef.current;
+      if (!container) return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+        setSelRange(null);
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      if (
+        !container.contains(range.startContainer) ||
+        !container.contains(range.endContainer)
+      ) {
+        setSelRange(null);
+        return;
+      }
+      const start = offsetWithin(
+        container,
+        range.startContainer,
+        range.startOffset
+      );
+      const end = offsetWithin(container, range.endContainer, range.endOffset);
+      if (start < 0 || end < 0 || start === end) {
+        setSelRange(null);
+        return;
+      }
+      const [a, b] = start < end ? [start, end] : [end, start];
+      setSelRange({ start: a, end: b });
+    };
+    document.addEventListener("selectionchange", captureSelection);
+    document.addEventListener("mouseup", captureSelection);
+    document.addEventListener("keyup", captureSelection);
+    return () => {
+      document.removeEventListener("selectionchange", captureSelection);
+      document.removeEventListener("mouseup", captureSelection);
+      document.removeEventListener("keyup", captureSelection);
+    };
+  }, [editing, state.text]);
+
   const stats = useMemo(() => {
     const total = state.text.length;
     const counts: Record<ColorKey, number> = { green: 0, yellow: 0, red: 0 };
@@ -163,27 +219,24 @@ export function HighlighterWorkspace({
   }, [state]);
 
   const applyColor = (color: ColorKey | null) => {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-    const container = renderRef.current;
-    if (!container) return;
-    const range = sel.getRangeAt(0);
-    if (!container.contains(range.startContainer)) return;
-    const start = offsetWithin(container, range.startContainer, range.startOffset);
-    const end = offsetWithin(container, range.endContainer, range.endOffset);
-    if (start < 0 || end < 0 || start === end) return;
-    const [a, b] = start < end ? [start, end] : [end, start];
+    const range = selRange;
+    if (!range) return;
     setState((prev) => {
       const colors = [...prev.colors];
-      for (let i = a; i < b; i++) colors[i] = color;
+      for (let i = range.start; i < range.end; i++) colors[i] = color;
       return { ...prev, colors };
     });
-    sel.removeAllRanges();
+    // Clear selection visually but keep it logically until next user action.
+    window.getSelection()?.removeAllRanges();
+    setSelRange(null);
   };
 
   const clearAll = () => {
     if (!state.text) return;
-    setState((prev) => ({ ...prev, colors: Array(prev.text.length).fill(null) }));
+    setState((prev) => ({
+      ...prev,
+      colors: Array(prev.text.length).fill(null),
+    }));
   };
 
   const handlePasteSubmit = (text: string) => {
@@ -193,6 +246,7 @@ export function HighlighterWorkspace({
 
   const reset = () => {
     setState({ text: "", colors: [] });
+    setSelRange(null);
     setEditing(true);
   };
 
@@ -212,23 +266,32 @@ export function HighlighterWorkspace({
     );
   }
 
+  const selLen = selRange ? selRange.end - selRange.start : 0;
+  const buttonsDisabled = selLen === 0;
+
   return (
     <div className="rounded-lg border border-asu-blue/25 bg-asu-blue/5 p-4">
       {data.prompt && (
         <p className="text-sm font-medium text-gray-700 mb-3">{data.prompt}</p>
       )}
 
-      {/* Color picker toolbar */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+      {/* Selection-aware color toolbar */}
+      <div className="flex flex-wrap items-center gap-2 mb-2">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
-          Highlight selection
+          {selLen > 0
+            ? `Selected ${selLen} char${selLen === 1 ? "" : "s"} → highlight as`
+            : "Select text in the workspace, then click a color"}
         </span>
         {legend.map(({ color, label }) => (
           <button
             key={color}
             type="button"
+            disabled={buttonsDisabled}
+            // mousedown preventDefault keeps focus from leaving the
+            // selection. selRange already captured what we need.
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => applyColor(color)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-asu-blue ${COLOR_TO_BUTTON[color]}`}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-asu-blue disabled:opacity-40 disabled:cursor-not-allowed ${COLOR_TO_BUTTON[color]}`}
             aria-label={`Highlight selected text as ${label}`}
           >
             <span
@@ -240,8 +303,10 @@ export function HighlighterWorkspace({
         ))}
         <button
           type="button"
+          disabled={buttonsDisabled}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyColor(null)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer bg-white border border-gray-300 text-gray-700 hover:border-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-asu-blue"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer bg-white border border-gray-300 text-gray-700 hover:border-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-asu-blue disabled:opacity-40 disabled:cursor-not-allowed"
           aria-label="Remove highlight from selected text"
         >
           Erase
@@ -250,10 +315,10 @@ export function HighlighterWorkspace({
         <button
           type="button"
           onClick={clearAll}
-          className="text-xs text-gray-500 hover:text-asu-maroon cursor-pointer"
+          className="text-xs text-gray-500 hover:text-asu-maroon cursor-pointer disabled:opacity-40"
           disabled={!state.text}
         >
-          Clear all highlights
+          Clear all
         </button>
         <button
           type="button"
@@ -267,7 +332,7 @@ export function HighlighterWorkspace({
       {/* The highlightable rendered text */}
       <div
         ref={renderRef}
-        className="text-sm text-gray-800 leading-relaxed bg-white rounded-md border border-gray-200 p-3 min-h-[10rem] max-h-[28rem] overflow-y-auto whitespace-pre-wrap select-text"
+        className="text-sm text-gray-800 leading-relaxed bg-white rounded-md border border-gray-200 p-3 min-h-[10rem] max-h-[28rem] overflow-y-auto whitespace-pre-wrap select-text cursor-text"
       >
         {spans.map((span, i) => {
           const slice = state.text.slice(span.start, span.end);
