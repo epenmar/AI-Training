@@ -126,10 +126,45 @@ export default async function ActivityDetailPage({
           )
           .in("bloom_phase_id", phaseIds)
       : { data: [] };
-  const exploreSources = (lessonItems ?? [])
+  const autoSources = (lessonItems ?? [])
     .filter((it) => (it.skill_ids ?? []).includes(activity.skill_id))
     .filter((it) => !!(it.link || it.source_url))
+    .map((it) => ({
+      key: `auto-${it.id}`,
+      title: it.item_title ?? "",
+      url: it.link ?? it.source_url ?? "",
+      source: it.source ?? null,
+      meta: [it.learning_level, it.modality].filter(Boolean).join(" · "),
+      where: it.specific_location?.trim() ?? null,
+    }))
     .slice(0, 6);
+
+  // Curated per-activity extras (what specific steps' detailed_help used to
+  // link inline). Stored as jsonb on the activity row.
+  type ExtraSource = {
+    title: string;
+    url: string;
+    source?: string;
+    meta?: string;
+    where?: string;
+  };
+  const rawExtras = Array.isArray(activity.extra_sources)
+    ? (activity.extra_sources as ExtraSource[])
+    : [];
+  const extraSources = rawExtras
+    .filter((e) => e && typeof e.title === "string" && typeof e.url === "string")
+    .map((e, i) => ({
+      key: `extra-${i}`,
+      title: e.title,
+      url: e.url,
+      source: e.source ?? null,
+      meta: e.meta ?? "",
+      where: e.where ?? null,
+    }));
+
+  // Curated extras first (manually picked for this activity), auto-derived
+  // sources below them.
+  const exploreSources = [...extraSources, ...autoSources];
 
   // Determine the user's "next activity" for the bottom-of-page nav. Prefer
   // the next waypoint on their personalized roadmap (if they have an
@@ -398,32 +433,47 @@ export default async function ActivityDetailPage({
         </div>
       )}
 
-      {/* Explore the Sources — pale ASU green callout under the steps. */}
+      {/* Explore the Sources — collapsible pale-green accordion under the
+          steps. Closed by default so the activity remains the focus. */}
       {exploreSources.length > 0 && (
-        <section
-          aria-label="Underlying source material for this activity"
-          className="mb-6 rounded-xl border border-asu-green/30 bg-asu-green/5 p-5"
-        >
-          <header className="mb-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-green-800">
-              Explore the Sources
-            </h3>
-            <p className="text-xs text-gray-600 mt-1">
-              The activity above teaches you by doing. If you want to read
-              the underlying material directly, here&apos;s what it draws
-              from.
-            </p>
-          </header>
-          <ul className="space-y-2">
+        <details className="group mb-6 rounded-xl border border-asu-green/30 bg-asu-green/5">
+          <summary className="cursor-pointer list-none p-5 flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-green-800 inline-flex items-center gap-2">
+                Explore the Sources
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-asu-green/20 text-[10px] font-bold text-green-800">
+                  {exploreSources.length}
+                </span>
+              </h3>
+              <p className="text-xs text-gray-600 mt-1 max-w-2xl">
+                The activity above teaches you by doing. If you want to read
+                the underlying material directly, here&apos;s what it draws
+                from.
+              </p>
+            </div>
+            <svg
+              className="w-4 h-4 mt-1 text-green-800 transition-transform group-open:rotate-180 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </summary>
+          <ul className="space-y-2 px-5 pb-5">
             {exploreSources.map((item) => {
-              const url = item.link ?? item.source_url ?? "";
-              const meta = [item.learning_level, item.modality]
-                .filter(Boolean)
-                .join(" · ");
-              const where = item.specific_location?.trim();
+              const url = item.url;
+              const meta = item.meta;
+              const where = item.where;
               return (
                 <li
-                  key={item.id}
+                  key={item.key}
                   className="rounded-lg bg-white border border-gray-200 p-3"
                 >
                   <a
@@ -432,7 +482,7 @@ export default async function ActivityDetailPage({
                     rel="noopener noreferrer"
                     className="text-sm font-semibold text-asu-maroon hover:underline inline-flex items-center gap-1"
                   >
-                    {item.item_title}
+                    {item.title}
                     <svg
                       className="w-3 h-3 text-gray-400 flex-shrink-0"
                       fill="none"
@@ -465,7 +515,7 @@ export default async function ActivityDetailPage({
               );
             })}
           </ul>
-        </section>
+        </details>
       )}
 
       {/* Linked phases */}

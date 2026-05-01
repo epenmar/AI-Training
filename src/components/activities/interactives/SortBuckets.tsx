@@ -54,8 +54,26 @@ export function SortBuckets({ data }: { data: SortBucketsData }) {
         <p className="text-sm font-medium text-gray-700 mb-3">{data.prompt}</p>
       )}
 
+      <p className="text-[11px] text-gray-500 mb-2">
+        Drag a chip into a bucket, or tap a chip then tap a bucket. Click ✕
+        on a placed chip to send it back.
+      </p>
+
       {/* Unsorted chips */}
-      <div className="rounded-lg bg-white border border-dashed border-gray-300 p-3 mb-3">
+      <div
+        className="rounded-lg bg-white border border-dashed border-gray-300 p-3 mb-3"
+        onDragOver={(e) => {
+          // Allow dropping back to "unsorted" zone too
+          e.preventDefault();
+        }}
+        onDrop={(e) => {
+          const itemId = e.dataTransfer.getData("text/plain");
+          if (itemId) {
+            setPlacement((p) => ({ ...p, [itemId]: null }));
+            setActive(null);
+          }
+        }}
+      >
         <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2">
           To sort{unsorted.length > 0 ? ` (${unsorted.length})` : ""}
         </p>
@@ -67,9 +85,16 @@ export function SortBuckets({ data }: { data: SortBucketsData }) {
                 <li key={it.id}>
                   <button
                     type="button"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("text/plain", it.id);
+                      e.dataTransfer.effectAllowed = "move";
+                      setActive(it.id);
+                    }}
+                    onDragEnd={() => setActive(null)}
                     aria-pressed={isActive}
                     onClick={() => pickItem(it.id)}
-                    className={`text-left text-sm rounded-md border px-3 py-2 cursor-pointer transition-all ${
+                    className={`text-left text-sm rounded-md border px-3 py-2 cursor-grab active:cursor-grabbing transition-all ${
                       isActive
                         ? "border-asu-blue ring-2 ring-asu-blue/30 bg-asu-blue/10 text-gray-700"
                         : "border-gray-300 bg-white text-gray-700 hover:border-asu-blue hover:text-asu-blue"
@@ -82,14 +107,14 @@ export function SortBuckets({ data }: { data: SortBucketsData }) {
             })}
           </ul>
         ) : (
-          <p className="text-xs text-gray-400 italic">All items placed.</p>
+          <p className="text-xs text-gray-500 italic">All items placed.</p>
         )}
       </div>
 
       {/* Active hint */}
       {active && (
         <p className="text-xs text-asu-blue font-medium mb-2">
-          Selected. Click a bucket below to drop it.
+          Selected. Drop on a bucket below or tap one to place it.
         </p>
       )}
 
@@ -98,16 +123,31 @@ export function SortBuckets({ data }: { data: SortBucketsData }) {
         {data.buckets.map((b) => {
           const inBucket = data.items.filter((it) => placement[it.id] === b.id);
           return (
-            <button
+            <div
               key={b.id}
-              type="button"
+              role="button"
+              tabIndex={0}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const itemId = e.dataTransfer.getData("text/plain");
+                if (itemId) placeInto(itemId, b.id);
+              }}
               onClick={() => placeInto(active, b.id)}
-              disabled={!active}
-              aria-label={`Drop into ${b.label}`}
-              className={`text-left rounded-lg border-2 bg-white p-3 transition-colors ${
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  if (active) placeInto(active, b.id);
+                }
+              }}
+              aria-label={`Bucket ${b.label}. ${inBucket.length} item${inBucket.length === 1 ? "" : "s"}.`}
+              className={`text-left rounded-lg border-2 bg-white p-3 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-asu-blue focus-visible:ring-offset-1 ${
                 active
                   ? "border-asu-blue/50 hover:border-asu-blue hover:bg-asu-blue/5 cursor-pointer"
-                  : "border-gray-200 cursor-default"
+                  : "border-gray-300"
               }`}
             >
               <p className="text-sm font-bold text-asu-blue mb-2">{b.label}</p>
@@ -149,7 +189,7 @@ export function SortBuckets({ data }: { data: SortBucketsData }) {
                   })}
                 </ul>
               )}
-            </button>
+            </div>
           );
         })}
       </div>

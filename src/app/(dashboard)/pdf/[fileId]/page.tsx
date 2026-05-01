@@ -35,6 +35,13 @@ export default async function PdfViewerPage({
   )}/view${pageNum ? `#page=${pageNum}` : ""}`;
   const title = sp.title?.trim() || "Reference PDF";
   const backHref = sp.back?.startsWith("/") ? sp.back : "/learning-paths";
+  // Label the back button with where it actually goes.
+  const backLabel = (() => {
+    if (backHref.startsWith("/learning-paths")) return "Back to Learning Materials";
+    if (backHref.startsWith("/activities")) return "Back to Activities";
+    if (backHref === "/" ) return "Back to Dashboard";
+    return "Back";
+  })();
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -56,7 +63,7 @@ export default async function PdfViewerPage({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Back
+        {backLabel}
       </Link>
 
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">

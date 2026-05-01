@@ -53,6 +53,7 @@ export function VocabTerm({
         aria-label={`Definition of ${term}`}
         className="font-bold text-asu-blue hover:text-asu-maroon focus:outline-none focus-visible:ring-2 focus-visible:ring-asu-blue focus-visible:ring-offset-1 rounded cursor-pointer"
       >
+        <span aria-hidden="true">*</span>
         {term}
         <span aria-hidden="true">*</span>
       </button>

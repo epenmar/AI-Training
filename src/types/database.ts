@@ -199,6 +199,7 @@ export interface Database {
           value_add: string | null;
           objectives: string[];
           community_action: string;
+          extra_sources: unknown;
         };
         Insert: {
           skill_id: number;
@@ -211,6 +212,7 @@ export interface Database {
           value_add?: string | null;
           objectives?: string[];
           community_action?: string;
+          extra_sources?: unknown;
         };
         Update: {
           skill_id?: number;
@@ -223,6 +225,7 @@ export interface Database {
           value_add?: string | null;
           objectives?: string[];
           community_action?: string;
+          extra_sources?: unknown;
         };
         Relationships: [];
       };
