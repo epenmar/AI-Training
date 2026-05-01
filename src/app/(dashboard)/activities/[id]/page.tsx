@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CompletionPanel } from "@/components/activities/CompletionPanel";
 import { AsuResourcesPanel } from "@/components/activities/AsuResourcesPanel";
 import { StepInteractive } from "@/components/activities/interactives/StepInteractive";
+import { buildRecommendations } from "@/lib/recommendations";
 
 const BAND_COLORS: Record<string, string> = {
   "New → Foundational": "bg-asu-blue/10 text-asu-blue",
@@ -116,6 +117,74 @@ export default async function ActivityDetailPage({
     .filter((it) => (it.skill_ids ?? []).includes(activity.skill_id))
     .filter((it) => !!(it.link || it.source_url))
     .slice(0, 6);
+
+  // Determine the user's "next activity" for the bottom-of-page nav. Prefer
+  // the next waypoint on their personalized roadmap (if they have an
+  // assessment); otherwise advance through this activity's skill+band.
+  const { data: latestAttempt } = await supabase
+    .from("assessment_attempts")
+    .select("id")
+    .eq("user_id", user.id)
+    .order("completed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  let nextActivity: { id: number; title: string } | null = null;
+  if (latestAttempt) {
+    const [{ data: responses }, { data: questions }] = await Promise.all([
+      supabase
+        .from("assessment_responses")
+        .select("question_id, score")
+        .eq("attempt_id", latestAttempt.id),
+      supabase.from("assessment_questions").select("id, skill_id"),
+    ]);
+    const qSkillMap = new Map(
+      (questions ?? []).map((q) => [q.id, q.skill_id])
+    );
+    const targets = buildRecommendations(responses ?? [], qSkillMap);
+    if (targets.length > 0) {
+      const { data: roadmapActs } = await supabase
+        .from("level_up_activities")
+        .select("id, title, skill_id, band");
+      const { data: completionRows } = await supabase
+        .from("user_activity_completions")
+        .select("activity_id")
+        .eq("user_id", user.id);
+      const completedSet = new Set(
+        (completionRows ?? []).map((r) => r.activity_id)
+      );
+      // Build the same waypoint list the recommended view uses, then pick
+      // the first incomplete one that isn't this activity.
+      for (const t of targets) {
+        const candidates = (roadmapActs ?? []).filter(
+          (a) => a.skill_id === t.skillId && a.band === t.band
+        );
+        const next = candidates.find(
+          (a) => !completedSet.has(a.id) && a.id !== activityId
+        );
+        if (next) {
+          nextActivity = { id: next.id, title: next.title };
+          break;
+        }
+      }
+    }
+  }
+  if (!nextActivity) {
+    // Fallback: next id in this skill, or null.
+    const { data: sameSkill } = await supabase
+      .from("level_up_activities")
+      .select("id, title, band")
+      .eq("skill_id", activity.skill_id)
+      .order("id");
+    const idx = (sameSkill ?? []).findIndex((a) => a.id === activityId);
+    const nextInSkill = idx >= 0 ? (sameSkill ?? [])[idx + 1] : null;
+    if (nextInSkill) {
+      nextActivity = { id: nextInSkill.id, title: nextInSkill.title };
+    }
+  }
+
+  const mapHref = latestAttempt
+    ? "/activities?filter=recommended"
+    : `/activities?filter=all#skill-${activity.skill_id}-heading`;
 
   const bandClass =
     BAND_COLORS[activity.band] ?? "bg-gray-100 text-gray-600";
@@ -232,7 +301,9 @@ export default async function ActivityDetailPage({
                 const hasInteractive =
                   step.interactive_type != null &&
                   step.interactive_data != null;
-                const showResources = !!step.show_asu_resources;
+                const showPlatform = !!step.show_asu_resources;
+                const showExternal = !!step.show_external_tools;
+                const showResources = showPlatform || showExternal;
                 const hasExpand = hasHelp || hasInteractive || showResources;
                 return (
                   <li
@@ -279,6 +350,8 @@ export default async function ActivityDetailPage({
                               activityId={activityId}
                               activityTitle={activity.title}
                               activityDeliverable={activity.deliverable ?? null}
+                              showPlatform={showPlatform}
+                              showExternal={showExternal}
                             />
                           )}
                           {hasInteractive && (
@@ -414,6 +487,59 @@ export default async function ActivityDetailPage({
         deliverable={activity.deliverable ?? null}
         communityAction={activity.community_action ?? "lookbook"}
       />
+
+      {/* Bottom-of-page navigation */}
+      <nav
+        aria-label="Activity navigation"
+        className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-5"
+      >
+        <Link
+          href={mapHref}
+          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.553 2.776A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+            />
+          </svg>
+          Back to{" "}
+          {latestAttempt ? "your roadmap" : "all activities"}
+        </Link>
+        {nextActivity && (
+          <Link
+            href={`/activities/${nextActivity.id}`}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-asu-maroon text-white hover:bg-sidebar-hover"
+          >
+            Next activity
+            <span className="hidden sm:inline text-white/80 font-normal">
+              · {nextActivity.title}
+            </span>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 8l4 4m0 0l-4 4m4-4H3"
+              />
+            </svg>
+          </Link>
+        )}
+      </nav>
     </div>
   );
 }

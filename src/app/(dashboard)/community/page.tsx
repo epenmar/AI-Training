@@ -22,6 +22,7 @@ export default async function CommunityPage({
     band?: string;
     tab?: string;
     q?: string;
+    sort?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -30,6 +31,7 @@ export default async function CommunityPage({
   const bandFilter =
     params.band && VALID_BANDS.has(params.band) ? params.band : "";
   const search = (params.q ?? "").trim();
+  const sort: "top" | "latest" = params.sort === "latest" ? "latest" : "top";
 
   const supabase = await createClient();
   const {
@@ -55,7 +57,7 @@ export default async function CommunityPage({
           bandFilter={bandFilter}
         />
       ) : (
-        <AskTab userId={user.id} search={search} />
+        <AskTab userId={user.id} search={search} sort={sort} />
       )}
     </div>
   );
@@ -98,6 +100,38 @@ function Tabs({ active }: { active: TabKey }) {
   );
 }
 
+function SortLink({
+  current,
+  value,
+  search,
+  label,
+}: {
+  current: "top" | "latest";
+  value: "top" | "latest";
+  search: string;
+  label: string;
+}) {
+  const params = new URLSearchParams({ tab: "questions" });
+  if (value !== "top") params.set("sort", value);
+  if (search) params.set("q", search);
+  const href = `/community?${params.toString()}`;
+  const active = current === value;
+  return (
+    <Link
+      href={href}
+      role="tab"
+      aria-selected={active}
+      className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
+        active
+          ? "bg-white text-asu-maroon shadow-sm"
+          : "text-gray-500 hover:text-gray-700"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
 function TabButton({
   href,
   active,
@@ -137,9 +171,11 @@ function TabButton({
 async function AskTab({
   userId,
   search,
+  sort,
 }: {
   userId: string;
   search: string;
+  sort: "top" | "latest";
 }) {
   const supabase = await createClient();
 
@@ -156,6 +192,8 @@ async function AskTab({
       `title.ilike.%${escaped}%,description.ilike.%${escaped}%`
     );
   }
+  // We always pull newest-first from the DB; if sort=top we re-order in JS
+  // by comment count after we count them.
   questionQuery = questionQuery.order("created_at", { ascending: false });
 
   const [
@@ -194,6 +232,20 @@ async function AskTab({
   for (const row of commentRows ?? []) {
     commentCounts.set(row.post_id, (commentCounts.get(row.post_id) ?? 0) + 1);
   }
+
+  // Reddit-style "top" sort: most-discussed first, recency as tiebreaker.
+  const sortedQuestions =
+    sort === "top"
+      ? [...(questions ?? [])].sort((a, b) => {
+          const ca = commentCounts.get(a.id) ?? 0;
+          const cb = commentCounts.get(b.id) ?? 0;
+          if (cb !== ca) return cb - ca;
+          return (
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+          );
+        })
+      : (questions ?? []);
 
   return (
     <div className="space-y-5">
@@ -260,19 +312,39 @@ async function AskTab({
 
       {search && (
         <p className="text-xs text-gray-500">
-          {(questions ?? []).length}{" "}
-          {(questions ?? []).length === 1 ? "result" : "results"} for
+          {sortedQuestions.length}{" "}
+          {sortedQuestions.length === 1 ? "result" : "results"} for
           &ldquo;{search}&rdquo;
         </p>
       )}
+
+      {/* Sort toggle */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Sort
+        </span>
+        <div
+          role="tablist"
+          aria-label="Sort discussions"
+          className="inline-flex items-center gap-0.5 p-0.5 bg-gray-100 rounded-md"
+        >
+          <SortLink current={sort} value="top" search={search} label="Top" />
+          <SortLink
+            current={sort}
+            value="latest"
+            search={search}
+            label="Latest"
+          />
+        </div>
+      </div>
 
       <div id="new-post" className="scroll-mt-24">
         <AskQuestionForm skills={skills ?? []} />
       </div>
 
-      {(questions ?? []).length > 0 ? (
+      {sortedQuestions.length > 0 ? (
         <ul className="space-y-3">
-          {(questions ?? []).map((q) => {
+          {sortedQuestions.map((q) => {
             const author = profileMap.get(q.user_id);
             const showName = !q.anonymous && author?.display_name;
             const authorName = showName ? author.display_name : "Anonymous";

@@ -236,6 +236,7 @@ export interface Database {
           interactive_type: string | null;
           interactive_data: unknown;
           show_asu_resources: boolean;
+          show_external_tools: boolean;
         };
         Insert: {
           activity_id: number;
@@ -245,6 +246,7 @@ export interface Database {
           interactive_type?: string | null;
           interactive_data?: unknown;
           show_asu_resources?: boolean;
+          show_external_tools?: boolean;
         };
         Update: {
           activity_id?: number;
@@ -254,6 +256,7 @@ export interface Database {
           interactive_type?: string | null;
           interactive_data?: unknown;
           show_asu_resources?: boolean;
+          show_external_tools?: boolean;
         };
         Relationships: [];
       };
