@@ -9,6 +9,8 @@ export type ComparisonTableData = {
   rows: { id: string; label: string; placeholder?: string }[];
   columns: { id: string; label: string }[];
   cellPlaceholder?: string;
+  // When true, row labels render as static text instead of editable inputs.
+  rowsReadOnly?: boolean;
 };
 
 type Stored = Record<string, Record<string, string>>;
@@ -96,14 +98,20 @@ export function ComparisonTable({ data }: { data: ComparisonTableData }) {
                   scope="row"
                   className="text-left align-top pr-2 py-1"
                 >
-                  <input
-                    type="text"
-                    aria-label={`${row.label} name`}
-                    defaultValue={row.label}
-                    placeholder={row.placeholder ?? row.label}
-                    onChange={(e) => update(row.id, "_label", e.target.value)}
-                    className="w-32 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:border-asu-blue focus:outline-none focus:ring-1 focus:ring-asu-blue"
-                  />
+                  {data.rowsReadOnly ? (
+                    <span className="block w-40 text-sm font-semibold text-gray-700 px-1 py-1.5 leading-snug">
+                      {row.label}
+                    </span>
+                  ) : (
+                    <input
+                      type="text"
+                      aria-label={`${row.label} name`}
+                      defaultValue={row.label}
+                      placeholder={row.placeholder ?? row.label}
+                      onChange={(e) => update(row.id, "_label", e.target.value)}
+                      className="w-32 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:border-asu-blue focus:outline-none focus:ring-1 focus:ring-asu-blue"
+                    />
+                  )}
                 </th>
                 {data.columns.map((col) => (
                   <td key={col.id} className="align-top py-1">
