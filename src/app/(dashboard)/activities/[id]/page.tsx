@@ -36,17 +36,34 @@ function renderRichText(text: string): React.ReactNode[] {
         </strong>
       );
     } else if (match[2] !== undefined && match[3] !== undefined) {
-      out.push(
-        <a
-          key={`a${key++}`}
-          href={match[3]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-asu-maroon underline hover:opacity-80"
-        >
-          {match[2]}
-        </a>
-      );
+      const linkText = match[2];
+      const href = match[3];
+      // Internal links (relative paths starting with "/") get a Next.js
+      // Link so they navigate in the same tab; external URLs open new
+      // tabs as before.
+      if (href.startsWith("/")) {
+        out.push(
+          <Link
+            key={`a${key++}`}
+            href={href}
+            className="text-asu-maroon underline hover:opacity-80"
+          >
+            {linkText}
+          </Link>
+        );
+      } else {
+        out.push(
+          <a
+            key={`a${key++}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-asu-maroon underline hover:opacity-80"
+          >
+            {linkText}
+          </a>
+        );
+      }
     } else if (match[4] !== undefined && match[5] !== undefined) {
       out.push(
         <VocabTerm

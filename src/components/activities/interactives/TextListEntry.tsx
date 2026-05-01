@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AutoTextarea } from "./AutoTextarea";
 
 export type TextListEntryData = {
@@ -26,8 +26,11 @@ type Stored = {
   marks: Record<string, boolean[]>;
 };
 
-// Backward-compat: pre-v2 storage was just Record<string, string[]> with no
-// marks. Treat that as values-only.
+// Same-tab live-update mechanism: when one instance writes to localStorage,
+// it dispatches a custom event; instances pointing at the same storageKey
+// re-read and re-render without a page refresh.
+const SYNC_EVENT = "text-list-entry:storage-update";
+
 function readStorage(key: string, groups: TextListEntryData["groups"]): Stored {
   const empty: Stored = {
     values: Object.fromEntries(
@@ -79,6 +82,9 @@ function writeStorage(key: string, value: Stored) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
+    window.dispatchEvent(
+      new CustomEvent(SYNC_EVENT, { detail: { key } })
+    );
   } catch {
     // ignore
   }
@@ -95,16 +101,53 @@ export function TextListEntry({ data }: { data: TextListEntryData }) {
   };
   const [state, setState] = useState<Stored>(empty);
   const [hydrated, setHydrated] = useState(false);
+  const lastWritten = useRef<string>("");
 
+  // Hydrate from localStorage on mount.
   useEffect(() => {
     setState(readStorage(data.storageKey, data.groups));
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.storageKey]);
 
+  // Persist on change (and notify other instances).
   useEffect(() => {
-    if (hydrated) writeStorage(data.storageKey, state);
+    if (!hydrated) return;
+    const serialized = JSON.stringify(state);
+    if (serialized === lastWritten.current) return;
+    lastWritten.current = serialized;
+    writeStorage(data.storageKey, state);
   }, [state, data.storageKey, hydrated]);
+
+  // Listen for cross-instance updates (other TextListEntry on the same
+  // page writing to the same storageKey, or a different tab).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onSync = (e: Event) => {
+      const ce = e as CustomEvent<{ key: string }>;
+      if (ce.detail?.key !== data.storageKey) return;
+      const fresh = readStorage(data.storageKey, data.groups);
+      const freshSer = JSON.stringify(fresh);
+      if (freshSer === lastWritten.current) return;
+      lastWritten.current = freshSer;
+      setState(fresh);
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== data.storageKey) return;
+      const fresh = readStorage(data.storageKey, data.groups);
+      const freshSer = JSON.stringify(fresh);
+      if (freshSer === lastWritten.current) return;
+      lastWritten.current = freshSer;
+      setState(fresh);
+    };
+    window.addEventListener(SYNC_EVENT, onSync);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(SYNC_EVENT, onSync);
+      window.removeEventListener("storage", onStorage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.storageKey]);
 
   const updateValue = (groupId: string, idx: number, val: string) => {
     setState((prev) => {
@@ -144,32 +187,18 @@ export function TextListEntry({ data }: { data: TextListEntryData }) {
               {Array.from({ length: g.count }, (_, i) => {
                 const value = state.values[g.id]?.[i] ?? "";
                 const marked = state.marks[g.id]?.[i] ?? false;
-                const rowHighlight = g.markable && marked
-                  ? "bg-asu-gold/20 border-asu-gold/60"
-                  : "bg-white border-gray-200";
-
-                if (g.readOnly) {
-                  return (
-                    <div
-                      key={i}
-                      className={`text-sm rounded-md border px-3 py-2 leading-snug ${rowHighlight} ${
-                        value
-                          ? "text-gray-700"
-                          : "text-gray-400 italic"
-                      }`}
-                    >
-                      {value || "(blank — fill in earlier step)"}
-                    </div>
-                  );
-                }
+                const rowHighlight =
+                  g.markable && marked
+                    ? "bg-asu-gold/20 border-asu-gold/60"
+                    : "bg-white border-gray-200";
 
                 return (
                   <div
                     key={i}
-                    className={`flex items-start gap-2 rounded-md border px-2 py-1.5 ${rowHighlight}`}
+                    className={`flex items-stretch gap-2 rounded-md border px-2 py-1.5 min-h-[2.5rem] ${rowHighlight}`}
                   >
                     {g.markable && (
-                      <label className="inline-flex items-center pt-1.5 cursor-pointer">
+                      <label className="inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
                           checked={marked}
@@ -181,15 +210,25 @@ export function TextListEntry({ data }: { data: TextListEntryData }) {
                         />
                       </label>
                     )}
-                    <AutoTextarea
-                      aria-label={`${g.label} item ${i + 1}`}
-                      value={value}
-                      onChange={(e) =>
-                        updateValue(g.id, i, e.target.value)
-                      }
-                      placeholder={g.placeholder}
-                      className="flex-1 text-sm bg-transparent border-0 px-2 py-1 focus:outline-none focus:ring-0 leading-snug"
-                    />
+                    {g.readOnly ? (
+                      <span
+                        className={`flex-1 text-sm self-center px-1 py-1 leading-snug ${
+                          value ? "text-gray-700" : "text-gray-400 italic"
+                        }`}
+                      >
+                        {value || "(blank, fill in earlier step)"}
+                      </span>
+                    ) : (
+                      <AutoTextarea
+                        aria-label={`${g.label} item ${i + 1}`}
+                        value={value}
+                        onChange={(e) =>
+                          updateValue(g.id, i, e.target.value)
+                        }
+                        placeholder={g.placeholder}
+                        className="flex-1 text-sm bg-transparent border-0 px-2 py-1 focus:outline-none focus:ring-0 leading-snug"
+                      />
+                    )}
                   </div>
                 );
               })}
