@@ -22,6 +22,10 @@ import {
   PrincipledInnovationInfographic,
   type PrincipledInnovationInfographicData,
 } from "./PrincipledInnovationInfographic";
+import {
+  ShortlistTable,
+  type ShortlistTableData,
+} from "./ShortlistTable";
 
 export function StepInteractive({
   type,
@@ -55,6 +59,8 @@ export function StepInteractive({
           data={data as PrincipledInnovationInfographicData}
         />
       );
+    case "shortlist_table":
+      return <ShortlistTable data={data as ShortlistTableData} />;
     default:
       return null;
   }
