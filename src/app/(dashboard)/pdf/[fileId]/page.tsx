@@ -1,10 +1,20 @@
 import Link from "next/link";
 
-// Wrapper around Google Drive's preview URL so PDF links can deep-link to a
-// specific page. Drive's /file/d/.../view URL ignores #page=N anchors, but
-// /file/d/.../preview honors ?page=N when rendered inside an iframe.
+// PDFs we host directly under /public/pdfs/. Local PDFs honor #page=N in
+// the browser's native PDF viewer, so deep-linking actually works. Drive
+// files fall back to Drive's embed iframe (which doesn't reliably honor
+// the page param).
+const LOCAL_PDFS: Record<string, string> = {
+  // alias → local filename (without .pdf)
+  "genai101-takehome-reference": "genai101-takehome-reference",
+  // Legacy Drive file ID, still pointed at the same local file
+  "1eoJvnLNMY-nW18z8hkWRq8gNqRpoGaO-": "genai101-takehome-reference",
+};
+
+// Wrapper around either a locally-hosted PDF or Google Drive's preview URL,
+// so PDF links can deep-link to a specific page.
 //
-// Usage: /pdf/{driveFileId}?page=N&title=...
+// Usage: /pdf/{slugOrDriveId}?page=N&title=...
 export default async function PdfViewerPage({
   params,
   searchParams,
@@ -18,7 +28,7 @@ export default async function PdfViewerPage({
   const pageNum =
     pageStr && /^\d+$/.test(pageStr) ? parseInt(pageStr, 10) : null;
 
-  // Defensive, only allow Drive-style file IDs (alphanumeric + - and _).
+  // Defensive, only allow safe characters.
   if (!/^[A-Za-z0-9_-]+$/.test(fileId)) {
     return (
       <div className="max-w-3xl mx-auto">
@@ -27,12 +37,18 @@ export default async function PdfViewerPage({
     );
   }
 
-  const previewUrl = `https://drive.google.com/file/d/${encodeURIComponent(
-    fileId
-  )}/preview${pageNum ? `?page=${pageNum}` : ""}`;
-  const directUrl = `https://drive.google.com/file/d/${encodeURIComponent(
-    fileId
-  )}/view${pageNum ? `#page=${pageNum}` : ""}`;
+  const localFile = LOCAL_PDFS[fileId];
+  const isLocal = !!localFile;
+  const previewUrl = isLocal
+    ? `/pdfs/${localFile}.pdf${pageNum ? `#page=${pageNum}` : ""}`
+    : `https://drive.google.com/file/d/${encodeURIComponent(
+        fileId
+      )}/preview${pageNum ? `?page=${pageNum}` : ""}`;
+  const directUrl = isLocal
+    ? `/pdfs/${localFile}.pdf${pageNum ? `#page=${pageNum}` : ""}`
+    : `https://drive.google.com/file/d/${encodeURIComponent(
+        fileId
+      )}/view${pageNum ? `#page=${pageNum}` : ""}`;
   const title = sp.title?.trim() || "Reference PDF";
   const backHref = sp.back?.startsWith("/") ? sp.back : "/learning-paths";
   // Label the back button with where it actually goes.
@@ -81,7 +97,7 @@ export default async function PdfViewerPage({
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
         >
-          Open in Google Drive
+          {isLocal ? "Open PDF in new tab" : "Open in Google Drive"}
           <svg
             className="w-3 h-3"
             fill="none"
@@ -107,9 +123,10 @@ export default async function PdfViewerPage({
         loading="lazy"
         allow="fullscreen"
       />
-      <p className="mt-2 text-xs text-gray-400">
-        If the embedded viewer doesn&apos;t load, use &ldquo;Open in Google
-        Drive&rdquo; above.
+      <p className="mt-2 text-xs text-gray-500">
+        {isLocal
+          ? "If the embedded viewer doesn't load, use \"Open PDF in new tab\" above."
+          : "If the embedded viewer doesn't load, use \"Open in Google Drive\" above."}
       </p>
     </div>
   );

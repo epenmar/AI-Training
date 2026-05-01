@@ -68,7 +68,7 @@ export function AskQuestionForm({ skills }: { skills: Skill[] }) {
             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
           />
         </svg>
-        Ask the community a question…
+        Make a comment or ask the community a question…
       </button>
     );
   }
@@ -83,14 +83,14 @@ export function AskQuestionForm({ skills }: { skills: Skill[] }) {
           htmlFor="q-title"
           className="block text-xs font-medium text-gray-500 mb-1"
         >
-          Question
+          Question or comment
         </label>
         <input
           id="q-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="What are you trying to figure out?"
+          placeholder="What are you trying to figure out, or what observation do you want to share?"
           maxLength={200}
           required
           className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-asu-blue focus:border-transparent"
@@ -108,7 +108,7 @@ export function AskQuestionForm({ skills }: { skills: Skill[] }) {
           id="q-body"
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Share context: what you've tried, what tools you're using, and what a helpful answer would look like."
+          placeholder="Share context: for a question, what you've tried and what a helpful answer looks like; for a comment, what you noticed and why it surprised you."
           rows={5}
           maxLength={5000}
           required
