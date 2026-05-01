@@ -14,6 +14,10 @@ import {
   ComparisonTable,
   type ComparisonTableData,
 } from "./ComparisonTable";
+import {
+  VitraInfographic,
+  type VitraInfographicData,
+} from "./VitraInfographic";
 
 export function StepInteractive({
   type,
@@ -39,6 +43,8 @@ export function StepInteractive({
       return <CitationTracker data={data as CitationTrackerData} />;
     case "comparison_table":
       return <ComparisonTable data={data as ComparisonTableData} />;
+    case "vitra_infographic":
+      return <VitraInfographic data={data as VitraInfographicData} />;
     default:
       return null;
   }

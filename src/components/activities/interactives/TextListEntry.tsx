@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AutoTextarea } from "./AutoTextarea";
 
 export type TextListEntryData = {
   storageKey: string;
@@ -83,9 +84,8 @@ export function TextListEntry({ data }: { data: TextListEntryData }) {
             </p>
             <div className="space-y-2">
               {Array.from({ length: g.count }, (_, i) => (
-                <input
+                <AutoTextarea
                   key={i}
-                  type="text"
                   value={values[g.id]?.[i] ?? ""}
                   onChange={(e) => updateAt(g.id, i, e.target.value)}
                   placeholder={g.placeholder}

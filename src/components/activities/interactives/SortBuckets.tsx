@@ -8,102 +8,165 @@ export type SortBucketsData = {
   items: { id: string; text: string; bucketId: string; rationale?: string }[];
 };
 
-type AnswerState = Record<string, string | null>;
+type Placement = Record<string, string | null>; // itemId -> bucketId | null (unsorted)
 
 export function SortBuckets({ data }: { data: SortBucketsData }) {
-  const initial = useMemo<AnswerState>(
+  const initial = useMemo<Placement>(
     () => Object.fromEntries(data.items.map((it) => [it.id, null])),
     [data.items]
   );
-  const [answers, setAnswers] = useState<AnswerState>(initial);
+  const [placement, setPlacement] = useState<Placement>(initial);
+  const [active, setActive] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
 
-  const allAnswered = data.items.every((it) => answers[it.id] != null);
+  const itemsById = useMemo(
+    () => Object.fromEntries(data.items.map((it) => [it.id, it])),
+    [data.items]
+  );
 
+  const unsorted = data.items.filter((it) => !placement[it.id]);
+  const allPlaced = unsorted.length === 0;
   const correctCount = data.items.reduce(
-    (n, it) => (answers[it.id] === it.bucketId ? n + 1 : n),
+    (n, it) => (placement[it.id] === it.bucketId ? n + 1 : n),
     0
   );
+
+  function placeInto(itemId: string | null, bucketId: string | null) {
+    if (!itemId) return;
+    setPlacement((p) => ({ ...p, [itemId]: bucketId }));
+    setActive(null);
+  }
+
+  function pickItem(itemId: string) {
+    if (checked) return;
+    setActive((cur) => (cur === itemId ? null : itemId));
+  }
+
+  function reset() {
+    setPlacement(initial);
+    setActive(null);
+    setChecked(false);
+  }
 
   return (
     <div className="rounded-lg border border-asu-blue/25 bg-asu-blue/5 p-4">
       {data.prompt && (
         <p className="text-sm font-medium text-gray-700 mb-3">{data.prompt}</p>
       )}
-      <ul className="space-y-3">
-        {data.items.map((item) => {
-          const selected = answers[item.id];
-          const isCorrect = checked && selected === item.bucketId;
-          const isWrong = checked && selected != null && selected !== item.bucketId;
+
+      {/* Unsorted chips */}
+      <div className="rounded-lg bg-white border border-dashed border-gray-300 p-3 mb-3">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2">
+          To sort{unsorted.length > 0 ? ` (${unsorted.length})` : ""}
+        </p>
+        {unsorted.length > 0 ? (
+          <ul className="flex flex-wrap gap-2">
+            {unsorted.map((it) => {
+              const isActive = active === it.id;
+              return (
+                <li key={it.id}>
+                  <button
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => pickItem(it.id)}
+                    className={`text-left text-sm rounded-md border px-3 py-2 cursor-pointer transition-all ${
+                      isActive
+                        ? "border-asu-blue ring-2 ring-asu-blue/30 bg-asu-blue/10 text-gray-700"
+                        : "border-gray-300 bg-white text-gray-700 hover:border-asu-blue hover:text-asu-blue"
+                    }`}
+                  >
+                    {it.text}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="text-xs text-gray-400 italic">All items placed.</p>
+        )}
+      </div>
+
+      {/* Active hint */}
+      {active && (
+        <p className="text-xs text-asu-blue font-medium mb-2">
+          Selected. Click a bucket below to drop it.
+        </p>
+      )}
+
+      {/* Buckets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {data.buckets.map((b) => {
+          const inBucket = data.items.filter((it) => placement[it.id] === b.id);
           return (
-            <li
-              key={item.id}
-              className={`rounded-lg border bg-white p-3 transition-colors ${
-                isCorrect
-                  ? "border-asu-green/50 bg-asu-green/5"
-                  : isWrong
-                    ? "border-red-300 bg-red-50"
-                    : "border-gray-200"
+            <button
+              key={b.id}
+              type="button"
+              onClick={() => placeInto(active, b.id)}
+              disabled={!active}
+              aria-label={`Drop into ${b.label}`}
+              className={`text-left rounded-lg border-2 bg-white p-3 transition-colors ${
+                active
+                  ? "border-asu-blue/50 hover:border-asu-blue hover:bg-asu-blue/5 cursor-pointer"
+                  : "border-gray-200 cursor-default"
               }`}
             >
-              <p className="text-sm text-gray-700 mb-3">{item.text}</p>
-              <div className="flex items-center gap-3 flex-wrap bg-asu-blue/5 rounded-md border border-asu-blue/25 px-3 py-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-asu-blue">
-                  Sort into
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {data.buckets.map((b) => {
-                    const isSelected = selected === b.id;
+              <p className="text-sm font-bold text-asu-blue mb-2">{b.label}</p>
+              {inBucket.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">Empty</p>
+              ) : (
+                <ul className="flex flex-col gap-1.5">
+                  {inBucket.map((it) => {
+                    const isCorrect = checked && placement[it.id] === it.bucketId;
+                    const isWrong =
+                      checked && placement[it.id] != null && !isCorrect;
                     return (
-                      <button
-                        key={b.id}
-                        type="button"
-                        aria-pressed={isSelected}
-                        disabled={checked && isCorrect}
-                        onClick={() =>
-                          setAnswers((a) => ({ ...a, [item.id]: b.id }))
-                        }
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md cursor-pointer transition-all border disabled:cursor-default ${
-                          isSelected
-                            ? "bg-asu-blue text-white border-asu-blue"
-                            : "bg-white text-gray-700 border-gray-300 hover:border-asu-blue hover:text-asu-blue"
+                      <li
+                        key={it.id}
+                        className={`text-sm rounded-md border px-2 py-1.5 flex items-start justify-between gap-2 ${
+                          isCorrect
+                            ? "border-asu-green/50 bg-asu-green/5"
+                            : isWrong
+                              ? "border-red-300 bg-red-50"
+                              : "border-gray-200 bg-gray-50"
                         }`}
                       >
-                        <span
-                          className={`inline-flex items-center justify-center w-4 h-4 rounded-full border-2 ${
-                            isSelected
-                              ? "border-white bg-white/30"
-                              : "border-gray-400"
-                          }`}
-                          aria-hidden="true"
-                        >
-                          {isSelected && (
-                            <span className="block w-1.5 h-1.5 rounded-full bg-current" />
-                          )}
-                        </span>
-                        {b.label}
-                      </button>
+                        <span className="flex-1">{it.text}</span>
+                        {!checked && (
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPlacement((p) => ({ ...p, [it.id]: null }));
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                setPlacement((p) => ({ ...p, [it.id]: null }));
+                              }
+                            }}
+                            aria-label={`Remove ${it.text} from ${b.label}`}
+                            className="text-xs text-gray-400 hover:text-asu-maroon cursor-pointer"
+                          >
+                            ✕
+                          </span>
+                        )}
+                      </li>
                     );
                   })}
-                </div>
-                {selected == null && (
-                  <span className="text-[11px] text-gray-400 italic">
-                    Pick one
-                  </span>
-                )}
-              </div>
-              {isWrong && item.rationale && (
-                <p className="mt-2 text-xs text-red-700">{item.rationale}</p>
+                </ul>
               )}
-            </li>
+            </button>
           );
         })}
-      </ul>
-      <div className="mt-3 flex items-center justify-between gap-3">
+      </div>
+
+      {/* Check + feedback */}
+      <div className="mt-3 flex items-center gap-3 flex-wrap">
         <button
           type="button"
           onClick={() => setChecked(true)}
-          disabled={!allAnswered}
+          disabled={!allPlaced}
           className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-asu-blue text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           Check answers
@@ -113,19 +176,30 @@ export function SortBuckets({ data }: { data: SortBucketsData }) {
             {correctCount} of {data.items.length} correct
           </p>
         )}
-        {checked && correctCount < data.items.length && (
+        {(allPlaced || checked) && (
           <button
             type="button"
-            onClick={() => {
-              setAnswers(initial);
-              setChecked(false);
-            }}
+            onClick={reset}
             className="text-xs text-asu-maroon hover:underline cursor-pointer"
           >
             Reset
           </button>
         )}
       </div>
+
+      {/* Per-item rationale (only on wrong placements) */}
+      {checked && (
+        <ul className="mt-3 space-y-1">
+          {data.items
+            .filter((it) => placement[it.id] !== it.bucketId && it.rationale)
+            .map((it) => (
+              <li key={it.id} className="text-xs text-red-700">
+                <span className="font-semibold">&ldquo;{it.text}&rdquo;:</span>{" "}
+                {it.rationale}
+              </li>
+            ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -23,12 +23,12 @@ const COMMUNITY_ACTIONS: Record<
     icon: "share",
   },
   observation: {
-    label: "Post an observation",
+    label: "Post to Discussions",
     href: (id) => `/community?tab=questions&activity=${id}#new-post`,
     icon: "ask",
   },
   ask: {
-    label: "Ask the community",
+    label: "Post to Discussions",
     href: (id) => `/community?tab=questions&activity=${id}#new-post`,
     icon: "ask",
   },

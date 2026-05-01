@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AutoTextarea } from "./AutoTextarea";
 
 export type ComparisonTableData = {
   storageKey: string;
@@ -114,14 +115,13 @@ export function ComparisonTable({ data }: { data: ComparisonTableData }) {
                   )}
                 </th>
                 {data.columns.map((col) => (
-                  <td key={col.id} className="align-top py-1">
-                    <input
-                      type="text"
+                  <td key={col.id} className="align-top py-1 min-w-[10rem]">
+                    <AutoTextarea
                       aria-label={`${row.label} ${col.label}`}
                       value={state[row.id]?.[col.id] ?? ""}
                       onChange={(e) => update(row.id, col.id, e.target.value)}
                       placeholder={data.cellPlaceholder}
-                      className="w-full text-sm bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:border-asu-blue focus:outline-none focus:ring-1 focus:ring-asu-blue"
+                      className="w-full text-sm bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:border-asu-blue focus:outline-none focus:ring-1 focus:ring-asu-blue leading-snug"
                     />
                   </td>
                 ))}
