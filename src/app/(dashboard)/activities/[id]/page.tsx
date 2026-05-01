@@ -209,10 +209,7 @@ export default async function ActivityDetailPage({
           {steps && steps.length > 0 && (
             <ol className="space-y-3">
               {steps.map((step) => {
-                const hasHelp =
-                  (activity.band === "New → Foundational" ||
-                    activity.band === "Foundational → Intermediate") &&
-                  !!step.detailed_help?.trim();
+                const hasHelp = !!step.detailed_help?.trim();
                 const hasInteractive =
                   step.interactive_type != null &&
                   step.interactive_data != null;

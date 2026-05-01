@@ -112,6 +112,7 @@ export function CitationTracker({ data }: { data: CitationTrackerData }) {
 
   // verify mode
   const allEmpty = state.citations.every((c) => !c.trim());
+  const markedCount = state.verdicts.filter((v) => v != null).length;
   return (
     <div className="rounded-lg border border-asu-blue/25 bg-asu-blue/5 p-4">
       {data.prompt && (
@@ -122,43 +123,74 @@ export function CitationTracker({ data }: { data: CitationTrackerData }) {
           No citations stored yet. Go back to the earlier step to enter them.
         </p>
       ) : (
-        <ol className="space-y-2 list-decimal pl-5">
-          {state.citations.map((cite, i) => (
-            <li key={i} className="space-y-2">
-              <p className="text-sm text-gray-700 bg-white rounded-md border border-gray-200 px-3 py-2 font-mono leading-snug whitespace-pre-wrap">
-                {cite || (
-                  <span className="text-gray-400 italic">(blank)</span>
-                )}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {VERDICTS.map((v) => {
-                  const selected = state.verdicts[i] === v.value;
-                  return (
-                    <button
-                      key={v.value}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() =>
-                        setState((s) => {
-                          const next = [...s.verdicts];
-                          next[i] = v.value;
-                          return { ...s, verdicts: next };
-                        })
-                      }
-                      className={`px-3 py-1 text-xs font-semibold rounded-md cursor-pointer transition-colors ${
-                        selected
-                          ? v.tone
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {v.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </li>
-          ))}
-        </ol>
+        <>
+          <p className="text-xs text-gray-500 mb-3">
+            Tap one verdict per citation. Progress, {markedCount} of{" "}
+            {state.citations.length} marked.
+          </p>
+          <ol className="space-y-3 list-decimal pl-5">
+            {state.citations.map((cite, i) => {
+              const selected = state.verdicts[i];
+              return (
+                <li key={i} className="space-y-2">
+                  <p className="text-sm text-gray-700 bg-white rounded-md border border-gray-200 px-3 py-2 font-mono leading-snug whitespace-pre-wrap">
+                    {cite || (
+                      <span className="text-gray-400 italic">(blank)</span>
+                    )}
+                  </p>
+                  <div className="flex items-center gap-3 flex-wrap bg-white rounded-md border border-asu-blue/30 px-3 py-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-asu-blue">
+                      Mark as
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {VERDICTS.map((v) => {
+                        const isSelected = selected === v.value;
+                        return (
+                          <button
+                            key={v.value}
+                            type="button"
+                            aria-pressed={isSelected}
+                            onClick={() =>
+                              setState((s) => {
+                                const next = [...s.verdicts];
+                                next[i] = v.value;
+                                return { ...s, verdicts: next };
+                              })
+                            }
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md cursor-pointer transition-all ${
+                              isSelected
+                                ? `${v.tone} ring-2 ring-offset-1 ring-current/30`
+                                : "bg-white border border-gray-300 text-gray-700 hover:border-asu-blue hover:text-asu-blue"
+                            }`}
+                          >
+                            <span
+                              className={`inline-flex items-center justify-center w-4 h-4 rounded-full border-2 ${
+                                isSelected
+                                  ? "border-white bg-white/30"
+                                  : "border-gray-400"
+                              }`}
+                              aria-hidden="true"
+                            >
+                              {isSelected && (
+                                <span className="block w-1.5 h-1.5 rounded-full bg-current" />
+                              )}
+                            </span>
+                            {v.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {selected == null && (
+                      <span className="text-[11px] text-gray-400 italic">
+                        Pick one
+                      </span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </>
       )}
     </div>
   );

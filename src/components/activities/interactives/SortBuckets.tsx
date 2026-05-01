@@ -30,7 +30,7 @@ export function SortBuckets({ data }: { data: SortBucketsData }) {
       {data.prompt && (
         <p className="text-sm font-medium text-gray-700 mb-3">{data.prompt}</p>
       )}
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {data.items.map((item) => {
           const selected = answers[item.id];
           const isCorrect = checked && selected === item.bucketId;
@@ -46,26 +46,51 @@ export function SortBuckets({ data }: { data: SortBucketsData }) {
                     : "border-gray-200"
               }`}
             >
-              <p className="text-sm text-gray-700 mb-2">{item.text}</p>
-              <div className="flex flex-wrap gap-2">
-                {data.buckets.map((b) => (
-                  <button
-                    key={b.id}
-                    type="button"
-                    aria-pressed={selected === b.id}
-                    disabled={checked && isCorrect}
-                    onClick={() =>
-                      setAnswers((a) => ({ ...a, [item.id]: b.id }))
-                    }
-                    className={`px-3 py-1 text-xs font-semibold rounded-md cursor-pointer transition-colors ${
-                      selected === b.id
-                        ? "bg-asu-blue text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    } disabled:cursor-default`}
-                  >
-                    {b.label}
-                  </button>
-                ))}
+              <p className="text-sm text-gray-700 mb-3">{item.text}</p>
+              <div className="flex items-center gap-3 flex-wrap bg-asu-blue/5 rounded-md border border-asu-blue/25 px-3 py-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-asu-blue">
+                  Sort into
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {data.buckets.map((b) => {
+                    const isSelected = selected === b.id;
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        aria-pressed={isSelected}
+                        disabled={checked && isCorrect}
+                        onClick={() =>
+                          setAnswers((a) => ({ ...a, [item.id]: b.id }))
+                        }
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md cursor-pointer transition-all border disabled:cursor-default ${
+                          isSelected
+                            ? "bg-asu-blue text-white border-asu-blue"
+                            : "bg-white text-gray-700 border-gray-300 hover:border-asu-blue hover:text-asu-blue"
+                        }`}
+                      >
+                        <span
+                          className={`inline-flex items-center justify-center w-4 h-4 rounded-full border-2 ${
+                            isSelected
+                              ? "border-white bg-white/30"
+                              : "border-gray-400"
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {isSelected && (
+                            <span className="block w-1.5 h-1.5 rounded-full bg-current" />
+                          )}
+                        </span>
+                        {b.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selected == null && (
+                  <span className="text-[11px] text-gray-400 italic">
+                    Pick one
+                  </span>
+                )}
               </div>
               {isWrong && item.rationale && (
                 <p className="mt-2 text-xs text-red-700">{item.rationale}</p>
