@@ -9,6 +9,10 @@ interface Props {
   activityDeliverable: string | null;
 }
 
+// Renders the ASU platform callouts (Compare AI, Build in Create AI) and
+// the external-tool suggester as flat siblings, no wrapping "resources"
+// box. Each callout already carries its own visual identity, the
+// ToolSuggester below explicitly labels itself as external (non-ASU).
 export function AsuResourcesPanel({
   skillId,
   band,
@@ -17,21 +21,7 @@ export function AsuResourcesPanel({
   activityDeliverable,
 }: Props) {
   return (
-    <section
-      aria-label="ASU resources for this activity"
-      className="mb-6 rounded-xl border-2 border-asu-green/30 bg-asu-green/5 p-4 md:p-5"
-    >
-      <header className="mb-3 flex items-center gap-2">
-        <span
-          aria-hidden="true"
-          className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-asu-green text-white text-[10px] font-extrabold tracking-tight"
-        >
-          ASU
-        </span>
-        <h3 className="text-sm font-semibold text-green-800">
-          ASU resources for this activity
-        </h3>
-      </header>
+    <div className="space-y-3">
       <AsuPlatformCallouts
         skillId={skillId}
         band={band}
@@ -39,6 +29,6 @@ export function AsuResourcesPanel({
         activityDeliverable={activityDeliverable}
       />
       <ToolSuggester activityId={activityId} />
-    </section>
+    </div>
   );
 }

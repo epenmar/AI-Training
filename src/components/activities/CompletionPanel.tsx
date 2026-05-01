@@ -24,12 +24,12 @@ const COMMUNITY_ACTIONS: Record<
   },
   observation: {
     label: "Post an observation",
-    href: (id) => `/community/new?activity=${id}`,
-    icon: "share",
+    href: (id) => `/community?tab=questions&activity=${id}#new-post`,
+    icon: "ask",
   },
   ask: {
     label: "Ask the community",
-    href: () => `/community?tab=questions`,
+    href: (id) => `/community?tab=questions&activity=${id}#new-post`,
     icon: "ask",
   },
   none: null,

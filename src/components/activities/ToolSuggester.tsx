@@ -42,12 +42,12 @@ export function ToolSuggester({ activityId }: Props) {
   };
 
   return (
-    <div className="bg-white border border-asu-green/30 rounded-lg p-4">
+    <div className="bg-white border border-gray-300 border-dashed rounded-lg p-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
             <svg
-              className="w-4 h-4 text-asu-green"
+              className="w-4 h-4 text-gray-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -60,16 +60,20 @@ export function ToolSuggester({ activityId }: Props) {
                 d="M13 10V3L4 14h7v7l9-11h-7z"
               />
             </svg>
-            Tools for this activity
+            External tools for this activity
+            <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+              not ASU-vetted
+            </span>
           </h3>
           <p className="text-xs text-gray-500 mt-0.5">
-            Ask AI to suggest tools that fit this activity right now.
+            AI-generated suggestions for tools outside ASU. Verify each
+            against your data-handling needs before relying on it.
           </p>
         </div>
         <button
           onClick={handleSuggest}
           disabled={loading}
-          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-asu-green text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-700 text-white hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
         >
           {loading
             ? "Thinking..."
