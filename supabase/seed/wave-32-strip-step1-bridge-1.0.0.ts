@@ -31,7 +31,7 @@ async function main() {
   // Cut the bridge paragraph (everything from "**Where this goes next**" on)
   // and any trailing whitespace.
   const cleaned = row.detailed_help
-    .replace(/\n{0,2}\*\*Where this goes next.*$/s, "")
+    .replace(/\n{0,2}\*\*Where this goes next[\s\S]*$/, "")
     .trim();
   if (cleaned === row.detailed_help.trim()) {
     console.log("no bridge text matched the strip pattern");
