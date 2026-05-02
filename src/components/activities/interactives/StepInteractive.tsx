@@ -39,6 +39,10 @@ import {
   type DownloadableAssetData,
 } from "./DownloadableAsset";
 import { Scorecard, type ScorecardData } from "./Scorecard";
+import {
+  ChecklistDownload,
+  type ChecklistDownloadData,
+} from "./ChecklistDownload";
 
 export function StepInteractive({
   type,
@@ -84,6 +88,8 @@ export function StepInteractive({
       return <DownloadableAsset data={data as DownloadableAssetData} />;
     case "scorecard":
       return <Scorecard data={data as ScorecardData} />;
+    case "checklist_download":
+      return <ChecklistDownload data={data as ChecklistDownloadData} />;
     default:
       return null;
   }
