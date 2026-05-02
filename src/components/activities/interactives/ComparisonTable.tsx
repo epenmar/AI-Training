@@ -8,13 +8,54 @@ export type ComparisonTableData = {
   prompt?: string;
   rowHeader?: string;
   rows: { id: string; label: string; placeholder?: string }[];
-  columns: { id: string; label: string }[];
+  columns: { id: string; label: string; placeholder?: string }[];
   cellPlaceholder?: string;
   // When true, row labels render as static text instead of editable inputs.
   rowsReadOnly?: boolean;
+  // When true, column labels render as editable input fields whose
+  // values persist alongside the cell data. Useful when columns
+  // represent user-supplied entities (e.g., the actual tool names).
+  editableColumnLabels?: boolean;
 };
 
 type Stored = Record<string, Record<string, string>>;
+
+// Editable column labels live under their own localStorage key so the
+// cell-value shape stays clean.
+function colLabelsKey(storageKey: string): string {
+  return `${storageKey}:colLabels`;
+}
+
+function readColLabels(
+  storageKey: string,
+  columns: ComparisonTableData["columns"]
+): Record<string, string> {
+  const empty: Record<string, string> = Object.fromEntries(
+    columns.map((c) => [c.id, c.label])
+  );
+  if (typeof window === "undefined") return empty;
+  try {
+    const raw = window.localStorage.getItem(colLabelsKey(storageKey));
+    if (!raw) return empty;
+    const parsed = JSON.parse(raw) as Record<string, string>;
+    const merged = { ...empty };
+    for (const c of columns) {
+      if (typeof parsed[c.id] === "string") merged[c.id] = parsed[c.id];
+    }
+    return merged;
+  } catch {
+    return empty;
+  }
+}
+
+function writeColLabels(storageKey: string, value: Record<string, string>) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(colLabelsKey(storageKey), JSON.stringify(value));
+  } catch {
+    // ignore
+  }
+}
 
 function emptyState(rows: ComparisonTableData["rows"]): Stored {
   return Object.fromEntries(rows.map((r) => [r.id, {}]));
@@ -47,10 +88,14 @@ function writeStorage(key: string, value: Stored) {
 
 export function ComparisonTable({ data }: { data: ComparisonTableData }) {
   const [state, setState] = useState<Stored>(emptyState(data.rows));
+  const [colLabels, setColLabels] = useState<Record<string, string>>(() =>
+    Object.fromEntries(data.columns.map((c) => [c.id, c.label]))
+  );
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setState(readStorage(data.storageKey, data.rows));
+    setColLabels(readColLabels(data.storageKey, data.columns));
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.storageKey]);
@@ -59,11 +104,21 @@ export function ComparisonTable({ data }: { data: ComparisonTableData }) {
     if (hydrated) writeStorage(data.storageKey, state);
   }, [state, data.storageKey, hydrated]);
 
+  useEffect(() => {
+    if (hydrated && data.editableColumnLabels) {
+      writeColLabels(data.storageKey, colLabels);
+    }
+  }, [colLabels, data.storageKey, data.editableColumnLabels, hydrated]);
+
   const update = (rowId: string, colId: string, value: string) => {
     setState((prev) => ({
       ...prev,
       [rowId]: { ...(prev[rowId] ?? {}), [colId]: value },
     }));
+  };
+
+  const updateColLabel = (colId: string, value: string) => {
+    setColLabels((prev) => ({ ...prev, [colId]: value }));
   };
 
   return (
@@ -87,7 +142,18 @@ export function ComparisonTable({ data }: { data: ComparisonTableData }) {
                   scope="col"
                   className="text-left text-[11px] font-semibold uppercase tracking-wider text-asu-blue px-2 pb-2"
                 >
-                  {c.label}
+                  {data.editableColumnLabels ? (
+                    <input
+                      type="text"
+                      aria-label={`${c.label} name`}
+                      value={colLabels[c.id] ?? c.label}
+                      onChange={(e) => updateColLabel(c.id, e.target.value)}
+                      placeholder={c.placeholder ?? c.label}
+                      className="w-full text-[11px] font-semibold uppercase tracking-wider text-asu-blue bg-white border border-gray-200 rounded-md px-2 py-1 focus:border-asu-blue focus:outline-none focus:ring-1 focus:ring-asu-blue normal-case"
+                    />
+                  ) : (
+                    c.label
+                  )}
                 </th>
               ))}
             </tr>

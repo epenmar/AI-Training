@@ -26,7 +26,11 @@ export function AutoTextarea({
       value={value as string | undefined}
       {...rest}
       rows={1}
-      className={`resize-y overflow-hidden ${className}`}
+      // block + w-full ensure the textarea fills its flex / grid
+      // parent — without this, the textarea's default cols=20
+      // intrinsic width can cause it to render narrow even with
+      // flex-1.
+      className={`block w-full resize-y overflow-hidden ${className}`}
       style={{ minHeight: "2.25rem" }}
     />
   );
