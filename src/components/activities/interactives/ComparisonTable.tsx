@@ -126,13 +126,25 @@ export function ComparisonTable({ data }: { data: ComparisonTableData }) {
       {data.prompt && (
         <p className="text-sm font-medium text-gray-700 mb-3">{data.prompt}</p>
       )}
+      {/*
+        overflow-x-auto on the wrapper enables horizontal scroll when the
+        table is wider than its parent. The first column (row labels) is
+        sticky-left so it stays visible while the user scrolls — useful
+        on narrow screens or matrices with many tool columns.
+      */}
       <div className="overflow-x-auto">
         <table className="w-full border-separate border-spacing-1 text-sm">
           <thead>
             <tr>
+              {/*
+                Sticky cells need a fully-opaque bg so scrolling cells
+                are hidden behind them. The card around the table is
+                bg-asu-blue/5 (5% over white ≈ #f5fbff), so a solid
+                bg-[#f5fbff] keeps the visual continuous.
+              */}
               <th
                 scope="col"
-                className="text-left text-[11px] font-semibold uppercase tracking-wider text-asu-blue px-2 pb-2"
+                className="sticky left-0 z-20 bg-[#f5fbff] text-left text-[11px] font-semibold uppercase tracking-wider text-asu-blue px-2 pb-2 shadow-[2px_0_0_0_rgba(0,163,224,0.15)]"
               >
                 {data.rowHeader ?? ""}
               </th>
@@ -163,7 +175,7 @@ export function ComparisonTable({ data }: { data: ComparisonTableData }) {
               <tr key={row.id}>
                 <th
                   scope="row"
-                  className="text-left align-top pr-2 py-1"
+                  className="sticky left-0 z-10 bg-[#f5fbff] text-left align-top pr-2 py-1 shadow-[2px_0_0_0_rgba(0,163,224,0.15)]"
                 >
                   {data.rowsReadOnly ? (
                     <span className="block w-40 text-sm font-semibold text-gray-700 px-1 py-1.5 leading-snug">

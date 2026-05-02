@@ -511,22 +511,25 @@ export default async function ActivityDetailPage({
         </div>
       )}
 
-      {/* Explore the Sources — collapsible pale-green accordion under the
-          steps. Closed by default so the activity remains the focus. */}
+      {/* Explore Sources and Resources — collapsible pale-green accordion
+          under the steps. Closed by default so the activity remains the
+          focus. Always shown — the wave-38 seed guarantees every active
+          activity has a populated extra_sources, so we don't need a
+          length>0 guard anymore. */}
       {exploreSources.length > 0 && (
         <details className="group mb-6 rounded-xl border border-asu-green/30 bg-asu-green/5">
           <summary className="cursor-pointer list-none p-5 flex items-start justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wide text-green-800 inline-flex items-center gap-2">
-                Explore the Sources
+                Explore Sources and Resources
                 <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-asu-green/20 text-[10px] font-bold text-green-800">
                   {exploreSources.length}
                 </span>
               </h3>
               <p className="text-xs text-gray-600 mt-1 max-w-2xl">
-                The activity above teaches you by doing. If you want to read
-                the underlying material directly, here&apos;s what it draws
-                from.
+                Curated reading and reference for this skill — start here,
+                then go deeper. The activity above teaches by doing; this
+                callout is what to bookmark.
               </p>
             </div>
             <svg
