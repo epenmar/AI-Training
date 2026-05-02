@@ -38,6 +38,7 @@ import {
   DownloadableAsset,
   type DownloadableAssetData,
 } from "./DownloadableAsset";
+import { Scorecard, type ScorecardData } from "./Scorecard";
 
 export function StepInteractive({
   type,
@@ -81,6 +82,8 @@ export function StepInteractive({
       return <StageFlowchart data={data as StageFlowchartData} />;
     case "downloadable_asset":
       return <DownloadableAsset data={data as DownloadableAssetData} />;
+    case "scorecard":
+      return <Scorecard data={data as ScorecardData} />;
     default:
       return null;
   }
