@@ -62,12 +62,14 @@ export function ToolSuggester({ activityId }: Props) {
             </svg>
             External tools for this activity
             <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-              not ASU-vetted
+              may not be ASU-vetted
             </span>
           </h3>
           <p className="text-xs text-gray-500 mt-0.5">
-            AI-generated suggestions for tools outside ASU. Verify each
-            against your data-handling needs before relying on it.
+            AI-generated suggestions. Some are ASU enterprise-approved
+            (Adobe, Microsoft, Google, etc.); others may not be vetted
+            for ASU data. Confirm vetting status and your data-handling
+            needs before relying on any of them.
           </p>
         </div>
         <button
