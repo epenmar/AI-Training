@@ -43,6 +43,7 @@ import {
   ChecklistDownload,
   type ChecklistDownloadData,
 } from "./ChecklistDownload";
+import { ChipSelector, type ChipSelectorData } from "./ChipSelector";
 
 export function StepInteractive({
   type,
@@ -90,6 +91,8 @@ export function StepInteractive({
       return <Scorecard data={data as ScorecardData} />;
     case "checklist_download":
       return <ChecklistDownload data={data as ChecklistDownloadData} />;
+    case "chip_selector":
+      return <ChipSelector data={data as ChipSelectorData} />;
     default:
       return null;
   }
