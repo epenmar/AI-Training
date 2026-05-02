@@ -167,75 +167,125 @@ export function TextListEntry({ data }: { data: TextListEntryData }) {
     });
   };
 
+  // Layout strategy:
+  //   - 1 group  → full-width single column
+  //   - N groups, all same count → paired-row CSS grid (rows align
+  //                                across columns because they share
+  //                                the same grid row)
+  //   - N groups, different counts → fall back to per-column stacks
+  //                                (each column holds its own list)
+  const allSameCount =
+    data.groups.length > 0 &&
+    data.groups.every((g) => g.count === data.groups[0].count);
+  const useRowGrid = data.groups.length > 1 && allSameCount;
+  const rowCount = data.groups[0]?.count ?? 0;
+
+  const renderCell = (
+    g: TextListEntryData["groups"][number],
+    i: number
+  ) => {
+    const value = state.values[g.id]?.[i] ?? "";
+    const marked = state.marks[g.id]?.[i] ?? false;
+    const rowHighlight =
+      g.markable && marked
+        ? "bg-asu-gold/20 border-asu-gold/60"
+        : "bg-white border-gray-200";
+
+    return (
+      <div
+        className={`flex items-stretch gap-2 rounded-md border px-2 py-1.5 min-h-[2.5rem] h-full ${rowHighlight}`}
+      >
+        {g.markable && (
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={marked}
+              onChange={() => toggleMark(g.id, i)}
+              aria-label={g.markLabel ?? `Mark this ${g.label} item`}
+              className="w-4 h-4 rounded border-gray-300 text-asu-gold focus:ring-asu-gold cursor-pointer"
+            />
+          </label>
+        )}
+        {g.readOnly ? (
+          <span
+            className={`flex-1 text-sm self-center px-1 py-1 leading-snug ${
+              value ? "text-gray-700" : "text-gray-400 italic"
+            }`}
+          >
+            {value || "(blank, fill in earlier step)"}
+          </span>
+        ) : (
+          <AutoTextarea
+            aria-label={`${g.label} item ${i + 1}`}
+            value={value}
+            onChange={(e) => updateValue(g.id, i, e.target.value)}
+            placeholder={g.placeholder}
+            className="flex-1 text-sm bg-transparent border-0 px-2 py-1 focus:outline-none focus:ring-0 leading-snug"
+          />
+        )}
+      </div>
+    );
+  };
+
+  const renderHeader = (g: TextListEntryData["groups"][number]) => (
+    <p className="text-[11px] font-semibold uppercase tracking-wider text-asu-blue mb-2">
+      {g.label}
+      {g.readOnly && (
+        <span className="ml-2 text-[10px] font-medium text-gray-500 normal-case tracking-normal">
+          (from earlier step)
+        </span>
+      )}
+    </p>
+  );
+
   return (
     <div className="rounded-lg border border-asu-blue/25 bg-asu-blue/5 p-4">
       {data.prompt && (
         <p className="text-sm font-medium text-gray-700 mb-3">{data.prompt}</p>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {data.groups.map((g) => (
-          <div key={g.id}>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-asu-blue mb-2">
-              {g.label}
-              {g.readOnly && (
-                <span className="ml-2 text-[10px] font-medium text-gray-500 normal-case tracking-normal">
-                  (from earlier step)
-                </span>
-              )}
-            </p>
-            <div className="space-y-2">
-              {Array.from({ length: g.count }, (_, i) => {
-                const value = state.values[g.id]?.[i] ?? "";
-                const marked = state.marks[g.id]?.[i] ?? false;
-                const rowHighlight =
-                  g.markable && marked
-                    ? "bg-asu-gold/20 border-asu-gold/60"
-                    : "bg-white border-gray-200";
-
-                return (
-                  <div
-                    key={i}
-                    className={`flex items-stretch gap-2 rounded-md border px-2 py-1.5 min-h-[2.5rem] ${rowHighlight}`}
-                  >
-                    {g.markable && (
-                      <label className="inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={marked}
-                          onChange={() => toggleMark(g.id, i)}
-                          aria-label={
-                            g.markLabel ?? `Mark this ${g.label} item`
-                          }
-                          className="w-4 h-4 rounded border-gray-300 text-asu-gold focus:ring-asu-gold cursor-pointer"
-                        />
-                      </label>
-                    )}
-                    {g.readOnly ? (
-                      <span
-                        className={`flex-1 text-sm self-center px-1 py-1 leading-snug ${
-                          value ? "text-gray-700" : "text-gray-400 italic"
-                        }`}
-                      >
-                        {value || "(blank, fill in earlier step)"}
-                      </span>
-                    ) : (
-                      <AutoTextarea
-                        aria-label={`${g.label} item ${i + 1}`}
-                        value={value}
-                        onChange={(e) =>
-                          updateValue(g.id, i, e.target.value)
-                        }
-                        placeholder={g.placeholder}
-                        className="flex-1 text-sm bg-transparent border-0 px-2 py-1 focus:outline-none focus:ring-0 leading-snug"
-                      />
-                    )}
-                  </div>
-                );
-              })}
+      {useRowGrid ? (
+        <div
+          className="grid gap-x-3 gap-y-2 items-stretch"
+          style={{
+            gridTemplateColumns: `repeat(${data.groups.length}, minmax(0, 1fr))`,
+          }}
+        >
+          {/* Header row */}
+          {data.groups.map((g) => (
+            <div key={`hdr-${g.id}`}>{renderHeader(g)}</div>
+          ))}
+          {/* Body rows: every row index becomes one grid row whose
+              cells stretch to the same height by default. */}
+          {Array.from({ length: rowCount }).flatMap((_, rowIdx) =>
+            data.groups.map((g) => (
+              <div key={`${g.id}-${rowIdx}`} className="h-full">
+                {renderCell(g, rowIdx)}
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        // Single group → full-width column. Multiple groups with
+        // different counts → per-column stacks.
+        <div
+          className={
+            data.groups.length === 1
+              ? "space-y-2"
+              : "grid grid-cols-1 sm:grid-cols-2 gap-4"
+          }
+        >
+          {data.groups.map((g) => (
+            <div key={g.id}>
+              {renderHeader(g)}
+              <div className="space-y-2">
+                {Array.from({ length: g.count }, (_, i) => (
+                  <div key={i}>{renderCell(g, i)}</div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
       <p className="text-[11px] text-gray-500 mt-3">
         Saved in your browser. Comes back to you in later steps.
       </p>
