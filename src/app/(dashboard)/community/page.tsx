@@ -203,7 +203,11 @@ async function AskTab({
   ] = await Promise.all([
     questionQuery,
     supabase.from("profiles").select("is_admin").eq("id", userId).single(),
-    supabase.from("skills").select("id, short_name").order("id"),
+    supabase
+      .from("skills")
+      .select("id, short_name, display_order")
+      .eq("is_active", true)
+      .order("display_order", { nullsFirst: false }),
   ]);
   const isAdmin = !!viewerProfile?.is_admin;
 

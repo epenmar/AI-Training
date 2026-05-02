@@ -45,6 +45,9 @@ export interface Database {
           short_name: string;
           bloom_phase_id: number;
           is_gap: boolean;
+          is_active: boolean;
+          display_order: number | null;
+          derivation_note: string | null;
         };
         Insert: {
           id: number;
@@ -52,6 +55,9 @@ export interface Database {
           short_name: string;
           bloom_phase_id: number;
           is_gap?: boolean;
+          is_active?: boolean;
+          display_order?: number | null;
+          derivation_note?: string | null;
         };
         Update: {
           id?: number;
@@ -59,6 +65,9 @@ export interface Database {
           short_name?: string;
           bloom_phase_id?: number;
           is_gap?: boolean;
+          is_active?: boolean;
+          display_order?: number | null;
+          derivation_note?: string | null;
         };
         Relationships: [];
       };
@@ -67,16 +76,19 @@ export interface Database {
           id: number;
           skill_id: number;
           scenario: string;
+          is_active: boolean;
         };
         Insert: {
           id: number;
           skill_id: number;
           scenario: string;
+          is_active?: boolean;
         };
         Update: {
           id?: number;
           skill_id?: number;
           scenario?: string;
+          is_active?: boolean;
         };
         Relationships: [];
       };
@@ -200,8 +212,10 @@ export interface Database {
           objectives: string[];
           community_action: string;
           extra_sources: unknown;
+          is_active: boolean;
         };
         Insert: {
+          id?: number;
           skill_id: number;
           band: string;
           title: string;
@@ -213,6 +227,7 @@ export interface Database {
           objectives?: string[];
           community_action?: string;
           extra_sources?: unknown;
+          is_active?: boolean;
         };
         Update: {
           skill_id?: number;
@@ -226,6 +241,7 @@ export interface Database {
           objectives?: string[];
           community_action?: string;
           extra_sources?: unknown;
+          is_active?: boolean;
         };
         Relationships: [];
       };

@@ -57,7 +57,7 @@ export default async function CommunityPostPage({
     post.skill_id
       ? supabase
           .from("skills")
-          .select("id, short_name, statement")
+          .select("id, short_name, statement, display_order")
           .eq("id", post.skill_id)
           .single()
       : Promise.resolve({ data: null }),
@@ -312,7 +312,7 @@ export default async function CommunityPostPage({
                 href={`/community?skill=${skill.id}`}
                 className="text-xs bg-asu-maroon/10 text-asu-maroon px-2.5 py-1 rounded-full font-medium hover:bg-asu-maroon/20"
               >
-                Skill {skill.id}: {skill.short_name}
+                Skill {skill.display_order ?? skill.id}: {skill.short_name}
               </Link>
             )}
             {activity && bandClass && (

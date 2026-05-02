@@ -17,13 +17,21 @@ export default async function AssessmentPage() {
     { data: skills },
     { data: attempts },
   ] = await Promise.all([
-    supabase.from("assessment_questions").select("*").order("id"),
+    supabase
+      .from("assessment_questions")
+      .select("*")
+      .eq("is_active", true)
+      .order("id"),
     supabase
       .from("assessment_options")
       .select("*")
       .order("question_id")
       .order("option_key"),
-    supabase.from("skills").select("*").order("id"),
+    supabase
+      .from("skills")
+      .select("*")
+      .eq("is_active", true)
+      .order("display_order", { nullsFirst: false }),
     supabase
       .from("assessment_attempts")
       .select("*")
@@ -131,7 +139,9 @@ export default async function AssessmentPage() {
           <p className="text-sm text-gray-500">Latest Score</p>
           <p className="text-3xl font-bold text-asu-maroon mt-1">
             {attempts![attempts!.length - 1].total_score}
-            <span className="text-base font-normal text-gray-400">/42</span>
+            <span className="text-base font-normal text-gray-400">
+              /{questions.length * 3}
+            </span>
           </p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-5">

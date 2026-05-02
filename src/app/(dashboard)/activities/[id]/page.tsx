@@ -200,7 +200,10 @@ export default async function ActivityDetailPage({
         .from("assessment_responses")
         .select("question_id, score")
         .eq("attempt_id", latestAttempt.id),
-      supabase.from("assessment_questions").select("id, skill_id"),
+      supabase
+        .from("assessment_questions")
+        .select("id, skill_id")
+        .eq("is_active", true),
     ]);
     const qSkillMap = new Map(
       (questions ?? []).map((q) => [q.id, q.skill_id])
@@ -209,7 +212,8 @@ export default async function ActivityDetailPage({
     if (targets.length > 0) {
       const { data: roadmapActs } = await supabase
         .from("level_up_activities")
-        .select("id, title, skill_id, band");
+        .select("id, title, skill_id, band")
+        .eq("is_active", true);
       const { data: completionRows } = await supabase
         .from("user_activity_completions")
         .select("activity_id")
@@ -234,11 +238,12 @@ export default async function ActivityDetailPage({
     }
   }
   if (!nextActivity) {
-    // Fallback: next id in this skill, or null.
+    // Fallback: next id in this skill (active only), or null.
     const { data: sameSkill } = await supabase
       .from("level_up_activities")
       .select("id, title, band")
       .eq("skill_id", activity.skill_id)
+      .eq("is_active", true)
       .order("id");
     const idx = (sameSkill ?? []).findIndex((a) => a.id === activityId);
     const nextInSkill = idx >= 0 ? (sameSkill ?? [])[idx + 1] : null;
@@ -307,7 +312,7 @@ export default async function ActivityDetailPage({
               href={`/activities?filter=all#skill-${skill.id}-heading`}
               className="text-xs text-asu-maroon hover:underline font-medium"
             >
-              Skill {skill.id}: {skill.short_name}
+              Skill {skill.display_order ?? skill.id}: {skill.short_name}
             </Link>
           )}
           {activity.time_estimate && (

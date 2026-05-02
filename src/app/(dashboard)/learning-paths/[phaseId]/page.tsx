@@ -49,7 +49,10 @@ export default async function PhaseDetailPage({
     .eq("bloom_phase_id", phaseId)
     .order("seq");
 
-  const { data: skills } = await supabase.from("skills").select("*");
+  const { data: skills } = await supabase
+    .from("skills")
+    .select("*")
+    .eq("is_active", true);
   const skillMap = new Map((skills ?? []).map((s) => [s.id, s]));
 
   // Build the user's skill -> target level map if we're filtering to

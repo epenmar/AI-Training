@@ -50,9 +50,14 @@ export default async function ActivitiesPage({
   const { data: activities } = await supabase
     .from("level_up_activities")
     .select("*")
+    .eq("is_active", true)
     .order("skill_id");
 
-  const { data: skills } = await supabase.from("skills").select("*").order("id");
+  const { data: skills } = await supabase
+    .from("skills")
+    .select("*")
+    .eq("is_active", true)
+    .order("display_order", { nullsFirst: false });
   const { data: completions } = await supabase
     .from("user_activity_completions")
     .select("activity_id")
@@ -251,7 +256,7 @@ export default async function ActivitiesPage({
                   id={`skill-${skill.id}-heading`}
                   className="text-sm font-semibold text-gray-700"
                 >
-                  <span className="text-asu-maroon">Skill {skill.id}:</span>{" "}
+                  <span className="text-asu-maroon">Skill {skill.display_order ?? skill.id}:</span>{" "}
                   {skill.short_name}
                 </h3>
                 <span className="text-xs text-gray-400 font-medium">

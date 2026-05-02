@@ -18,15 +18,20 @@ interface Props {
   questions: QuestionWithOptions[];
 }
 
-const BAND_THRESHOLDS = [
-  { max: 14, label: "New to this" },
-  { max: 28, label: "Foundational" },
-  { max: 35, label: "Intermediate" },
-  { max: 42, label: "Advanced" },
-] as const;
+// Thresholds scale with the number of active questions. Each answer
+// scores 0-3, so max possible = 3 * questions.length. Bands roughly
+// follow 33% / 67% / 83% / 100% — matches the pre-restructure ratios.
+function getBandThresholds(maxScore: number) {
+  return [
+    { max: Math.floor(maxScore * 0.33), label: "New to this" },
+    { max: Math.floor(maxScore * 0.67), label: "Foundational" },
+    { max: Math.floor(maxScore * 0.83), label: "Intermediate" },
+    { max: maxScore, label: "Advanced" },
+  ];
+}
 
-function getBand(score: number): string {
-  for (const t of BAND_THRESHOLDS) {
+function getBand(score: number, maxScore: number): string {
+  for (const t of getBandThresholds(maxScore)) {
     if (score <= t.max) return t.label;
   }
   return "Advanced";
@@ -264,7 +269,8 @@ export function AssessmentFlow({ questions }: Props) {
     });
 
     const totalScore = responses.reduce((sum, r) => sum + r.score, 0);
-    const overallBand = getBand(totalScore);
+    const maxScore = questions.length * 3;
+    const overallBand = getBand(totalScore, maxScore);
 
     // Ensure profile exists (handles accounts created before profile trigger).
     // Leave display_name null so the account-setup flow prompts on first visit.
@@ -336,7 +342,7 @@ export function AssessmentFlow({ questions }: Props) {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <div className="mb-2">
           <span className="inline-block bg-asu-maroon/10 text-asu-maroon text-xs font-semibold px-3 py-1 rounded-full">
-            Skill {q.skill_id}: {q.skill.short_name}
+            Skill {q.skill.display_order ?? q.skill_id}: {q.skill.short_name}
           </span>
         </div>
         <h2 className="text-lg font-semibold text-gray-700 mb-6">
@@ -346,7 +352,7 @@ export function AssessmentFlow({ questions }: Props) {
         {/* Options */}
         <fieldset>
           <legend className="sr-only">
-            Select your response for skill {q.skill_id}
+            Select your response for skill {q.skill.display_order ?? q.skill_id}
           </legend>
           <div className="space-y-3">
             {q.options.map((opt) => {

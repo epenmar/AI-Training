@@ -83,9 +83,19 @@ export default async function SkillSummaryPage() {
       .from("assessment_responses")
       .select("question_id, score")
       .eq("attempt_id", latestAttempt.id),
-    supabase.from("assessment_questions").select("id, skill_id"),
-    supabase.from("skills").select("*").order("id"),
-    supabase.from("level_up_activities").select("id, skill_id, band"),
+    supabase
+      .from("assessment_questions")
+      .select("id, skill_id")
+      .eq("is_active", true),
+    supabase
+      .from("skills")
+      .select("*")
+      .eq("is_active", true)
+      .order("display_order", { nullsFirst: false }),
+    supabase
+      .from("level_up_activities")
+      .select("id, skill_id, band")
+      .eq("is_active", true),
   ]);
 
   // (skill_id, band) → activity_id so we can link directly to the
@@ -134,7 +144,7 @@ export default async function SkillSummaryPage() {
             <p className="text-xl font-bold text-gray-700 mt-1">
               {latestAttempt.overall_band}{" "}
               <span className="text-sm font-normal text-gray-500">
-                · {latestAttempt.total_score}/42
+                · {latestAttempt.total_score}/{(skills?.length ?? 12) * 3}
               </span>
             </p>
           </div>
@@ -176,7 +186,7 @@ export default async function SkillSummaryPage() {
                   <div className="min-w-0">
                     <h3 className="text-base font-semibold text-gray-700">
                       <span className="text-asu-maroon">
-                        Skill {skill.id}:
+                        Skill {skill.display_order ?? skill.id}:
                       </span>{" "}
                       {skill.short_name}
                     </h3>

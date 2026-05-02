@@ -19,11 +19,13 @@ export default async function NewPostPage({
   const { data: skills } = await supabase
     .from("skills")
     .select("id, short_name")
-    .order("id");
+    .eq("is_active", true)
+    .order("display_order", { nullsFirst: false });
 
   const { data: activities } = await supabase
     .from("level_up_activities")
     .select("id, title, skill_id")
+    .eq("is_active", true)
     .order("skill_id");
 
   // Resolve the pre-fill: if an activity id came in, use it and derive its skill.

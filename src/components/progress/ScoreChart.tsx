@@ -19,15 +19,20 @@ interface AttemptPoint {
 
 interface Props {
   attempts: AttemptPoint[];
+  maxScore?: number; // Defaults to 36 (12 active skills × 3); falls
+  // back to 42 for legacy chart calls.
 }
 
-const BAND_LINES = [
-  { y: 14, label: "Foundational", color: "#00A3E0" },
-  { y: 28, label: "Intermediate", color: "#78BE20" },
-  { y: 35, label: "Advanced", color: "#FFC627" },
-];
+function bandLines(maxScore: number) {
+  return [
+    { y: Math.floor(maxScore * 0.33), label: "Foundational", color: "#00A3E0" },
+    { y: Math.floor(maxScore * 0.67), label: "Intermediate", color: "#78BE20" },
+    { y: Math.floor(maxScore * 0.83), label: "Advanced", color: "#FFC627" },
+  ];
+}
 
-export function ScoreChart({ attempts }: Props) {
+export function ScoreChart({ attempts, maxScore = 36 }: Props) {
+  const BAND_LINES = bandLines(maxScore);
   if (attempts.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
@@ -54,12 +59,12 @@ export function ScoreChart({ attempts }: Props) {
               tickLine={false}
             />
             <YAxis
-              domain={[0, 42]}
+              domain={[0, maxScore]}
               tick={{ fontSize: 12, fill: "#747474" }}
               tickLine={false}
             />
             <Tooltip
-              formatter={(value) => [`${value}/42`, "Score"]}
+              formatter={(value) => [`${value}/${maxScore}`, "Score"]}
               labelStyle={{ color: "#191919" }}
               contentStyle={{
                 borderRadius: "8px",
