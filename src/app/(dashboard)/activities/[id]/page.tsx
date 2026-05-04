@@ -472,13 +472,15 @@ export default async function ActivityDetailPage({
             </ol>
           )}
 
-          {/* Optional extension — shown at the end of the steps, not counted in the time estimate */}
+          {/* Optional extension — shown at the end of the steps, not counted in the time estimate. Renders with whitespace-pre-line so multi-step directions keep their formatting; renderRichText so [link](url) and **bold** work like in step bodies. */}
           {extension && (
             <div className="mt-3 bg-asu-gold/10 border-l-4 border-asu-gold rounded-r-lg p-4">
               <p className="text-xs font-semibold text-yellow-800 uppercase tracking-wide mb-1">
                 Optional extension
               </p>
-              <p className="text-sm text-gray-700">{extension}</p>
+              <p className="text-sm text-gray-700 whitespace-pre-line">
+                {renderRichText(extension)}
+              </p>
               <p className="text-xs text-gray-500 mt-2 italic">
                 Not included in the {activity.time_estimate} estimate above —
                 for anyone who wants to go further.

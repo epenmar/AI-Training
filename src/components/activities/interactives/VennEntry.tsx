@@ -3,17 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { AutoTextarea } from "./AutoTextarea";
 
-// Three-region "Venn-like" entry. Renders two overlapping circles as
-// a visual cue, plus three labeled regions below for the actual lists:
-// left-only, intersection, right-only. Designed for compare-two-views
-// activities (your themes vs. AI's themes; your read vs. their read).
+// Three-region "Venn" entry. Two overlapping CSS-circle regions form
+// the visual; three textareas live INSIDE them — left-only sits in
+// the left crescent, intersection sits over the overlap, right-only
+// sits in the right crescent. Typing in each textarea is the same as
+// typing into that part of the Venn.
 export type VennEntryData = {
   storageKey: string;
   prompt?: string;
-  // Optional small caption above each circle ("Yours", "AI", etc.)
+  // Caption above each circle ("You", "AI", etc.)
   leftCircleLabel?: string;
   rightCircleLabel?: string;
-  // Region labels rendered above each list area.
+  // Region labels rendered as the textarea labels.
   leftLabel: string;
   bothLabel: string;
   rightLabel: string;
@@ -112,95 +113,145 @@ export function VennEntry({ data }: { data: VennEntryData }) {
         <p className="text-sm font-medium text-gray-700">{data.prompt}</p>
       )}
 
-      {/* Decorative Venn — pure visual; lists below are the editable parts. */}
-      <div className="flex items-center justify-center" aria-hidden="true">
+      {/* Venn layout. SVG draws the two overlapping circles; an
+          absolutely-positioned 3-column grid sits on top with the
+          textareas in each region. On narrow screens the layout
+          drops to a vertical stack with the SVG above. */}
+      <div className="hidden lg:block relative w-full">
         <svg
-          viewBox="0 0 320 140"
-          className="w-full max-w-md h-auto"
+          viewBox="0 0 600 320"
+          className="w-full h-auto"
+          aria-hidden="true"
           role="presentation"
         >
           <circle
-            cx="120"
-            cy="70"
-            r="60"
-            fill="rgba(140, 29, 64, 0.12)"
-            stroke="rgba(140, 29, 64, 0.5)"
+            cx="220"
+            cy="160"
+            r="150"
+            fill="rgba(140, 29, 64, 0.10)"
+            stroke="rgba(140, 29, 64, 0.45)"
             strokeWidth="2"
           />
           <circle
-            cx="200"
-            cy="70"
-            r="60"
-            fill="rgba(0, 163, 224, 0.12)"
-            stroke="rgba(0, 163, 224, 0.5)"
+            cx="380"
+            cy="160"
+            r="150"
+            fill="rgba(0, 163, 224, 0.10)"
+            stroke="rgba(0, 163, 224, 0.45)"
             strokeWidth="2"
           />
           {data.leftCircleLabel && (
             <text
-              x="80"
-              y="22"
+              x="120"
+              y="32"
               textAnchor="middle"
-              className="fill-asu-maroon"
-              fontSize="11"
+              fontSize="14"
               fontWeight="700"
+              fill="#8c1d40"
             >
               {data.leftCircleLabel}
             </text>
           )}
           {data.rightCircleLabel && (
             <text
-              x="240"
-              y="22"
+              x="480"
+              y="32"
               textAnchor="middle"
-              className="fill-asu-blue"
-              fontSize="11"
+              fontSize="14"
               fontWeight="700"
+              fill="#00a3e0"
             >
               {data.rightCircleLabel}
             </text>
           )}
-          <text
-            x="80"
-            y="135"
-            textAnchor="middle"
-            fontSize="9"
-            className="fill-gray-500"
-          >
-            only
-          </text>
-          <text
-            x="160"
-            y="135"
-            textAnchor="middle"
-            fontSize="9"
-            className="fill-gray-600"
-            fontWeight="600"
-          >
-            both
-          </text>
-          <text
-            x="240"
-            y="135"
-            textAnchor="middle"
-            fontSize="9"
-            className="fill-gray-500"
-          >
-            only
-          </text>
         </svg>
+        {/* Overlay: 3-column grid sized to match the SVG aspect ratio.
+            Each cell carries a label + textarea positioned inside its
+            circle region. */}
+        <div className="absolute inset-0 grid grid-cols-12 gap-2 px-6 py-12">
+          <div className="col-span-4 flex flex-col">
+            <label
+              htmlFor={`${data.storageKey}-left`}
+              className="block text-[11px] font-bold uppercase tracking-wider text-asu-maroon mb-1"
+            >
+              {data.leftLabel}
+            </label>
+            <AutoTextarea
+              id={`${data.storageKey}-left`}
+              value={state.left}
+              onChange={(e) => setRegion("left", e.target.value)}
+              placeholder={data.leftPlaceholder ?? "One per line"}
+              className="flex-1 text-sm bg-white/80 border border-asu-maroon/30 rounded-md px-2 py-1.5 focus:border-asu-maroon focus:bg-white focus:outline-none focus:ring-1 focus:ring-asu-maroon"
+              style={{ minHeight: "9rem" }}
+            />
+          </div>
+          <div className="col-span-4 flex flex-col">
+            <label
+              htmlFor={`${data.storageKey}-both`}
+              className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1 text-center"
+            >
+              {data.bothLabel}
+            </label>
+            <AutoTextarea
+              id={`${data.storageKey}-both`}
+              value={state.both}
+              onChange={(e) => setRegion("both", e.target.value)}
+              placeholder={data.bothPlaceholder ?? "One per line"}
+              className="flex-1 text-sm bg-white/80 border border-gray-400 rounded-md px-2 py-1.5 focus:border-gray-700 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-500"
+              style={{ minHeight: "9rem" }}
+            />
+          </div>
+          <div className="col-span-4 flex flex-col">
+            <label
+              htmlFor={`${data.storageKey}-right`}
+              className="block text-[11px] font-bold uppercase tracking-wider text-asu-blue mb-1 text-right"
+            >
+              {data.rightLabel}
+            </label>
+            <AutoTextarea
+              id={`${data.storageKey}-right`}
+              value={state.right}
+              onChange={(e) => setRegion("right", e.target.value)}
+              placeholder={data.rightPlaceholder ?? "One per line"}
+              className="flex-1 text-sm bg-white/80 border border-asu-blue/30 rounded-md px-2 py-1.5 focus:border-asu-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-asu-blue"
+              style={{ minHeight: "9rem" }}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Three editable regions stacked. Color-coded to match the Venn. */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      {/* Narrow-screen fallback: stack the three regions vertically
+          with a small Venn icon up top so the metaphor still reads. */}
+      <div className="lg:hidden space-y-3">
+        <div className="flex items-center justify-center" aria-hidden="true">
+          <svg viewBox="0 0 280 110" className="w-40 h-auto">
+            <circle
+              cx="100"
+              cy="55"
+              r="50"
+              fill="rgba(140, 29, 64, 0.15)"
+              stroke="rgba(140, 29, 64, 0.5)"
+              strokeWidth="2"
+            />
+            <circle
+              cx="180"
+              cy="55"
+              r="50"
+              fill="rgba(0, 163, 224, 0.15)"
+              stroke="rgba(0, 163, 224, 0.5)"
+              strokeWidth="2"
+            />
+          </svg>
+        </div>
         <div>
           <label
-            htmlFor={`${data.storageKey}-left`}
+            htmlFor={`${data.storageKey}-left-mobile`}
             className="block text-[11px] font-bold uppercase tracking-wider text-asu-maroon mb-1"
           >
             {data.leftLabel}
           </label>
           <AutoTextarea
-            id={`${data.storageKey}-left`}
+            id={`${data.storageKey}-left-mobile`}
             value={state.left}
             onChange={(e) => setRegion("left", e.target.value)}
             placeholder={data.leftPlaceholder ?? "One per line"}
@@ -209,13 +260,13 @@ export function VennEntry({ data }: { data: VennEntryData }) {
         </div>
         <div>
           <label
-            htmlFor={`${data.storageKey}-both`}
+            htmlFor={`${data.storageKey}-both-mobile`}
             className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1"
           >
             {data.bothLabel}
           </label>
           <AutoTextarea
-            id={`${data.storageKey}-both`}
+            id={`${data.storageKey}-both-mobile`}
             value={state.both}
             onChange={(e) => setRegion("both", e.target.value)}
             placeholder={data.bothPlaceholder ?? "One per line"}
@@ -224,13 +275,13 @@ export function VennEntry({ data }: { data: VennEntryData }) {
         </div>
         <div>
           <label
-            htmlFor={`${data.storageKey}-right`}
+            htmlFor={`${data.storageKey}-right-mobile`}
             className="block text-[11px] font-bold uppercase tracking-wider text-asu-blue mb-1"
           >
             {data.rightLabel}
           </label>
           <AutoTextarea
-            id={`${data.storageKey}-right`}
+            id={`${data.storageKey}-right-mobile`}
             value={state.right}
             onChange={(e) => setRegion("right", e.target.value)}
             placeholder={data.rightPlaceholder ?? "One per line"}
@@ -238,6 +289,7 @@ export function VennEntry({ data }: { data: VennEntryData }) {
           />
         </div>
       </div>
+
       <p className="text-[11px] text-gray-500">Saved in your browser.</p>
     </div>
   );
