@@ -151,9 +151,9 @@ export default async function ActivitiesPage({
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-700">Activities</h2>
         <p className="text-gray-500">
-          42 hands-on activities across 14 skills and 3 level-up bands.
-          Each activity includes step-by-step instructions and a concrete
-          deliverable.
+          {activities?.length ?? 0} hands-on activities across{" "}
+          {skills?.length ?? 0} skills and 3 level-up bands. Each activity
+          includes step-by-step instructions and a concrete deliverable.
         </p>
       </div>
 

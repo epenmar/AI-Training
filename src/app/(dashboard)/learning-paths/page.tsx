@@ -49,6 +49,14 @@ export default async function LearningPathsPage({
     .eq("is_active", true)
     .order("display_order", { nullsFirst: false });
 
+  // Active activity count for the "how materials and activities work
+  // together" section — kept dynamic so the copy stays correct as
+  // activities are added or retired.
+  const { count: activeActivityCount } = await supabase
+    .from("level_up_activities")
+    .select("id", { count: "exact", head: true })
+    .eq("is_active", true);
+
   // Default to personalized view if the user has an attempt; explicit
   // `filter=all` opts into browse-all.
   const recommendedOnly =
@@ -285,9 +293,10 @@ export default async function LearningPathsPage({
               </p>
             </div>
             <p className="text-xs text-gray-600 leading-relaxed">
-              The 42 hands-on activities pull from these materials. As you
-              work through an activity, the relevant pages, lessons, and
-              tools surface inline, you learn through doing.
+              The {activeActivityCount ?? 0} hands-on activities pull
+              from these materials. As you work through an activity, the
+              relevant pages, lessons, and tools surface inline — you
+              learn through doing.
             </p>
           </div>
 

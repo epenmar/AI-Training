@@ -44,6 +44,11 @@ import {
   type ChecklistDownloadData,
 } from "./ChecklistDownload";
 import { ChipSelector, type ChipSelectorData } from "./ChipSelector";
+import { VennEntry, type VennEntryData } from "./VennEntry";
+import {
+  SideBySideHighlighter,
+  type SideBySideHighlighterData,
+} from "./SideBySideHighlighter";
 
 export function StepInteractive({
   type,
@@ -93,6 +98,12 @@ export function StepInteractive({
       return <ChecklistDownload data={data as ChecklistDownloadData} />;
     case "chip_selector":
       return <ChipSelector data={data as ChipSelectorData} />;
+    case "venn_entry":
+      return <VennEntry data={data as VennEntryData} />;
+    case "side_by_side_highlighter":
+      return (
+        <SideBySideHighlighter data={data as SideBySideHighlighterData} />
+      );
     default:
       return null;
   }
