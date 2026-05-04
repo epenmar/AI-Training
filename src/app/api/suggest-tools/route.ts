@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 type CacheEntry = { at: number; tools: SuggestedTool[] };
-const cache = new Map<number, CacheEntry>();
+// Cache key combines activityId + stepNumber so step-specific
+// suggestions don't collide with activity-level ones.
+const cache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 type SuggestedTool = {
@@ -31,13 +33,17 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => ({}))) as {
     activityId?: number;
+    stepNumber?: number;
   };
   const activityId = body.activityId;
   if (!activityId || typeof activityId !== "number") {
     return NextResponse.json({ error: "missing_activity_id" }, { status: 400 });
   }
+  const stepNumber =
+    typeof body.stepNumber === "number" ? body.stepNumber : null;
 
-  const cached = cache.get(activityId);
+  const cacheKey = `${activityId}:${stepNumber ?? "all"}`;
+  const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
     return NextResponse.json({ tools: cached.tools, cached: true });
   }
@@ -62,21 +68,40 @@ export async function POST(request: Request) {
       .map((s) => `${s.step_number}. ${s.instruction}`)
       .join("\n") || "(no steps)";
 
-  const system =
-    "You help ASU learners pick GenAI tools for a specific activity. Respond with ONLY a single JSON object, no surrounding prose, no markdown code fences.";
+  const focusedStep =
+    stepNumber !== null
+      ? (steps ?? []).find((s) => s.step_number === stepNumber) ?? null
+      : null;
 
-  const prompt = `Suggest 3-5 currently-available AI tools that would help an ASU learner complete this activity well.
+  const system =
+    "You help ASU learners pick GenAI tools for a specific activity step. Respond with ONLY a single JSON object, no surrounding prose, no markdown code fences.";
+
+  // When the suggester is invoked from a specific step, focus the
+  // recommendation on that step's task. The "why" line should explain
+  // how the tool helps with THAT step, not the activity broadly.
+  const stepFocusBlock =
+    focusedStep !== null
+      ? `\n\nFOCUS — this learner is on step ${focusedStep.step_number} of the activity. Recommend tools that specifically help with this step's task:\n  Step ${focusedStep.step_number}: ${focusedStep.instruction}\n\nThe \"why\" line for each tool MUST tie the recommendation to this step specifically (e.g., "best for [this step's specific task] because…"). Generic activity-level reasons are not acceptable.`
+      : "";
+
+  const prompt = `Suggest 3-5 currently-available AI tools that would help an ASU learner complete ${
+    focusedStep ? "this step" : "this activity"
+  } well.
 
 Activity title: ${activity.title}
 Activity description: ${activity.description ?? ""}
 Deliverable: ${activity.deliverable ?? ""}
-Steps:
-${stepList}
+All steps (for context):
+${stepList}${stepFocusBlock}
 
 Respond with a JSON object of the form:
-{"tools": [{"name": "Tool Name", "url": "https://...", "why": "One-sentence reason this tool fits this activity."}, ...]}
+{"tools": [{"name": "Tool Name", "url": "https://...", "why": "One-sentence reason this tool fits ${
+    focusedStep ? "this step" : "this activity"
+  }."}, ...]}
 
-Only include tools that (a) are publicly available as of your knowledge, (b) have a real, stable URL, and (c) directly help with THIS activity's deliverable. Keep the "why" under 20 words.
+Only include tools that (a) are publicly available as of your knowledge, (b) have a real, stable URL, and (c) directly help with ${
+    focusedStep ? "THIS STEP'S task" : "THIS activity's deliverable"
+  }. Keep the "why" under 25 words and lead with "Best for [the specific task]…".
 
 Tool selection guidelines, in priority order. Aim for a mix across tiers — do NOT default to only well-known options when a licensed or better-fit alternative exists.
 
@@ -153,6 +178,6 @@ When the activity calls for something creative (music, voice, video, a poster, a
       typeof t?.why === "string"
   );
 
-  cache.set(activityId, { at: Date.now(), tools });
+  cache.set(cacheKey, { at: Date.now(), tools });
   return NextResponse.json({ tools, cached: false });
 }

@@ -9,6 +9,10 @@ interface Props {
   activityDeliverable: string | null;
   showPlatform: boolean;
   showExternal: boolean;
+  // Scope the tool suggester to a specific step. When provided, the
+  // "why" lines come back step-specific ("best for [this task]")
+  // instead of activity-generic.
+  stepNumber?: number;
 }
 
 // Renders the ASU platform callouts (Compare AI, Build in Create AI) and / or
@@ -23,6 +27,7 @@ export function AsuResourcesPanel({
   activityDeliverable,
   showPlatform,
   showExternal,
+  stepNumber,
 }: Props) {
   if (!showPlatform && !showExternal) return null;
   return (
@@ -35,7 +40,9 @@ export function AsuResourcesPanel({
           activityDeliverable={activityDeliverable}
         />
       )}
-      {showExternal && <ToolSuggester activityId={activityId} />}
+      {showExternal && (
+        <ToolSuggester activityId={activityId} stepNumber={stepNumber} />
+      )}
     </div>
   );
 }

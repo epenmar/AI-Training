@@ -4,11 +4,16 @@ import { useState } from "react";
 
 interface Props {
   activityId: number;
+  // When provided, the suggester scopes its recommendations to a
+  // specific step's task and the "why" lines lead with "Best for
+  // [that step's specific task]…" instead of generic activity-level
+  // commentary.
+  stepNumber?: number;
 }
 
 type Tool = { name: string; url: string; why: string };
 
-export function ToolSuggester({ activityId }: Props) {
+export function ToolSuggester({ activityId, stepNumber }: Props) {
   const [tools, setTools] = useState<Tool[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -20,7 +25,7 @@ export function ToolSuggester({ activityId }: Props) {
       const res = await fetch("/api/suggest-tools", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ activityId }),
+        body: JSON.stringify({ activityId, stepNumber }),
       });
       const data = await res.json();
       if (!res.ok) {

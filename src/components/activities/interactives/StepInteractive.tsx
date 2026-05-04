@@ -49,6 +49,10 @@ import {
   SideBySideHighlighter,
   type SideBySideHighlighterData,
 } from "./SideBySideHighlighter";
+import {
+  WorkflowBuilder,
+  type WorkflowBuilderData,
+} from "./WorkflowBuilder";
 
 export function StepInteractive({
   type,
@@ -104,6 +108,8 @@ export function StepInteractive({
       return (
         <SideBySideHighlighter data={data as SideBySideHighlighterData} />
       );
+    case "workflow_builder":
+      return <WorkflowBuilder data={data as WorkflowBuilderData} />;
     default:
       return null;
   }

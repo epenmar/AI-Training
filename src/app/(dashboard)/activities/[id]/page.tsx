@@ -446,6 +446,7 @@ export default async function ActivityDetailPage({
                               activityDeliverable={activity.deliverable ?? null}
                               showPlatform={showPlatform}
                               showExternal={showExternal}
+                              stepNumber={step.step_number}
                             />
                           )}
                           {renderInteractiveInline && (
