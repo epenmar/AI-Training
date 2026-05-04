@@ -102,23 +102,28 @@ export default async function LearningPathsPage({
                     className="invisible group-hover/info:visible group-focus/info:visible absolute left-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] z-30 rounded-lg bg-white border border-gray-300 shadow-lg p-3 text-xs text-gray-700 leading-relaxed normal-case tracking-normal font-normal"
                   >
                     <strong className="block text-asu-maroon mb-1">
-                      How this list was derived
+                      Why these 12 skills
                     </strong>
-                    Adapted from Andrew Maynard&apos;s original 14
-                    skills. We merged Source verification + Fact-checking
-                    into <em>Verify what AI gives you</em>; merged AI
-                    agents + Visuals + new technical literacy into
-                    <em> Build with AI</em>; merged AI literacy +
-                    Intentional use into <em>Critical AI judgment</em>;
-                    and added <em>Bias and equity in AI</em> as a new
-                    skill the original framework didn&apos;t address.
+                    We started with Andrew Maynard&apos;s 14-skill AI
+                    framework and adapted it for educators and others
+                    who already hold a college degree — readers who
+                    don&apos;t need an AI-101 vocabulary primer but do
+                    need to think harder about classroom and research
+                    applications. Skills that overlapped were combined
+                    into sharper composites; we added{" "}
+                    <em>Bias and equity in AI</em> because it deserves
+                    its own attention rather than living implicitly
+                    across the others; and the framing across the rest
+                    is aligned with ASU&apos;s Principled Innovation
+                    charter.
                   </span>
                 </span>
               </h3>
               <p className="text-xs text-gray-600 mt-1 max-w-2xl">
-                The Bloom phases below organize the source material;
-                these {skills.length} skills are what the activities
-                build. Tap to see the full skill set.
+                These {skills.length} skills, adapted from Andrew
+                Maynard&apos;s AI skills framework, are what every
+                activity in the curriculum builds toward. Expand to see
+                the full set; click any skill to jump to its activities.
               </p>
             </div>
             <svg
@@ -145,46 +150,72 @@ export default async function LearningPathsPage({
               const isNew =
                 !!skill.derivation_note &&
                 skill.derivation_note.toLowerCase().startsWith("new");
+              // Each card jumps to that skill's section on the
+              // activities page (anchors keyed by stable skill.id).
+              const skillHref = `/activities?filter=all#skill-${skill.id}-heading`;
               return (
-                <li
-                  key={skill.id}
-                  className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3"
-                >
-                  <div className="flex-shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-md bg-asu-maroon/5 text-asu-maroon">
-                    <SkillIcon skillId={skill.id} size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-asu-maroon uppercase tracking-wider flex flex-wrap items-center gap-1.5">
-                      Skill {displayN}
-                      {skill.is_gap && (
-                        <span className="text-[10px] font-medium normal-case tracking-normal text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                          gap-skill
-                        </span>
-                      )}
-                      {isAdapted && (
-                        <span
-                          title={skill.derivation_note ?? ""}
-                          className="text-[10px] font-medium normal-case tracking-normal text-asu-blue bg-asu-blue/10 px-1.5 py-0.5 rounded cursor-help"
-                        >
-                          adapted
-                        </span>
-                      )}
-                      {isNew && (
-                        <span
-                          title={skill.derivation_note ?? ""}
-                          className="text-[10px] font-medium normal-case tracking-normal text-green-700 bg-asu-green/10 px-1.5 py-0.5 rounded cursor-help"
-                        >
-                          new
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-sm font-semibold text-gray-700 leading-snug">
-                      {skill.short_name}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                      {skill.statement}
-                    </p>
-                  </div>
+                <li key={skill.id}>
+                  <Link
+                    href={skillHref}
+                    className="group flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:border-asu-maroon/40 hover:bg-asu-maroon/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-asu-maroon transition-colors"
+                  >
+                    <div className="flex-shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-md bg-asu-maroon/5 text-asu-maroon group-hover:bg-asu-maroon/10">
+                      <SkillIcon skillId={skill.id} size={20} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-asu-maroon uppercase tracking-wider flex flex-wrap items-center gap-1.5">
+                        Skill {displayN}
+                        {skill.is_gap && (
+                          <span className="text-[10px] font-medium normal-case tracking-normal text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                            gap-skill
+                          </span>
+                        )}
+                        {/*
+                          The "adapted" / "new" pills used the native
+                          `title` attribute, which has a ~500ms browser
+                          delay. CSS-based popovers (same pattern as
+                          the "i" icon above) show instantly on hover
+                          or focus.
+                        */}
+                        {isAdapted && skill.derivation_note && (
+                          <span
+                            tabIndex={0}
+                            aria-label={skill.derivation_note}
+                            className="group/pill relative inline-flex text-[10px] font-medium normal-case tracking-normal text-asu-blue bg-asu-blue/10 px-1.5 py-0.5 rounded cursor-help focus:outline-none"
+                          >
+                            adapted
+                            <span
+                              role="tooltip"
+                              className="invisible group-hover/pill:visible group-focus/pill:visible absolute left-0 top-full mt-1 w-72 max-w-[calc(100vw-2rem)] z-30 rounded-lg bg-white border border-gray-300 shadow-lg p-2.5 text-[11px] text-gray-700 leading-relaxed font-normal"
+                            >
+                              {skill.derivation_note}
+                            </span>
+                          </span>
+                        )}
+                        {isNew && skill.derivation_note && (
+                          <span
+                            tabIndex={0}
+                            aria-label={skill.derivation_note}
+                            className="group/pill relative inline-flex text-[10px] font-medium normal-case tracking-normal text-green-700 bg-asu-green/10 px-1.5 py-0.5 rounded cursor-help focus:outline-none"
+                          >
+                            new
+                            <span
+                              role="tooltip"
+                              className="invisible group-hover/pill:visible group-focus/pill:visible absolute left-0 top-full mt-1 w-72 max-w-[calc(100vw-2rem)] z-30 rounded-lg bg-white border border-gray-300 shadow-lg p-2.5 text-[11px] text-gray-700 leading-relaxed font-normal"
+                            >
+                              {skill.derivation_note}
+                            </span>
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-sm font-semibold text-gray-700 group-hover:text-asu-maroon leading-snug">
+                        {skill.short_name}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                        {skill.statement}
+                      </p>
+                    </div>
+                  </Link>
                 </li>
               );
             })}
