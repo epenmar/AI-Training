@@ -1,13 +1,76 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { AutoTextarea } from "./AutoTextarea";
+
+type GroupColor =
+  | "maroon"
+  | "blue"
+  | "gold"
+  | "green"
+  | "orange"
+  | "neutral";
+
+// Per-group color tints. `stickyBg` must be opaque (sticky-left cells
+// hide whatever scrolls under them) so the values are pre-blended on
+// white. `rowBg` paints the data cells; the textareas inside stay
+// `bg-white`, so the tint shows in the gap created by border-spacing.
+const GROUP_TINTS: Record<
+  GroupColor,
+  { rowBg: string; stickyBg: string; borderL: string; headerBg: string }
+> = {
+  maroon: {
+    rowBg: "bg-asu-maroon/5",
+    stickyBg: "bg-[#fbf2f4]",
+    borderL: "border-asu-maroon/40",
+    headerBg: "bg-asu-maroon/10 text-asu-maroon",
+  },
+  blue: {
+    rowBg: "bg-asu-blue/5",
+    stickyBg: "bg-[#f5fbff]",
+    borderL: "border-asu-blue/40",
+    headerBg: "bg-asu-blue/10 text-asu-blue",
+  },
+  gold: {
+    rowBg: "bg-asu-gold/10",
+    stickyBg: "bg-[#fff8df]",
+    borderL: "border-asu-gold/60",
+    headerBg: "bg-asu-gold/20 text-yellow-900",
+  },
+  green: {
+    rowBg: "bg-asu-green/5",
+    stickyBg: "bg-[#f4faea]",
+    borderL: "border-asu-green/40",
+    headerBg: "bg-asu-green/10 text-green-800",
+  },
+  orange: {
+    rowBg: "bg-asu-orange/10",
+    stickyBg: "bg-[#fff1e7]",
+    borderL: "border-asu-orange/50",
+    headerBg: "bg-asu-orange/15 text-orange-900",
+  },
+  neutral: {
+    rowBg: "",
+    stickyBg: "bg-[#f5fbff]",
+    borderL: "border-gray-200",
+    headerBg: "bg-gray-100 text-gray-700",
+  },
+};
 
 export type ComparisonTableData = {
   storageKey: string;
   prompt?: string;
   rowHeader?: string;
-  rows: { id: string; label: string; placeholder?: string }[];
+  rows: {
+    id: string;
+    label: string;
+    placeholder?: string;
+    // When set, this row participates in a row-group. Adjacent rows
+    // sharing a groupId render under one group header; the group's
+    // color tints the row.
+    groupId?: string;
+  }[];
+  rowGroups?: { id: string; label?: string; color?: GroupColor }[];
   columns: { id: string; label: string; placeholder?: string }[];
   cellPlaceholder?: string;
   // When true, row labels render as static text instead of editable inputs.
@@ -16,6 +79,11 @@ export type ComparisonTableData = {
   // values persist alongside the cell data. Useful when columns
   // represent user-supplied entities (e.g., the actual tool names).
   editableColumnLabels?: boolean;
+  // Show a "Download CSV" button under the table. CSV uses current
+  // editable column labels (when applicable) and includes a "Group"
+  // column up front when row groups are configured.
+  enableCsvExport?: boolean;
+  csvFilename?: string;
 };
 
 type Stored = Record<string, Record<string, string>>;
@@ -86,6 +154,60 @@ function writeStorage(key: string, value: Stored) {
   }
 }
 
+function escapeCsvCell(s: string): string {
+  if (s.includes(",") || s.includes('"') || s.includes("\n") || s.includes("\r")) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+function buildCsv(
+  data: ComparisonTableData,
+  state: Stored,
+  colLabels: Record<string, string>
+): string {
+  const hasGroups = !!data.rowGroups && data.rowGroups.length > 0;
+  const groupLabelById = new Map(
+    (data.rowGroups ?? []).map((g) => [g.id, g.label ?? g.id])
+  );
+
+  const colLabel = (id: string, fallback: string) =>
+    data.editableColumnLabels ? colLabels[id] ?? fallback : fallback;
+
+  const headers: string[] = [];
+  if (hasGroups) headers.push("Group");
+  headers.push(data.rowHeader ?? "Row");
+  for (const c of data.columns) headers.push(colLabel(c.id, c.label));
+
+  const lines = [headers.map(escapeCsvCell).join(",")];
+  for (const row of data.rows) {
+    const values: string[] = [];
+    if (hasGroups) {
+      values.push(
+        row.groupId ? (groupLabelById.get(row.groupId) ?? row.groupId) : ""
+      );
+    }
+    values.push(row.label);
+    for (const c of data.columns) {
+      values.push(state[row.id]?.[c.id] ?? "");
+    }
+    lines.push(values.map(escapeCsvCell).join(","));
+  }
+  return lines.join("\n");
+}
+
+function downloadCsv(filename: string, content: string) {
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export function ComparisonTable({ data }: { data: ComparisonTableData }) {
   const [state, setState] = useState<Stored>(emptyState(data.rows));
   const [colLabels, setColLabels] = useState<Record<string, string>>(() =>
@@ -120,6 +242,18 @@ export function ComparisonTable({ data }: { data: ComparisonTableData }) {
   const updateColLabel = (colId: string, value: string) => {
     setColLabels((prev) => ({ ...prev, [colId]: value }));
   };
+
+  const groupConfig = (groupId: string | undefined) =>
+    groupId ? data.rowGroups?.find((g) => g.id === groupId) : undefined;
+  const tintFor = (groupId: string | undefined) =>
+    GROUP_TINTS[groupConfig(groupId)?.color ?? "neutral"];
+
+  const onCsvDownload = () => {
+    const csv = buildCsv(data, state, colLabels);
+    downloadCsv(data.csvFilename ?? `${data.storageKey}.csv`, csv);
+  };
+
+  const totalCols = 1 + data.columns.length;
 
   return (
     <div className="rounded-lg border border-asu-blue/25 bg-asu-blue/5 p-4">
@@ -171,47 +305,94 @@ export function ComparisonTable({ data }: { data: ComparisonTableData }) {
             </tr>
           </thead>
           <tbody>
-            {data.rows.map((row) => (
-              <tr key={row.id}>
-                <th
-                  scope="row"
-                  className="sticky left-0 z-10 bg-[#f5fbff] text-left align-top pr-2 py-1 shadow-[2px_0_0_0_rgba(0,163,224,0.15)]"
-                >
-                  {data.rowsReadOnly ? (
-                    <span className="block w-40 text-sm font-semibold text-gray-700 px-1 py-1.5 leading-snug">
-                      {row.label}
-                    </span>
-                  ) : (
-                    <input
-                      type="text"
-                      aria-label={`${row.label} name`}
-                      defaultValue={row.label}
-                      placeholder={row.placeholder ?? row.label}
-                      onChange={(e) => update(row.id, "_label", e.target.value)}
-                      className="w-32 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:border-asu-blue focus:outline-none focus:ring-1 focus:ring-asu-blue"
-                    />
+            {data.rows.map((row, i) => {
+              const tint = tintFor(row.groupId);
+              const prevGroupId = i > 0 ? data.rows[i - 1].groupId : undefined;
+              const isFirstInGroup = row.groupId && row.groupId !== prevGroupId;
+              const group = groupConfig(row.groupId);
+              return (
+                <Fragment key={row.id}>
+                  {isFirstInGroup && group?.label && (
+                    <tr>
+                      <th
+                        scope="rowgroup"
+                        colSpan={totalCols}
+                        className={`text-left text-[11px] font-bold uppercase tracking-wider rounded-md px-3 py-1.5 border-l-4 ${tint.borderL} ${tint.headerBg}`}
+                      >
+                        {group.label}
+                      </th>
+                    </tr>
                   )}
-                </th>
-                {data.columns.map((col) => (
-                  <td key={col.id} className="align-top py-1 min-w-[10rem]">
-                    <AutoTextarea
-                      aria-label={`${row.label} ${col.label}`}
-                      value={state[row.id]?.[col.id] ?? ""}
-                      onChange={(e) => update(row.id, col.id, e.target.value)}
-                      placeholder={data.cellPlaceholder}
-                      className="w-full text-sm bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:border-asu-blue focus:outline-none focus:ring-1 focus:ring-asu-blue leading-snug"
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
+                  <tr>
+                    <th
+                      scope="row"
+                      className={`sticky left-0 z-10 ${tint.stickyBg} text-left align-top pr-2 py-1 shadow-[2px_0_0_0_rgba(0,163,224,0.15)]`}
+                    >
+                      {data.rowsReadOnly ? (
+                        <span className="block w-40 text-sm font-semibold text-gray-700 px-1 py-1.5 leading-snug">
+                          {row.label}
+                        </span>
+                      ) : (
+                        <input
+                          type="text"
+                          aria-label={`${row.label} name`}
+                          defaultValue={row.label}
+                          placeholder={row.placeholder ?? row.label}
+                          onChange={(e) => update(row.id, "_label", e.target.value)}
+                          className="w-32 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:border-asu-blue focus:outline-none focus:ring-1 focus:ring-asu-blue"
+                        />
+                      )}
+                    </th>
+                    {data.columns.map((col) => (
+                      <td
+                        key={col.id}
+                        className={`align-top py-1 min-w-[10rem] ${tint.rowBg}`}
+                      >
+                        <AutoTextarea
+                          aria-label={`${row.label} ${col.label}`}
+                          value={state[row.id]?.[col.id] ?? ""}
+                          onChange={(e) => update(row.id, col.id, e.target.value)}
+                          placeholder={data.cellPlaceholder}
+                          className="w-full text-sm bg-white border border-gray-200 rounded-md px-2 py-1.5 focus:border-asu-blue focus:outline-none focus:ring-1 focus:ring-asu-blue leading-snug"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
-      <p className="text-[11px] text-gray-500 mt-2">
-        Saved in your browser. Capture your reflection in the deliverable
-        box at the bottom of this page.
-      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <p className="text-[11px] text-gray-500 flex-1">
+          Saved in your browser. Capture your reflection in the deliverable
+          box at the bottom of this page.
+        </p>
+        {data.enableCsvExport && (
+          <button
+            type="button"
+            onClick={onCsvDownload}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-asu-blue text-white hover:opacity-90 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-asu-blue"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"
+              />
+            </svg>
+            Download CSV
+          </button>
+        )}
+      </div>
     </div>
   );
 }
