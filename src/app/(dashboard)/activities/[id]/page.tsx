@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { CompletionPanel } from "@/components/activities/CompletionPanel";
 import { AsuResourcesPanel } from "@/components/activities/AsuResourcesPanel";
+import { ToolSuggester } from "@/components/activities/ToolSuggester";
 import { StepInteractive } from "@/components/activities/interactives/StepInteractive";
 import { VocabTerm } from "@/components/activities/VocabTerm";
 import { buildRecommendations } from "@/lib/recommendations";
@@ -472,21 +473,60 @@ export default async function ActivityDetailPage({
             </ol>
           )}
 
-          {/* Optional extension — shown at the end of the steps, not counted in the time estimate. Renders with whitespace-pre-line so multi-step directions keep their formatting; renderRichText so [link](url) and **bold** work like in step bodies. */}
-          {extension && (
-            <div className="mt-3 bg-asu-gold/10 border-l-4 border-asu-gold rounded-r-lg p-4">
-              <p className="text-xs font-semibold text-yellow-800 uppercase tracking-wide mb-1">
-                Optional extension
-              </p>
-              <p className="text-sm text-gray-700 whitespace-pre-line">
-                {renderRichText(extension)}
-              </p>
-              <p className="text-xs text-gray-500 mt-2 italic">
-                Not included in the {activity.time_estimate} estimate above —
-                for anyone who wants to go further.
-              </p>
-            </div>
-          )}
+          {/* Optional extension — convention: the first paragraph after
+              "Optional extension: " is the headline / TL;DR, then a
+              blank line, then the full directions. Headline always
+              visible; directions live inside an accordion so the
+              callout doesn't dominate the page when collapsed. The
+              Suggest-tools button is rendered alongside (activity-
+              scoped, since extensions sit outside the step ladder). */}
+          {extension && (() => {
+            const splitIdx = extension.indexOf("\n\n");
+            const summary =
+              splitIdx >= 0 ? extension.slice(0, splitIdx) : extension;
+            const body = splitIdx >= 0 ? extension.slice(splitIdx + 2) : "";
+            return (
+              <div className="mt-3 bg-asu-gold/10 border-l-4 border-asu-gold rounded-r-lg p-4">
+                <p className="text-xs font-semibold text-yellow-800 uppercase tracking-wide mb-1">
+                  Optional extension
+                </p>
+                <p className="text-sm text-gray-700">
+                  {renderRichText(summary)}
+                </p>
+                {body && (
+                  <details className="group mt-3">
+                    <summary className="cursor-pointer list-none text-xs font-medium text-yellow-900 hover:underline inline-flex items-center gap-1">
+                      <svg
+                        className="w-3.5 h-3.5 transition-transform group-open:rotate-90"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                      Show the directions
+                    </summary>
+                    <div className="mt-2 text-sm text-gray-700 whitespace-pre-line">
+                      {renderRichText(body)}
+                    </div>
+                  </details>
+                )}
+                <div className="mt-3">
+                  <ToolSuggester activityId={activityId} />
+                </div>
+                <p className="text-xs text-gray-500 mt-3 italic">
+                  Not included in the {activity.time_estimate} estimate
+                  above — for anyone who wants to go further.
+                </p>
+              </div>
+            );
+          })()}
           </div>
 
           {/* Sticky workspace sidebar (when a step is pinned). */}
