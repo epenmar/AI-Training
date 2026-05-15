@@ -4,9 +4,11 @@ import Link from "next/link";
 import { buildRecommendations } from "@/lib/recommendations";
 import { SkillIcon } from "@/components/activities/skillIcons";
 
-// One color per Bloom phase — rotates through ASU palette
-const PHASE_COLORS = [
-  { bg: "bg-asu-gray/10", accent: "bg-asu-gray", text: "text-gray-700" },
+// 12-position color palette for the skill cards. Cycles through the
+// ASU palette so adjacent skills are visually distinct without any
+// skill dominating.
+const SKILL_COLOR_PALETTE = [
+  { bg: "bg-asu-maroon/10", accent: "bg-asu-maroon", text: "text-asu-maroon" },
   { bg: "bg-asu-blue/10", accent: "bg-asu-blue", text: "text-asu-blue" },
   { bg: "bg-asu-turquoise/10", accent: "bg-asu-turquoise", text: "text-asu-turquoise" },
   { bg: "bg-asu-green/10", accent: "bg-asu-green", text: "text-green-700" },
@@ -15,6 +17,9 @@ const PHASE_COLORS = [
   { bg: "bg-asu-copper/10", accent: "bg-asu-copper", text: "text-asu-copper" },
   { bg: "bg-asu-pink/10", accent: "bg-asu-pink", text: "text-asu-pink" },
   { bg: "bg-asu-maroon/10", accent: "bg-asu-maroon", text: "text-asu-maroon" },
+  { bg: "bg-asu-blue/10", accent: "bg-asu-blue", text: "text-asu-blue" },
+  { bg: "bg-asu-green/10", accent: "bg-asu-green", text: "text-green-700" },
+  { bg: "bg-asu-gold/15", accent: "bg-asu-gold", text: "text-yellow-800" },
 ];
 
 export default async function LearningPathsPage({
@@ -40,22 +45,45 @@ export default async function LearningPathsPage({
 
   // The 12 active skills surfaced as an accordion above the
   // how-it-works infographic. Display order captures the curated
-  // sequence (start active and doing, build to judgment, end with
-  // sustaining practice). The transparency note explains the
-  // adaptation from Maynard's original 14.
+  // sequence. The transparency note explains the adaptation from
+  // Maynard's original 14.
   const { data: skills } = await supabase
     .from("skills")
     .select("id, statement, short_name, is_gap, display_order, derivation_note")
     .eq("is_active", true)
     .order("display_order", { nullsFirst: false });
 
-  // Active activity count for the "how materials and activities work
-  // together" section — kept dynamic so the copy stays correct as
-  // activities are added or retired.
-  const { count: activeActivityCount } = await supabase
+  // Materials per skill — counted across lesson_flow rows whose
+  // skill_ids array includes this skill. A material can serve more
+  // than one skill, so totals will exceed the lesson_flow row count.
+  const { data: lessonItems } = await supabase
+    .from("lesson_flow")
+    .select("id, skill_ids, learning_level");
+  const materialCountBySkill = new Map<number, number>();
+  for (const item of lessonItems ?? []) {
+    for (const sid of item.skill_ids ?? []) {
+      materialCountBySkill.set(
+        sid,
+        (materialCountBySkill.get(sid) ?? 0) + 1
+      );
+    }
+  }
+
+  // Active activities per skill — used both for the "X activities"
+  // copy on each card and for the total in the how-it-works section.
+  const { data: actRows } = await supabase
     .from("level_up_activities")
-    .select("id", { count: "exact", head: true })
+    .select("skill_id")
     .eq("is_active", true);
+  const activityCountBySkill = new Map<number, number>();
+  for (const row of actRows ?? []) {
+    if (row.skill_id == null) continue;
+    activityCountBySkill.set(
+      row.skill_id,
+      (activityCountBySkill.get(row.skill_id) ?? 0) + 1
+    );
+  }
+  const activeActivityCount = actRows?.length ?? 0;
 
   // Default to personalized view if the user has an attempt; explicit
   // `filter=all` opts into browse-all.
@@ -65,10 +93,11 @@ export default async function LearningPathsPage({
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-700">Learning Materials</h2>
+        <h2 className="text-2xl font-bold text-gray-700">Skills and Materials</h2>
         <p className="text-gray-500">
-          9 phases of curated source material, organized by Bloom&apos;s
-          Taxonomy from foundational understanding to advanced creation.
+          12 skills, sequenced from active practice to critical judgment.
+          Each skill has curated reading + reference material AND hands-on
+          activities that build it in practice.
         </p>
       </div>
 
@@ -84,11 +113,6 @@ export default async function LearningPathsPage({
                 </span>
                 <span
                   className="group/info relative inline-flex items-center"
-                  // The "i" lives inside the summary, so a click on it
-                  // would also toggle the parent details. The popover
-                  // works on hover and on focus instead, which is the
-                  // common accessible pattern for purely informational
-                  // tooltips.
                   tabIndex={0}
                   aria-label="How this skill list was derived"
                 >
@@ -158,8 +182,6 @@ export default async function LearningPathsPage({
               const isNew =
                 !!skill.derivation_note &&
                 skill.derivation_note.toLowerCase().startsWith("new");
-              // Each card jumps to that skill's section on the
-              // activities page (anchors keyed by stable skill.id).
               const skillHref = `/activities?filter=all#skill-${skill.id}-heading`;
               return (
                 <li key={skill.id}>
@@ -178,13 +200,6 @@ export default async function LearningPathsPage({
                             gap-skill
                           </span>
                         )}
-                        {/*
-                          The "adapted" / "new" pills used the native
-                          `title` attribute, which has a ~500ms browser
-                          delay. CSS-based popovers (same pattern as
-                          the "i" icon above) show instantly on hover
-                          or focus.
-                        */}
                         {isAdapted && skill.derivation_note && (
                           <span
                             tabIndex={0}
@@ -231,7 +246,7 @@ export default async function LearningPathsPage({
         </details>
       )}
 
-      {/* How activities and materials relate */}
+      {/* How materials + activities work together */}
       <section
         aria-label="How materials and activities work together"
         className="mb-6 rounded-xl bg-gradient-to-br from-asu-green/5 via-white to-asu-blue/5 border border-gray-200 p-5"
@@ -240,7 +255,6 @@ export default async function LearningPathsPage({
           How materials and activities work together
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* Step 1 — Materials */}
           <div className="rounded-lg bg-white border border-asu-green/30 p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-asu-green text-white">
@@ -259,17 +273,13 @@ export default async function LearningPathsPage({
                   />
                 </svg>
               </span>
-              <p className="text-sm font-bold text-gray-700">
-                Source material
-              </p>
+              <p className="text-sm font-bold text-gray-700">Source material</p>
             </div>
             <p className="text-xs text-gray-600 leading-relaxed">
               ASU&apos;s GenAI course modules, vetted external guides, and
               reference PDFs. The raw curriculum.
             </p>
           </div>
-
-          {/* Arrow / connector */}
           <div className="rounded-lg bg-white border border-asu-maroon/30 p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-asu-maroon text-white">
@@ -293,14 +303,12 @@ export default async function LearningPathsPage({
               </p>
             </div>
             <p className="text-xs text-gray-600 leading-relaxed">
-              The {activeActivityCount ?? 0} hands-on activities pull
-              from these materials. As you work through an activity, the
-              relevant pages, lessons, and tools surface inline — you
-              learn through doing.
+              The {activeActivityCount} hands-on activities pull from these
+              materials. As you work through an activity, the relevant
+              pages, lessons, and tools surface inline — you learn through
+              doing.
             </p>
           </div>
-
-          {/* Direct access */}
           <div className="rounded-lg bg-white border border-asu-blue/30 p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-asu-blue text-white">
@@ -319,23 +327,21 @@ export default async function LearningPathsPage({
                   />
                 </svg>
               </span>
-              <p className="text-sm font-bold text-gray-700">
-                Or come back here
-              </p>
+              <p className="text-sm font-bold text-gray-700">Or come back here</p>
             </div>
             <p className="text-xs text-gray-600 leading-relaxed">
               When you want to read a source straight through, or revisit a
-              specific lesson outside an activity, come to this page and
-              jump directly to the source.
+              specific lesson outside an activity, come here and jump
+              straight to it from the skill it builds.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Filter toggle */}
+      {/* Filter toggle — personalized vs. browse all */}
       <div
         role="tablist"
-        aria-label="Learning paths view"
+        aria-label="Skills view"
         className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-lg mb-6"
       >
         <Link
@@ -360,69 +366,81 @@ export default async function LearningPathsPage({
               : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          Browse all phases
+          Browse all skills
         </Link>
       </div>
 
       {recommendedOnly ? (
-        <PersonalizedPhaseGrid latestAttempt={latestAttempt} />
+        <PersonalizedSkillGrid
+          latestAttempt={latestAttempt}
+          skills={skills ?? []}
+          activityCountBySkill={activityCountBySkill}
+          lessonItems={lessonItems ?? []}
+        />
       ) : (
-        <AllPhaseGrid />
+        <AllSkillGrid
+          skills={skills ?? []}
+          materialCountBySkill={materialCountBySkill}
+          activityCountBySkill={activityCountBySkill}
+        />
       )}
     </div>
   );
 }
 
-async function AllPhaseGrid() {
-  const supabase = await createClient();
-  const { data: phases } = await supabase
-    .from("bloom_phases")
-    .select("*")
-    .order("sort_order");
+type SkillRow = {
+  id: number;
+  short_name: string;
+  statement: string;
+  is_gap: boolean | null;
+  display_order: number | null;
+  derivation_note: string | null;
+};
 
-  const { data: lessonItems } = await supabase
-    .from("lesson_flow")
-    .select("bloom_phase_id");
-
-  const countByPhase = new Map<number, number>();
-  (lessonItems ?? []).forEach((item) => {
-    countByPhase.set(
-      item.bloom_phase_id,
-      (countByPhase.get(item.bloom_phase_id) ?? 0) + 1
-    );
-  });
-
+function AllSkillGrid({
+  skills,
+  materialCountBySkill,
+  activityCountBySkill,
+}: {
+  skills: SkillRow[];
+  materialCountBySkill: Map<number, number>;
+  activityCountBySkill: Map<number, number>;
+}) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {(phases ?? []).map((phase) => (
-        <PhaseCard
-          key={phase.id}
-          phase={phase}
-          itemCount={countByPhase.get(phase.id) ?? 0}
-          href={`/learning-paths/${phase.id}`}
-          countLabel={(n) => `${n} ${n === 1 ? "item" : "items"}`}
+      {skills.map((skill, i) => (
+        <SkillCard
+          key={skill.id}
+          skill={skill}
+          colorIdx={i}
+          materialCount={materialCountBySkill.get(skill.id) ?? 0}
+          activityCount={activityCountBySkill.get(skill.id) ?? 0}
         />
       ))}
     </div>
   );
 }
 
-async function PersonalizedPhaseGrid({
+async function PersonalizedSkillGrid({
   latestAttempt,
+  skills,
+  activityCountBySkill,
+  lessonItems,
 }: {
   latestAttempt: { id: string; completed_at: string } | null;
+  skills: SkillRow[];
+  activityCountBySkill: Map<number, number>;
+  lessonItems: { skill_ids: number[] | null; learning_level: string | null }[];
 }) {
-  const supabase = await createClient();
-
   if (!latestAttempt) {
     return (
       <div className="bg-asu-blue/5 border border-asu-blue/20 rounded-lg p-6">
         <h3 className="text-base font-semibold text-gray-700 mb-1">
-          Take the self-assessment to get a personalized path
+          Take the self-assessment to get a personalized view
         </h3>
         <p className="text-sm text-gray-500 mb-4">
-          Answer 14 quick scenarios and we&apos;ll filter each phase down to
-          just the resources that match your current level.
+          Answer 14 quick scenarios and we&apos;ll filter your skills down to
+          the ones you can grow next.
         </p>
         <Link
           href="/assessment"
@@ -434,29 +452,18 @@ async function PersonalizedPhaseGrid({
     );
   }
 
-  const [
-    { data: responses },
-    { data: questions },
-    { data: phases },
-    { data: lessonItems },
-  ] = await Promise.all([
+  const supabase = await createClient();
+  const [{ data: responses }, { data: questions }] = await Promise.all([
     supabase
       .from("assessment_responses")
       .select("question_id, score")
       .eq("attempt_id", latestAttempt.id),
     supabase.from("assessment_questions").select("id, skill_id"),
-    supabase.from("bloom_phases").select("*").order("sort_order"),
-    supabase
-      .from("lesson_flow")
-      .select("id, bloom_phase_id, learning_level, skill_ids"),
   ]);
-
   const qSkillMap = new Map((questions ?? []).map((q) => [q.id, q.skill_id]));
   const targets = buildRecommendations(responses ?? [], qSkillMap);
-  // skillId -> targetLevel (e.g. 1 -> "Advanced")
-  const skillToLevel = new Map(
-    targets.map((t) => [t.skillId, t.targetLevel])
-  );
+  // skill_id -> target level (Foundational / Intermediate / Advanced)
+  const skillToLevel = new Map(targets.map((t) => [t.skillId, t.targetLevel]));
 
   if (targets.length === 0) {
     return (
@@ -465,36 +472,32 @@ async function PersonalizedPhaseGrid({
           You&apos;re at Advanced on every skill
         </h3>
         <p className="text-sm text-gray-600">
-          No bridge content left. Switch to &ldquo;Browse all phases&rdquo; to
+          No bridge content left. Switch to &ldquo;Browse all skills&rdquo; to
           revisit anything, or retake the assessment.
         </p>
       </div>
     );
   }
 
-  // Count "at your level" items per phase
-  const countByPhase = new Map<number, number>();
-  (lessonItems ?? []).forEach((item) => {
-    if (!item.learning_level) return;
-    const matches = (item.skill_ids ?? []).some(
-      (sid) => skillToLevel.get(sid) === item.learning_level
-    );
-    if (matches) {
-      countByPhase.set(
-        item.bloom_phase_id,
-        (countByPhase.get(item.bloom_phase_id) ?? 0) + 1
-      );
+  // Per-skill: how many lesson_flow items are AT this learner's target
+  // level? Used to label the card with "X at your level."
+  const atLevelBySkill = new Map<number, number>();
+  for (const item of lessonItems) {
+    if (!item.learning_level) continue;
+    for (const sid of item.skill_ids ?? []) {
+      if (skillToLevel.get(sid) === item.learning_level) {
+        atLevelBySkill.set(sid, (atLevelBySkill.get(sid) ?? 0) + 1);
+      }
     }
-  });
+  }
 
-  const visiblePhases = (phases ?? []).filter(
-    (p) => (countByPhase.get(p.id) ?? 0) > 0
-  );
-  const totalCount = Array.from(countByPhase.values()).reduce(
+  const targetSkillIds = new Set(targets.map((t) => t.skillId));
+  const visibleSkills = skills.filter((s) => targetSkillIds.has(s.id));
+  const totalAtLevel = Array.from(atLevelBySkill.values()).reduce(
     (a, b) => a + b,
     0
   );
-  const hiddenCount = (phases?.length ?? 0) - visiblePhases.length;
+  const hiddenCount = skills.length - visibleSkills.length;
   const completedAt = new Date(latestAttempt.completed_at).toLocaleDateString(
     "en-US",
     { month: "short", day: "numeric", year: "numeric" }
@@ -503,83 +506,105 @@ async function PersonalizedPhaseGrid({
   return (
     <div>
       <p className="text-sm text-gray-500 mb-6">
-        Based on your assessment from {completedAt}, {totalCount} resources
-        across {visiblePhases.length} phases match your current level.
+        Based on your assessment from {completedAt},{" "}
+        {visibleSkills.length}{" "}
+        {visibleSkills.length === 1 ? "skill is" : "skills are"} where you
+        can grow next. {totalAtLevel} materials match your current level.
         {hiddenCount > 0 && (
           <>
             {" "}
-            {hiddenCount} {hiddenCount === 1 ? "phase is" : "phases are"}{" "}
+            {hiddenCount} {hiddenCount === 1 ? "skill is" : "skills are"}{" "}
             hidden — you&apos;ve already leveled past the content there.
           </>
         )}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visiblePhases.map((phase) => (
-          <PhaseCard
-            key={phase.id}
-            phase={phase}
-            itemCount={countByPhase.get(phase.id) ?? 0}
-            href={`/learning-paths/${phase.id}?filter=recommended`}
-            countLabel={(n) =>
-              `${n} at your level`
-            }
+        {visibleSkills.map((skill, i) => (
+          <SkillCard
+            key={skill.id}
+            skill={skill}
+            colorIdx={i}
+            materialCount={atLevelBySkill.get(skill.id) ?? 0}
+            activityCount={activityCountBySkill.get(skill.id) ?? 0}
+            targetLevel={skillToLevel.get(skill.id) ?? null}
+            countLabel="at your level"
           />
         ))}
+      </div>
+      <div className="mt-4 text-xs text-gray-500">
+        Materials counts above show resources at your target level.{" "}
+        <Link
+          href="/learning-paths?filter=all"
+          className="text-asu-maroon underline hover:opacity-80"
+        >
+          Switch to all skills
+        </Link>{" "}
+        to see every material.
       </div>
     </div>
   );
 }
 
-type PhaseRow = {
-  id: number;
-  name: string;
-  bloom_levels: string;
-  description: string | null;
-};
-
-function PhaseCard({
-  phase,
-  itemCount,
-  href,
+function SkillCard({
+  skill,
+  colorIdx,
+  materialCount,
+  activityCount,
+  targetLevel,
   countLabel,
 }: {
-  phase: PhaseRow;
-  itemCount: number;
-  href: string;
-  countLabel: (n: number) => string;
+  skill: SkillRow;
+  colorIdx: number;
+  materialCount: number;
+  activityCount: number;
+  targetLevel?: string | null;
+  countLabel?: string;
 }) {
-  const color = PHASE_COLORS[phase.id] ?? PHASE_COLORS[0];
+  const color =
+    SKILL_COLOR_PALETTE[colorIdx % SKILL_COLOR_PALETTE.length] ??
+    SKILL_COLOR_PALETTE[0];
+  const displayN = skill.display_order ?? skill.id;
+  const materialLabel = countLabel
+    ? `${materialCount} ${countLabel}`
+    : `${materialCount} ${materialCount === 1 ? "material" : "materials"}`;
   return (
     <Link
-      href={href}
+      href={`/learning-paths/skill/${skill.id}`}
       className="group relative block rounded-lg border border-gray-200 bg-white overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:ring-offset-2"
     >
       <div className={`h-1.5 w-full ${color.accent}`} />
       <div className="p-5">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div
-            className={`inline-flex items-center justify-center w-9 h-9 rounded-lg ${color.bg} ${color.text} font-bold text-sm`}
+            className={`inline-flex items-center justify-center w-9 h-9 rounded-lg ${color.bg} ${color.text}`}
           >
-            {phase.id}
+            <SkillIcon skillId={skill.id} size={20} />
           </div>
-          <span className="text-xs text-gray-400 font-medium">
-            {countLabel(itemCount)}
+          <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+            Skill {displayN}
           </span>
         </div>
         <h3 className="text-base font-semibold text-gray-700 group-hover:text-asu-maroon transition-colors">
-          {phase.name}
+          {skill.short_name}
         </h3>
-        <p className="text-xs text-gray-400 mt-0.5 uppercase tracking-wide font-medium">
-          {phase.bloom_levels}
-        </p>
-        {phase.description && (
-          <p className="text-sm text-gray-500 mt-2 line-clamp-2">
-            {phase.description}
+        {targetLevel && (
+          <p className="text-[11px] text-asu-maroon mt-0.5 font-bold uppercase tracking-wider">
+            Target: {targetLevel}
           </p>
         )}
+        <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+          {skill.statement}
+        </p>
+        <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
+          <span className="font-medium">{materialLabel}</span>
+          <span className="text-gray-300">·</span>
+          <span className="font-medium">
+            {activityCount} {activityCount === 1 ? "activity" : "activities"}
+          </span>
+        </div>
         <span className="inline-flex items-center gap-1 text-sm font-medium text-asu-maroon mt-3 group-hover:gap-2 transition-all">
-          Explore phase
+          Explore skill
           <svg
             className="w-4 h-4"
             fill="none"

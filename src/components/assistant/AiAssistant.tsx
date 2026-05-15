@@ -25,19 +25,19 @@ function suggestionsForPath(pathname: string): string[] {
       "Show me a creative activity",
     ];
   }
-  if (/^\/learning-paths\/\d+$/.test(path)) {
+  if (/^\/learning-paths\/skill\/\d+$/.test(path)) {
     return [
-      "Summarize this phase in plain language",
-      "Which skill here should I focus on first?",
-      "Give me one small thing to try from this phase",
-      "What comes after this phase?",
+      "Summarize this skill in plain language",
+      "Which material here should I read first?",
+      "Give me one small thing to try from this skill",
+      "Which activity here is the quickest start?",
     ];
   }
   if (path === "/learning-paths") {
     return [
-      "Which phase should I start with?",
-      "How long does the whole path take?",
-      "Which phase matches my day-to-day work?",
+      "Which skill should I start with?",
+      "Which skill matches my day-to-day work?",
+      "How long does the whole curriculum take?",
     ];
   }
   if (path === "/skill-summary") {

@@ -236,14 +236,12 @@ export default async function SkillSummaryPage() {
                       Browse activities
                     </Link>
                   )}
-                  {skill.bloom_phase_id != null && (
-                    <Link
-                      href={`/learning-paths/${skill.bloom_phase_id}`}
-                      className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      See resources
-                    </Link>
-                  )}
+                  <Link
+                    href={`/learning-paths/skill/${skill.id}`}
+                    className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    See materials
+                  </Link>
                 </div>
               </article>
             </li>
