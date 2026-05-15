@@ -641,7 +641,6 @@ export default async function ActivityDetailPage({
         initialNotes={completion?.deliverable_notes ?? ""}
         completedAt={completion?.completed_at ?? null}
         deliverable={activity.deliverable ?? null}
-        communityAction={activity.community_action ?? "lookbook"}
       />
 
       {/* Bottom-of-page navigation */}

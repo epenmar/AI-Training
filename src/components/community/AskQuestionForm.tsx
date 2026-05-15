@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createQuestion } from "@/app/(dashboard)/community/actions";
 
@@ -9,7 +9,16 @@ interface Skill {
   short_name: string;
 }
 
-export function AskQuestionForm({ skills }: { skills: Skill[] }) {
+export function AskQuestionForm({
+  skills,
+  prefillKey,
+}: {
+  skills: Skill[];
+  // localStorage key to read on mount; if present, value populates
+  // the question body and the form expands. Used by the deliverable-
+  // panel "Post to Discussions" handoff.
+  prefillKey?: string;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [expanded, setExpanded] = useState(false);
@@ -18,6 +27,20 @@ export function AskQuestionForm({ skills }: { skills: Skill[] }) {
   const [skillId, setSkillId] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!prefillKey) return;
+    try {
+      const v = window.localStorage.getItem(prefillKey);
+      if (v != null && v.trim().length > 0) {
+        setBody(v);
+        setExpanded(true);
+        window.localStorage.removeItem(prefillKey);
+      }
+    } catch {
+      // ignore
+    }
+  }, [prefillKey]);
 
   function reset() {
     setTitle("");

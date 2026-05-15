@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { createLinkPost, createPost } from "@/app/(dashboard)/community/actions";
 import { createClient } from "@/lib/supabase/client";
 import { getDomain, getEmbedUrl, getLinkKind } from "@/lib/embed";
@@ -21,6 +21,14 @@ interface Props {
   activities: Activity[];
   initialSkillId?: string;
   initialActivityId?: string;
+  // Optional prefill for the description textarea — used by the
+  // "Share project" handoff from the activity deliverable panel.
+  initialDescription?: string;
+  // localStorage key to read on mount; if present, value populates
+  // the description and the key is consumed (removed). Used by the
+  // deliverable-panel handoff so long notes don't ride along in the
+  // URL.
+  prefillKey?: string;
 }
 
 const MAX_BYTES = 50 * 1024 * 1024; // 50MB
@@ -58,6 +66,8 @@ export function UploadForm({
   activities,
   initialSkillId = "",
   initialActivityId = "",
+  initialDescription = "",
+  prefillKey,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [mode, setMode] = useState<"file" | "link">("file");
@@ -72,7 +82,24 @@ export function UploadForm({
   const [anonymous, setAnonymous] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [description, setDescription] = useState(initialDescription);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Prefill the description from localStorage if a key was provided.
+  // Used by the activity-deliverable handoff so long notes don't ride
+  // in the URL.
+  useEffect(() => {
+    if (!prefillKey) return;
+    try {
+      const v = window.localStorage.getItem(prefillKey);
+      if (v != null && v.trim().length > 0) {
+        setDescription(v);
+        window.localStorage.removeItem(prefillKey);
+      }
+    } catch {
+      // ignore
+    }
+  }, [prefillKey]);
 
   const filteredActivities = selectedSkill
     ? activities.filter((a) => a.skill_id === parseInt(selectedSkill, 10))
@@ -452,6 +479,8 @@ export function UploadForm({
           name="description"
           rows={3}
           maxLength={1000}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="What did you build? What prompt or technique did you use?"
           className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:border-transparent"
         />

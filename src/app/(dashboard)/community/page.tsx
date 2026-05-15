@@ -23,6 +23,11 @@ export default async function CommunityPage({
     tab?: string;
     q?: string;
     sort?: string;
+    // Deliverable-panel handoff: activity ID + prefill=1 tells the
+    // discussion form to load deliverable-prefill-discussion-{id}
+    // from localStorage on mount.
+    activity?: string;
+    prefill?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -32,6 +37,10 @@ export default async function CommunityPage({
     params.band && VALID_BANDS.has(params.band) ? params.band : "";
   const search = (params.q ?? "").trim();
   const sort: "top" | "latest" = params.sort === "latest" ? "latest" : "top";
+  const discussionPrefillKey =
+    params.prefill === "1" && params.activity
+      ? `deliverable-prefill-discussion-${params.activity}`
+      : undefined;
 
   const supabase = await createClient();
   const {
@@ -57,7 +66,12 @@ export default async function CommunityPage({
           bandFilter={bandFilter}
         />
       ) : (
-        <AskTab userId={user.id} search={search} sort={sort} />
+        <AskTab
+          userId={user.id}
+          search={search}
+          sort={sort}
+          discussionPrefillKey={discussionPrefillKey}
+        />
       )}
     </div>
   );
@@ -172,10 +186,12 @@ async function AskTab({
   userId,
   search,
   sort,
+  discussionPrefillKey,
 }: {
   userId: string;
   search: string;
   sort: "top" | "latest";
+  discussionPrefillKey?: string;
 }) {
   const supabase = await createClient();
 
@@ -379,7 +395,10 @@ async function AskTab({
       </div>
 
       <div id="new-post" className="scroll-mt-24">
-        <AskQuestionForm skills={skills ?? []} />
+        <AskQuestionForm
+          skills={skills ?? []}
+          prefillKey={discussionPrefillKey}
+        />
       </div>
 
       {sortedQuestions.length > 0 ? (

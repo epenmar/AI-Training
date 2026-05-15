@@ -117,7 +117,7 @@ export default async function CommunityPostPage({
   const fileExt = mediaUrl.split(".").pop()?.toUpperCase() ?? "FILE";
   const backHref =
     isQuestion || from === "questions" ? "/community?tab=questions" : "/community";
-  const backLabel = isQuestion || from === "questions" ? "Back to Questions" : "Back to Look Book";
+  const backLabel = isQuestion || from === "questions" ? "Back to Discussions" : "Back to Community";
 
   return (
     <div className="max-w-3xl mx-auto">

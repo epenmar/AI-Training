@@ -94,7 +94,7 @@ async function buildPageContext(sb: Sb, pathname: string): Promise<string> {
   }
 
   if (path === "/community") {
-    return "User is on the community Look Book — where ASU learners share screenshots/videos of AI work they've built.";
+    return "User is on the Community page — where ASU learners share their AI projects and ask discussion questions.";
   }
 
   if (path === "/") {

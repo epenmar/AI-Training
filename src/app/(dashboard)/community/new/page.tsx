@@ -6,9 +6,17 @@ import { UploadForm } from "@/components/community/UploadForm";
 export default async function NewPostPage({
   searchParams,
 }: {
-  searchParams: Promise<{ activity?: string; skill?: string }>;
+  searchParams: Promise<{
+    activity?: string;
+    skill?: string;
+    // ?prefill=1 — pulled in from the activity-deliverable
+    // "Share project" handoff. Tells the form to read the
+    // deliverable-prefill-project-{activityId} localStorage key.
+    prefill?: string;
+  }>;
 }) {
-  const { activity: activityParam, skill: skillParam } = await searchParams;
+  const { activity: activityParam, skill: skillParam, prefill } =
+    await searchParams;
 
   const supabase = await createClient();
   const {
@@ -63,7 +71,7 @@ export default async function NewPostPage({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        {prefilledActivityTitle ? "Back to activity" : "Back to Look Book"}
+        {prefilledActivityTitle ? "Back to activity" : "Back to Community"}
       </Link>
 
       <h2 className="text-2xl font-bold text-gray-700 mb-2">Share your work</h2>
@@ -88,6 +96,11 @@ export default async function NewPostPage({
         activities={activities ?? []}
         initialSkillId={initialSkillId}
         initialActivityId={initialActivityId}
+        prefillKey={
+          prefill === "1" && initialActivityId
+            ? `deliverable-prefill-project-${initialActivityId}`
+            : undefined
+        }
       />
     </div>
   );

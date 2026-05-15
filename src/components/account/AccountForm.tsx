@@ -193,7 +193,7 @@ export function AccountForm({
           className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-asu-maroon focus:border-transparent"
         />
         <p className="text-xs text-gray-400 mt-1">
-          Shown on your non-anonymous Community Look Book posts so peers can
+          Shown on your non-anonymous Community posts so peers can
           reach out about what you built.
         </p>
       </div>
