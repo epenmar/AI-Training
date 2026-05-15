@@ -121,15 +121,6 @@ export default async function ActivityDetailPage({
     .eq("activity_id", activityId)
     .maybeSingle();
 
-  // Linked phases for cross-navigation
-  const { data: linkedPhases } =
-    activity.linked_phase_ids && activity.linked_phase_ids.length > 0
-      ? await supabase
-          .from("bloom_phases")
-          .select("id, name")
-          .in("id", activity.linked_phase_ids)
-      : { data: [] };
-
   // Sources to "explore further" — pulled live from lesson_flow rows that
   // match this activity's skill + linked phases. The activity teaches by
   // doing; this callout lets the learner read the underlying material
@@ -570,9 +561,10 @@ export default async function ActivityDetailPage({
                 </span>
               </h3>
               <p className="text-xs text-gray-600 mt-1 max-w-2xl">
-                Curated reading and reference for this skill — start here,
-                then go deeper. The activity above teaches by doing; this
-                callout is what to bookmark.
+                Curated reading and reference for this skill. These
+                materials were used to help guide the creation of the
+                activity above and will help you explore the content
+                more deeply.
               </p>
             </div>
             <svg
@@ -640,29 +632,6 @@ export default async function ActivityDetailPage({
             })}
           </ul>
         </details>
-      )}
-
-      {/* Linked phases */}
-      {linkedPhases && linkedPhases.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
-            Related Learning Materials
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {linkedPhases.map((p) => (
-              <Link
-                key={p.id}
-                href={`/learning-paths/${p.id}`}
-                className="inline-flex items-center gap-1 text-sm bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg hover:border-asu-maroon/40 hover:text-asu-maroon transition-colors"
-              >
-                <span className="text-xs font-bold text-asu-maroon">
-                  Phase {p.id}:
-                </span>
-                {p.name}
-              </Link>
-            ))}
-          </div>
-        </div>
       )}
 
       {/* Completion panel */}
