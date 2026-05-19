@@ -155,7 +155,8 @@ export default async function LearningPathsPage({
                 These {skills.length} skills, adapted from Andrew
                 Maynard&apos;s AI skills framework, are what every
                 activity in the curriculum builds toward. Expand to see
-                the full set; click any skill to jump to its activities.
+                the full set; click any skill to jump to its materials
+                and activities.
               </p>
             </div>
             <svg
@@ -182,7 +183,11 @@ export default async function LearningPathsPage({
               const isNew =
                 !!skill.derivation_note &&
                 skill.derivation_note.toLowerCase().startsWith("new");
-              const skillHref = `/activities?filter=all#skill-${skill.id}-heading`;
+              // The dropdown lives on the Skills and Materials page,
+              // so each skill chip jumps to that skill's detail page
+              // (same destination as the cards below) — not to the
+              // activities filter view.
+              const skillHref = `/learning-paths/skill/${skill.id}`;
               return (
                 <li key={skill.id}>
                   <Link
