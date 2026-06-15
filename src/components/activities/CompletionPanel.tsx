@@ -373,9 +373,9 @@ export function CompletionPanel({
 
       {/* Instruction line */}
       <p className="text-xs text-gray-600 mb-3">
-        Click <span className="font-semibold">Post to Discussions</span> if
-        you learned something exciting or challenging that you&apos;d like
-        to share with others — otherwise just save it for yourself.
+        Click <span className="font-semibold">Post to Discussions</span>{" "}
+        if you learned something exciting or challenging that you&apos;d
+        like to share with others, otherwise just save it for yourself.
       </p>
 
       {/* Primary actions */}
