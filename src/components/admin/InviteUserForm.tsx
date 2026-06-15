@@ -6,6 +6,7 @@ import {
   inviteUserRole,
   removePendingInvite,
 } from "@/app/(dashboard)/admin/actions";
+import { openRoleEmail } from "./roleEmail";
 
 export function InviteUserForm() {
   const router = useRouter();
@@ -19,16 +20,19 @@ export function InviteUserForm() {
     setError("");
     setOk("");
     startTransition(async () => {
+      const targetEmail = email;
       const res = await inviteUserRole({ email, role });
       if ("error" in res) {
         setError(res.error);
         return;
       }
       setOk(
-        `Granted ${role} to ${email}. If they haven't signed in yet, it applies on their first login.`
+        `Granted ${role} to ${targetEmail}. If they haven't signed in yet, it applies on their first login.`
       );
       setEmail("");
       router.refresh();
+      // Pop a templated notification email in the default mail app.
+      openRoleEmail(targetEmail, role);
     });
   };
 

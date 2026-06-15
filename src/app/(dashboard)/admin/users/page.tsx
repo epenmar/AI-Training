@@ -166,6 +166,7 @@ export default async function AdminUsersPage() {
               </div>
               <UserRoleSelect
                 userId={p.id}
+                email={p.email}
                 role={role}
                 isSelf={p.id === user.id}
               />

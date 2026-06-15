@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setUserRole } from "@/app/(dashboard)/admin/actions";
+import { openRoleEmail, isAccessRole } from "./roleEmail";
 
 const ROLES = [
   { value: "user", label: "User (no admin)" },
@@ -13,10 +14,12 @@ const ROLES = [
 
 export function UserRoleSelect({
   userId,
+  email,
   role,
   isSelf,
 }: {
   userId: string;
+  email: string;
   role: string;
   isSelf: boolean;
 }) {
@@ -31,6 +34,11 @@ export function UserRoleSelect({
       if ("error" in res) {
         setError(res.error);
         return;
+      }
+      // Pop a templated notification email for access grants (not for
+      // self-changes or demotion to plain user).
+      if (!isSelf && isAccessRole(next) && next !== role) {
+        openRoleEmail(email, next);
       }
       router.refresh();
     });
