@@ -39,7 +39,7 @@ export function AdminNotesPanel({
   initialNotes: AdminNote[];
   revalidate: string;
 }) {
-  const { effectiveIsAdmin: isAdmin } = useAdminEdit();
+  const { showNotes: isAdmin } = useAdminEdit();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(initialNotes.length > 0);

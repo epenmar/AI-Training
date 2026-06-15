@@ -42,7 +42,7 @@ export function EditableText({
   revalidate,
   label,
 }: Props) {
-  const { effectiveIsAdmin: isAdmin, editMode } = useAdminEdit();
+  const { showEdit: isAdmin, editMode } = useAdminEdit();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);

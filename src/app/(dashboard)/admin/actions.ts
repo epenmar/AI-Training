@@ -33,9 +33,9 @@ export async function updateContent(input: {
 }): Promise<UpdateResult> {
   const { table, rowId, column, value } = input;
 
-  const { user, isAdmin, displayName } = await getAdminContext();
+  const { user, canEdit, displayName } = await getAdminContext();
   if (!user) return { error: "Not signed in" };
-  if (!isAdmin) return { error: "Admins only" };
+  if (!canEdit) return { error: "Editing requires editor access" };
   if (!isEditableField(table, column)) {
     return { error: `Field ${table}.${column} is not editable` };
   }
@@ -98,9 +98,9 @@ export async function rollbackRevision(
   revisionId: string,
   revalidate?: string
 ): Promise<UpdateResult> {
-  const { user, isAdmin, displayName } = await getAdminContext();
+  const { user, canEdit, displayName } = await getAdminContext();
   if (!user) return { error: "Not signed in" };
-  if (!isAdmin) return { error: "Admins only" };
+  if (!canEdit) return { error: "Editing requires editor access" };
   if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -177,9 +177,9 @@ export async function addEditComment(input: {
   body: string;
   revalidate?: string;
 }): Promise<UpdateResult> {
-  const { user, isAdmin, displayName } = await getAdminContext();
+  const { user, canComment, displayName } = await getAdminContext();
   if (!user) return { error: "Not signed in" };
-  if (!isAdmin) return { error: "Admins only" };
+  if (!canComment) return { error: "Leaving notes requires commenter access" };
   const body = input.body.trim();
   if (!body) return { error: "Note can't be empty" };
   if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
@@ -214,9 +214,9 @@ export async function resolveEditComment(
   commentId: string,
   revalidate?: string
 ): Promise<UpdateResult> {
-  const { user, isAdmin } = await getAdminContext();
+  const { user, canComment } = await getAdminContext();
   if (!user) return { error: "Not signed in" };
-  if (!isAdmin) return { error: "Admins only" };
+  if (!canComment) return { error: "Leaving notes requires commenter access" };
   if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -239,9 +239,9 @@ export async function reopenEditComment(
   commentId: string,
   revalidate?: string
 ): Promise<UpdateResult> {
-  const { user, isAdmin } = await getAdminContext();
+  const { user, canComment } = await getAdminContext();
   if (!user) return { error: "Not signed in" };
-  if (!isAdmin) return { error: "Admins only" };
+  if (!canComment) return { error: "Leaving notes requires commenter access" };
   if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -252,5 +252,113 @@ export async function reopenEditComment(
     .eq("id", commentId);
   if (error) return { error: error.message };
   if (revalidate) revalidatePath(revalidate);
+  return { success: true };
+}
+
+// ====================================================================
+// User role management (superadmin only)
+// ====================================================================
+
+const ASSIGNABLE_ROLES = new Set(["user", "commenter", "editor", "superadmin"]);
+
+// Set an existing user's role by their profile id.
+export async function setUserRole(
+  userId: string,
+  role: string
+): Promise<UpdateResult> {
+  const { user, canManageUsers } = await getAdminContext();
+  if (!user) return { error: "Not signed in" };
+  if (!canManageUsers) return { error: "Only superadmins can manage users" };
+  if (!ASSIGNABLE_ROLES.has(role)) return { error: "Invalid role" };
+  if (userId === user.id && role !== "superadmin") {
+    return { error: "You can't demote yourself" };
+  }
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+  const { error } = await admin
+    .from("profiles")
+    .update({ role })
+    .eq("id", userId);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/users");
+  return { success: true };
+}
+
+// Grant a role to someone by email. If a profile with that email
+// exists, set it directly; otherwise store a pending invite that's
+// claimed on their first sign-in.
+export async function inviteUserRole(input: {
+  email: string;
+  role: string;
+}): Promise<UpdateResult> {
+  const { user, canManageUsers, displayName } = await getAdminContext();
+  if (!user) return { error: "Not signed in" };
+  if (!canManageUsers) return { error: "Only superadmins can manage users" };
+  const email = input.email.trim().toLowerCase();
+  if (!email || !email.includes("@")) return { error: "Enter a valid email" };
+  if (!["commenter", "editor", "superadmin"].includes(input.role)) {
+    return { error: "Invalid role" };
+  }
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+  const { data: existing } = await admin
+    .from("profiles")
+    .select("id")
+    .ilike("email", email)
+    .maybeSingle();
+
+  if (existing?.id) {
+    const { error } = await admin
+      .from("profiles")
+      .update({ role: input.role })
+      .eq("id", existing.id);
+    if (error) return { error: error.message };
+    revalidatePath("/admin/users");
+    return { success: true };
+  }
+
+  // No account yet — store a pending invite.
+  const { error } = await admin.from("pending_admin_roles").upsert(
+    {
+      email,
+      role: input.role,
+      invited_by: user.id,
+      invited_by_name: displayName,
+    },
+    { onConflict: "email" }
+  );
+  if (error) {
+    return {
+      error:
+        error.code === "42P01"
+          ? "Roles aren't set up yet — apply migration 022 in Supabase."
+          : error.message,
+    };
+  }
+  revalidatePath("/admin/users");
+  return { success: true };
+}
+
+// Cancel a pending invite.
+export async function removePendingInvite(
+  email: string
+): Promise<UpdateResult> {
+  const { user, canManageUsers } = await getAdminContext();
+  if (!user) return { error: "Not signed in" };
+  if (!canManageUsers) return { error: "Only superadmins can manage users" };
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+  const { error } = await admin
+    .from("pending_admin_roles")
+    .delete()
+    .eq("email", email.toLowerCase());
+  if (error) return { error: error.message };
+  revalidatePath("/admin/users");
   return { success: true };
 }

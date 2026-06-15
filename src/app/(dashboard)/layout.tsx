@@ -5,6 +5,7 @@ import { TopNav } from "@/components/layout/TopNav";
 import { AiAssistant } from "@/components/assistant/AiAssistant";
 import { AdminEditProvider } from "@/components/admin/AdminEditProvider";
 import { AdminEditToggle } from "@/components/admin/AdminEditToggle";
+import { getAdminContext } from "@/lib/admin";
 
 export default async function DashboardLayout({
   children,
@@ -22,12 +23,19 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url, is_admin")
+    .select("display_name, avatar_url")
     .eq("id", user.id)
     .single();
 
+  // Role-derived admin capabilities (also claims any pending invite).
+  const { canComment, canEdit, canManageUsers } = await getAdminContext();
+
   return (
-    <AdminEditProvider isAdmin={!!profile?.is_admin}>
+    <AdminEditProvider
+      canComment={canComment}
+      canEdit={canEdit}
+      canManageUsers={canManageUsers}
+    >
       <div className="flex min-h-screen md:h-screen md:overflow-hidden">
         <Sidebar />
         <div className="flex flex-1 flex-col md:overflow-hidden">
@@ -35,6 +43,7 @@ export default async function DashboardLayout({
             email={user.email ?? ""}
             displayName={profile?.display_name ?? user.email ?? "User"}
             avatarUrl={profile?.avatar_url ?? null}
+            canManageUsers={canManageUsers}
           />
           <main
             id="main-content"

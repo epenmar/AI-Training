@@ -8,14 +8,16 @@ import {
 } from "react";
 
 type AdminEditContextValue = {
-  // The viewer's real admin status (from the server).
-  isAdmin: boolean;
-  // Admin status AFTER the "view as standard user" preview is applied.
-  // Every admin-only surface (edit pill, reviewer notes, edit
-  // affordances, sidebar link) should key off this, so previewing
-  // hides all admin chrome and the page renders exactly as a normal
-  // user would see it.
+  // Raw capabilities from the server (role-derived).
+  canComment: boolean;
+  canEdit: boolean;
+  canManageUsers: boolean;
+  // Preview-applied versions. "View as student" turns page chrome off.
+  showNotes: boolean; // can leave reviewer notes AND not previewing
+  showEdit: boolean; // can inline-edit AND not previewing
+  // Back-compat: any page admin chrome visible.
   effectiveIsAdmin: boolean;
+  isAdmin: boolean; // raw: has any admin chrome capability
   editMode: boolean;
   setEditMode: (on: boolean) => void;
   previewAsUser: boolean;
@@ -23,8 +25,13 @@ type AdminEditContextValue = {
 };
 
 const AdminEditContext = createContext<AdminEditContextValue>({
-  isAdmin: false,
+  canComment: false,
+  canEdit: false,
+  canManageUsers: false,
+  showNotes: false,
+  showEdit: false,
   effectiveIsAdmin: false,
+  isAdmin: false,
   editMode: false,
   setEditMode: () => {},
   previewAsUser: false,
@@ -36,33 +43,41 @@ export function useAdminEdit() {
 }
 
 export function AdminEditProvider({
-  isAdmin,
+  canComment,
+  canEdit,
+  canManageUsers,
   children,
 }: {
-  isAdmin: boolean;
+  canComment: boolean;
+  canEdit: boolean;
+  canManageUsers: boolean;
   children: ReactNode;
 }) {
   const [editMode, setEditModeRaw] = useState(false);
   const [previewAsUser, setPreviewAsUserRaw] = useState(false);
 
+  const anyAdmin = canComment || canEdit || canManageUsers;
+
   const setEditMode = (on: boolean) => {
-    if (!isAdmin || previewAsUser) return;
+    if (!canEdit || previewAsUser) return;
     setEditModeRaw(on);
   };
   const setPreviewAsUser = (on: boolean) => {
-    if (!isAdmin) return;
-    // Entering preview turns off edit mode so the page is truly clean.
+    if (!anyAdmin) return;
     if (on) setEditModeRaw(false);
     setPreviewAsUserRaw(on);
   };
 
-  const effectiveIsAdmin = isAdmin && !previewAsUser;
-
   return (
     <AdminEditContext.Provider
       value={{
-        isAdmin,
-        effectiveIsAdmin,
+        canComment,
+        canEdit,
+        canManageUsers,
+        showNotes: canComment && !previewAsUser,
+        showEdit: canEdit && !previewAsUser,
+        effectiveIsAdmin: anyAdmin && !previewAsUser,
+        isAdmin: anyAdmin,
         editMode,
         setEditMode,
         previewAsUser,
