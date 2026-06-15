@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CompletionPanel } from "@/components/activities/CompletionPanel";
 import { AsuResourcesPanel } from "@/components/activities/AsuResourcesPanel";
 import { ToolSuggester } from "@/components/activities/ToolSuggester";
+import { EditableText } from "@/components/admin/EditableText";
 import { StepInteractive } from "@/components/activities/interactives/StepInteractive";
 import { VocabTerm } from "@/components/activities/VocabTerm";
 import { buildRecommendations } from "@/lib/recommendations";
@@ -327,8 +328,29 @@ export default async function ActivityDetailPage({
             </span>
           )}
         </div>
-        <h2 className="text-2xl font-bold text-gray-700">{activity.title}</h2>
-        <p className="text-gray-600 mt-2">{coreDescription}</p>
+        <h2 className="text-2xl font-bold text-gray-700">
+          <EditableText
+            table="level_up_activities"
+            rowId={activityId}
+            column="title"
+            value={activity.title}
+            singleLine
+            label="Activity title"
+            revalidate={`/activities/${activityId}`}
+          />
+        </h2>
+        <p className="text-gray-600 mt-2">
+          <EditableText
+            table="level_up_activities"
+            rowId={activityId}
+            column="description"
+            value={activity.description ?? ""}
+            label="Description (Overview + Optional extension block)"
+            revalidate={`/activities/${activityId}`}
+          >
+            {coreDescription}
+          </EditableText>
+        </p>
 
         {(activity.value_add || (activity.objectives && activity.objectives.length > 0)) && (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -401,7 +423,16 @@ export default async function ActivityDetailPage({
                         {step.step_number}
                       </span>
                       <p className="text-sm text-gray-700 whitespace-pre-line flex-1">
-                        {renderRichText(step.instruction)}
+                        <EditableText
+                          table="activity_guide_steps"
+                          rowId={step.id}
+                          column="instruction"
+                          value={step.instruction ?? ""}
+                          label={`Step ${step.step_number} instruction`}
+                          revalidate={`/activities/${activityId}`}
+                        >
+                          {renderRichText(step.instruction)}
+                        </EditableText>
                       </p>
                     </div>
                     {hasExpand && (
@@ -426,7 +457,16 @@ export default async function ActivityDetailPage({
                         <div className="mt-3 space-y-3">
                           {hasHelp && (
                             <div className="text-sm text-gray-600 whitespace-pre-line border-l-2 border-asu-maroon/20 pl-3">
-                              {renderRichText(step.detailed_help ?? "")}
+                              <EditableText
+                                table="activity_guide_steps"
+                                rowId={step.id}
+                                column="detailed_help"
+                                value={step.detailed_help ?? ""}
+                                label={`Step ${step.step_number} details`}
+                                revalidate={`/activities/${activityId}`}
+                              >
+                                {renderRichText(step.detailed_help ?? "")}
+                              </EditableText>
                             </div>
                           )}
                           {showResources && (

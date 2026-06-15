@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
 import { AiAssistant } from "@/components/assistant/AiAssistant";
+import { AdminEditProvider } from "@/components/admin/AdminEditProvider";
+import { AdminEditToggle } from "@/components/admin/AdminEditToggle";
 
 export default async function DashboardLayout({
   children,
@@ -20,27 +22,30 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url")
+    .select("display_name, avatar_url, is_admin")
     .eq("id", user.id)
     .single();
 
   return (
-    <div className="flex min-h-screen md:h-screen md:overflow-hidden">
-      <Sidebar />
-      <div className="flex flex-1 flex-col md:overflow-hidden">
-        <TopNav
-          email={user.email ?? ""}
-          displayName={profile?.display_name ?? user.email ?? "User"}
-          avatarUrl={profile?.avatar_url ?? null}
-        />
-        <main
-          id="main-content"
-          className="flex-1 bg-gray-100 p-6 pb-28 sm:pb-6 md:overflow-y-auto"
-        >
-          {children}
-        </main>
+    <AdminEditProvider isAdmin={!!profile?.is_admin}>
+      <div className="flex min-h-screen md:h-screen md:overflow-hidden">
+        <Sidebar />
+        <div className="flex flex-1 flex-col md:overflow-hidden">
+          <TopNav
+            email={user.email ?? ""}
+            displayName={profile?.display_name ?? user.email ?? "User"}
+            avatarUrl={profile?.avatar_url ?? null}
+          />
+          <main
+            id="main-content"
+            className="flex-1 bg-gray-100 p-6 pb-28 sm:pb-6 md:overflow-y-auto"
+          >
+            {children}
+          </main>
+        </div>
+        <AiAssistant />
+        <AdminEditToggle />
       </div>
-      <AiAssistant />
-    </div>
+    </AdminEditProvider>
   );
 }
