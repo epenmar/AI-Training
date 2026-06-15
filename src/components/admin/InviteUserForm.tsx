@@ -6,7 +6,7 @@ import {
   inviteUserRole,
   removePendingInvite,
 } from "@/app/(dashboard)/admin/actions";
-import { openRoleEmail } from "./roleEmail";
+import { buildRoleMailto, openRoleEmail } from "./roleEmail";
 
 export function InviteUserForm() {
   const router = useRouter();
@@ -15,24 +15,28 @@ export function InviteUserForm() {
   const [role, setRole] = useState("commenter");
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
+  const [mailto, setMailto] = useState<string | null>(null);
 
   const submit = () => {
     setError("");
     setOk("");
+    setMailto(null);
     startTransition(async () => {
       const targetEmail = email;
+      const targetRole = role;
       const res = await inviteUserRole({ email, role });
       if ("error" in res) {
         setError(res.error);
         return;
       }
       setOk(
-        `Granted ${role} to ${targetEmail}. If they haven't signed in yet, it applies on their first login.`
+        `Granted ${targetRole} to ${targetEmail}. If they haven't signed in yet, it applies on their first login.`
       );
       setEmail("");
       router.refresh();
-      // Pop a templated notification email in the default mail app.
-      openRoleEmail(targetEmail, role);
+      // Reliable "Email them" link + best-effort auto-open.
+      setMailto(buildRoleMailto(targetEmail, targetRole));
+      openRoleEmail(targetEmail, targetRole);
     });
   };
 
@@ -74,6 +78,28 @@ export function InviteUserForm() {
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}
       {ok && <p className="text-xs text-green-700">{ok}</p>}
+      {mailto && (
+        <a
+          href={mailto}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-violet-700 hover:underline"
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
+          </svg>
+          Email them about this
+        </a>
+      )}
     </div>
   );
 }
