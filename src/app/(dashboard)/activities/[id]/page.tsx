@@ -305,10 +305,40 @@ export default async function ActivityDetailPage({
     pinnedStep.interactive_type != null &&
     pinnedStep.interactive_data != null;
 
+  // Reviewer-notes targets (activity + each step) for the panel.
+  const reviewerNoteTargets: AdminNoteTarget[] = [
+    {
+      table: "level_up_activities",
+      rowId: String(activityId),
+      label: "This activity (title / overview / deliverable)",
+    },
+    ...(steps ?? []).map(
+      (s): AdminNoteTarget => ({
+        table: "activity_guide_steps",
+        rowId: String(s.id),
+        label: `Step ${s.step_number}${
+          s.interactive_type ? ` · ${s.interactive_type}` : ""
+        }`,
+      })
+    ),
+  ];
+
   return (
     <div
       className={hasPinned ? "max-w-7xl mx-auto" : "max-w-3xl mx-auto"}
     >
+      {/* Reviewer notes — admins only. Pinned at the very top of the
+          page, above the band / skill pills, in an off-palette violet
+          so it's unmistakable. Renders nothing for non-admins / while
+          previewing as a student. */}
+      {isAdmin && (
+        <AdminNotesPanel
+          targets={reviewerNoteTargets}
+          initialNotes={adminNotes}
+          revalidate={`/activities/${activityId}`}
+        />
+      )}
+
       {/* Back link — sends users back to the All Activities page anchored at
           this activity's skill section. */}
       <Link
@@ -419,31 +449,6 @@ export default async function ActivityDetailPage({
           </div>
         )}
       </div>
-
-      {/* Admin editor notes — annotate anything, including non-editable
-          widgets. Admins only; renders empty if migration 021 isn't applied. */}
-      {isAdmin && (
-        <AdminNotesPanel
-          targets={[
-            {
-              table: "level_up_activities",
-              rowId: String(activityId),
-              label: "This activity (title / overview / deliverable)",
-            },
-            ...(steps ?? []).map(
-              (s): AdminNoteTarget => ({
-                table: "activity_guide_steps",
-                rowId: String(s.id),
-                label: `Step ${s.step_number}${
-                  s.interactive_type ? ` · ${s.interactive_type}` : ""
-                }`,
-              })
-            ),
-          ]}
-          initialNotes={adminNotes}
-          revalidate={`/activities/${activityId}`}
-        />
-      )}
 
       {/* Steps — instruction is the only thing visible by default. Everything
           else (help text, ASU resources, interactives) lives inside the step's

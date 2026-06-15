@@ -84,10 +84,10 @@ export function AdminNotesPanel({
     <details
       open={open}
       onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
-      className="group mb-6 rounded-xl border-2 border-asu-gold/50 bg-asu-gold/5"
+      className="group mb-6 rounded-xl border-2 border-violet-500 bg-violet-50 shadow-sm"
     >
       <summary className="cursor-pointer list-none p-4 flex items-center justify-between gap-3">
-        <span className="text-sm font-semibold uppercase tracking-wide text-yellow-800 inline-flex items-center gap-2">
+        <span className="text-sm font-semibold uppercase tracking-wide text-violet-800 inline-flex items-center gap-2">
           <svg
             className="w-4 h-4"
             fill="none"
@@ -103,15 +103,15 @@ export function AdminNotesPanel({
             />
           </svg>
           Reviewer notes
-          <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-asu-gold/30 text-[10px] font-bold text-yellow-900">
+          <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-violet-200 text-[10px] font-bold text-violet-900">
             {initialNotes.length} open
           </span>
-          <span className="text-[10px] font-medium normal-case tracking-normal text-yellow-700">
+          <span className="text-[10px] font-medium normal-case tracking-normal text-violet-600">
             (admins only)
           </span>
         </span>
         <svg
-          className="w-4 h-4 text-yellow-800 transition-transform group-open:rotate-180"
+          className="w-4 h-4 text-violet-800 transition-transform group-open:rotate-180"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -212,7 +212,7 @@ export function AdminNotesPanel({
               type="button"
               onClick={handleAdd}
               disabled={pending}
-              className="px-3 py-1.5 text-xs font-semibold rounded-md bg-asu-maroon text-white hover:bg-sidebar-hover disabled:opacity-50 cursor-pointer"
+              className="px-3 py-1.5 text-xs font-semibold rounded-md bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50 cursor-pointer"
             >
               {pending ? "Adding…" : "Add note"}
             </button>
