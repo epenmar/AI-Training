@@ -156,3 +156,92 @@ export async function rollbackRevision(
   if (revalidate) revalidatePath(revalidate);
   return { success: true };
 }
+
+// ====================================================================
+// Admin edit comments (annotations)
+// ====================================================================
+
+// Leave a freeform note about any content target — including
+// non-editable things (widgets, whole steps, structural rethinks).
+export async function addEditComment(input: {
+  table: string;
+  rowId: string;
+  columnName?: string | null;
+  contextLabel?: string | null;
+  body: string;
+  revalidate?: string;
+}): Promise<UpdateResult> {
+  const { user, isAdmin, displayName } = await getAdminContext();
+  if (!user) return { error: "Not signed in" };
+  if (!isAdmin) return { error: "Admins only" };
+  const body = input.body.trim();
+  if (!body) return { error: "Note can't be empty" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+  const { error } = await admin.from("admin_edit_comments").insert({
+    table_name: input.table,
+    row_id: String(input.rowId),
+    column_name: input.columnName ?? null,
+    context_label: input.contextLabel ?? null,
+    body,
+    created_by: user.id,
+    created_by_name: displayName,
+  });
+  if (error) {
+    // Most likely the table hasn't been created yet (migration 021).
+    return {
+      error:
+        error.message.includes("admin_edit_comments") ||
+        error.code === "42P01"
+          ? "Editor notes aren't set up yet — apply migration 021 in Supabase."
+          : error.message,
+    };
+  }
+  if (input.revalidate) revalidatePath(input.revalidate);
+  return { success: true };
+}
+
+// Mark a note resolved (it drops off the open list but is retained).
+export async function resolveEditComment(
+  commentId: string,
+  revalidate?: string
+): Promise<UpdateResult> {
+  const { user, isAdmin } = await getAdminContext();
+  if (!user) return { error: "Not signed in" };
+  if (!isAdmin) return { error: "Admins only" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+  const { error } = await admin
+    .from("admin_edit_comments")
+    .update({
+      status: "resolved",
+      resolved_by: user.id,
+      resolved_at: new Date().toISOString(),
+    })
+    .eq("id", commentId);
+  if (error) return { error: error.message };
+  if (revalidate) revalidatePath(revalidate);
+  return { success: true };
+}
+
+// Re-open a resolved note.
+export async function reopenEditComment(
+  commentId: string,
+  revalidate?: string
+): Promise<UpdateResult> {
+  const { user, isAdmin } = await getAdminContext();
+  if (!user) return { error: "Not signed in" };
+  if (!isAdmin) return { error: "Admins only" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+  const { error } = await admin
+    .from("admin_edit_comments")
+    .update({ status: "open", resolved_by: null, resolved_at: null })
+    .eq("id", commentId);
+  if (error) return { error: error.message };
+  if (revalidate) revalidatePath(revalidate);
+  return { success: true };
+}

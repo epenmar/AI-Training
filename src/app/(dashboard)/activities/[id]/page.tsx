@@ -5,6 +5,13 @@ import { CompletionPanel } from "@/components/activities/CompletionPanel";
 import { AsuResourcesPanel } from "@/components/activities/AsuResourcesPanel";
 import { ToolSuggester } from "@/components/activities/ToolSuggester";
 import { EditableText } from "@/components/admin/EditableText";
+import {
+  AdminNotesPanel,
+  type AdminNote,
+  type AdminNoteTarget,
+} from "@/components/admin/AdminNotesPanel";
+import { getAdminContext } from "@/lib/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { StepInteractive } from "@/components/activities/interactives/StepInteractive";
 import { VocabTerm } from "@/components/activities/VocabTerm";
 import { buildRecommendations } from "@/lib/recommendations";
@@ -114,6 +121,39 @@ export default async function ActivityDetailPage({
     .select("*")
     .eq("activity_id", activityId)
     .order("step_number");
+
+  // Admin context — drives inline editing + the editor-notes panel.
+  const { isAdmin } = await getAdminContext();
+
+  // Open editor notes for this activity + its steps (admins only). Best
+  // effort: if migration 021 hasn't been applied, the table is missing
+  // and we just render an empty panel.
+  let adminNotes: AdminNote[] = [];
+  if (isAdmin) {
+    const stepIds = (steps ?? []).map((s) => String(s.id));
+    const rowIds = [String(activityId), ...stepIds];
+    try {
+      const adminDb = createAdminClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: notes } = await (adminDb as any)
+        .from("admin_edit_comments")
+        .select(
+          "id, table_name, row_id, column_name, context_label, body, created_by_name, created_at"
+        )
+        .eq("status", "open")
+        .in("row_id", rowIds)
+        .order("created_at", { ascending: false });
+      adminNotes = (notes ?? []).filter(
+        (n: AdminNote) =>
+          (n.table_name === "level_up_activities" &&
+            n.row_id === String(activityId)) ||
+          (n.table_name === "activity_guide_steps" &&
+            stepIds.includes(n.row_id))
+      );
+    } catch {
+      adminNotes = [];
+    }
+  }
 
   const { data: completion } = await supabase
     .from("user_activity_completions")
@@ -379,6 +419,31 @@ export default async function ActivityDetailPage({
           </div>
         )}
       </div>
+
+      {/* Admin editor notes — annotate anything, including non-editable
+          widgets. Admins only; renders empty if migration 021 isn't applied. */}
+      {isAdmin && (
+        <AdminNotesPanel
+          targets={[
+            {
+              table: "level_up_activities",
+              rowId: String(activityId),
+              label: "This activity (title / overview / deliverable)",
+            },
+            ...(steps ?? []).map(
+              (s): AdminNoteTarget => ({
+                table: "activity_guide_steps",
+                rowId: String(s.id),
+                label: `Step ${s.step_number}${
+                  s.interactive_type ? ` · ${s.interactive_type}` : ""
+                }`,
+              })
+            ),
+          ]}
+          initialNotes={adminNotes}
+          revalidate={`/activities/${activityId}`}
+        />
+      )}
 
       {/* Steps — instruction is the only thing visible by default. Everything
           else (help text, ASU resources, interactives) lives inside the step's
