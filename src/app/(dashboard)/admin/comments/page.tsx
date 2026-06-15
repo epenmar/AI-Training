@@ -114,7 +114,7 @@ export default async function AdminCommentsPage({
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-700">Editor notes</h2>
+        <h2 className="text-2xl font-bold text-gray-700">Reviewer notes</h2>
         <p className="text-gray-500">
           Admin annotations across the site — flags for bigger changes
           that inline editing can&apos;t make. Work through these and take
@@ -157,7 +157,7 @@ export default async function AdminCommentsPage({
       {tableMissing ? (
         <div className="rounded-lg border-2 border-asu-gold/50 bg-asu-gold/5 p-5">
           <p className="text-sm text-gray-700">
-            Editor notes aren&apos;t set up yet. Apply migration{" "}
+            Reviewer notes aren&apos;t set up yet. Apply migration{" "}
             <span className="font-mono">021_admin_edit_comments.sql</span> in
             the Supabase dashboard SQL editor, then notes you add on
             activity pages will show up here.
@@ -168,7 +168,7 @@ export default async function AdminCommentsPage({
           <p className="text-sm text-gray-600">
             No {showResolved ? "resolved" : "open"} notes.
             {!showResolved &&
-              " Add one from any activity page using the gold “Editor notes” panel."}
+              " Add one from any activity page using the gold “Reviewer notes” panel."}
           </p>
         </div>
       ) : (

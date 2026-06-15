@@ -2,7 +2,7 @@
  * report-editor-notes.ts
  *
  * Reporting tool (run from here, not a site feature). Reads every
- * admin editor note out of `admin_edit_comments` and prints a grouped,
+ * admin reviewer note out of `admin_edit_comments` and prints a grouped,
  * actionable report so we can work through suggested changes together.
  *
  * Usage (from app/):
@@ -88,7 +88,7 @@ async function main() {
   const rows = (notes ?? []) as NoteRow[];
   if (rows.length === 0) {
     console.log(
-      `No ${wantResolvedOnly ? "resolved" : wantAll ? "" : "open "}editor notes found.`
+      `No ${wantResolvedOnly ? "resolved" : wantAll ? "" : "open "}reviewer notes found.`
     );
     return;
   }
@@ -212,7 +212,7 @@ async function main() {
       ? "ALL"
       : "OPEN";
   console.log(
-    `\n=================== EDITOR NOTES REPORT (${statusLabel}) ===================`
+    `\n=================== REVIEWER NOTES REPORT (${statusLabel}) ===================`
   );
   console.log(`Total notes: ${rows.length}\n`);
 
