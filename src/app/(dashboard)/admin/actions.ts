@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getAdminContext, isEditableField } from "@/lib/admin";
+import { getAdminContext, isEditableField, isArrayField } from "@/lib/admin";
 import {
   createAdminClient,
   hasServiceRole,
@@ -60,12 +60,24 @@ export async function updateContent(input: {
   if (readErr) return { error: readErr.message };
   const oldValue = (before as Record<string, unknown> | null)?.[column] ?? null;
 
-  // No-op guard.
-  if (oldValue === value) return { success: true };
+  // Array columns (e.g. objectives) are edited as newline-separated
+  // text; split into an array of non-empty trimmed lines before write.
+  const isArr = isArrayField(table, column);
+  const nextValue: string | string[] = isArr
+    ? value
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : value;
+
+  // No-op guard (compare serialized for arrays).
+  if (JSON.stringify(oldValue) === JSON.stringify(nextValue)) {
+    return { success: true };
+  }
 
   const { error: writeErr } = await db
     .from(table)
-    .update({ [column]: value })
+    .update({ [column]: nextValue })
     .eq("id", pk);
   if (writeErr) return { error: writeErr.message };
 
@@ -78,7 +90,7 @@ export async function updateContent(input: {
       row_id: String(rowId),
       column_name: column,
       old_value: oldValue,
-      new_value: value,
+      new_value: nextValue,
       changed_by: user.id,
       changed_by_name: displayName,
       change_source: "inline_edit",

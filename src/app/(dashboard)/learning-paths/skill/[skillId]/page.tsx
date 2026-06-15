@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { SkillIcon } from "@/components/activities/skillIcons";
+import { EditableText } from "@/components/admin/EditableText";
 
 const LEVEL_ORDER = ["Foundational", "Intermediate", "Advanced"] as const;
 const LEVEL_COLORS: Record<string, { chip: string; bar: string }> = {
@@ -122,12 +123,40 @@ export default async function SkillDetailPage({
             )}
           </p>
           <h1 className="text-2xl font-bold text-gray-700">
-            {skill.short_name}
+            <EditableText
+              table="skills"
+              rowId={skill.id}
+              column="short_name"
+              value={skill.short_name}
+              singleLine
+              label="Skill name"
+              revalidate={`/learning-paths/skill/${skill.id}`}
+            />
           </h1>
-          <p className="text-sm text-gray-600 mt-1 max-w-2xl">{skill.statement}</p>
+          <p className="text-sm text-gray-600 mt-1 max-w-2xl">
+            <EditableText
+              table="skills"
+              rowId={skill.id}
+              column="statement"
+              value={skill.statement}
+              label="Skill statement"
+              revalidate={`/learning-paths/skill/${skill.id}`}
+            >
+              {skill.statement}
+            </EditableText>
+          </p>
           {skill.derivation_note && (
             <p className="text-xs text-gray-400 mt-2 italic max-w-2xl">
-              {skill.derivation_note}
+              <EditableText
+                table="skills"
+                rowId={skill.id}
+                column="derivation_note"
+                value={skill.derivation_note}
+                label="Derivation note"
+                revalidate={`/learning-paths/skill/${skill.id}`}
+              >
+                {skill.derivation_note}
+              </EditableText>
             </p>
           )}
           <p className="text-xs text-gray-500 mt-3">

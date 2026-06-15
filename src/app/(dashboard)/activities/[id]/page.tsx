@@ -430,7 +430,14 @@ export default async function ActivityDetailPage({
                   Value add
                 </p>
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  {activity.value_add}
+                  <EditableText
+                    table="level_up_activities"
+                    rowId={activityId}
+                    column="value_add"
+                    value={activity.value_add}
+                    label="Value add"
+                    revalidate={`/activities/${activityId}`}
+                  />
                 </p>
               </div>
             )}
@@ -439,11 +446,20 @@ export default async function ActivityDetailPage({
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-asu-blue mb-1.5">
                   Objectives
                 </p>
-                <ul className="text-sm text-gray-700 leading-relaxed space-y-1 list-disc pl-5">
-                  {activity.objectives.map((obj, i) => (
-                    <li key={i}>{obj}</li>
-                  ))}
-                </ul>
+                <EditableText
+                  table="level_up_activities"
+                  rowId={activityId}
+                  column="objectives"
+                  value={activity.objectives.join("\n")}
+                  label="Objectives (one per line)"
+                  revalidate={`/activities/${activityId}`}
+                >
+                  <ul className="text-sm text-gray-700 leading-relaxed space-y-1 list-disc pl-5">
+                    {activity.objectives.map((obj, i) => (
+                      <li key={i}>{obj}</li>
+                    ))}
+                  </ul>
+                </EditableText>
               </div>
             )}
           </div>

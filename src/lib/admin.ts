@@ -125,12 +125,31 @@ export const EDITABLE_FIELDS: Record<string, Set<string>> = {
     "description",
     "deliverable",
     "value_add",
+    "objectives",
+    "community_action",
   ]),
   activity_guide_steps: new Set(["instruction", "detailed_help"]),
   skills: new Set(["short_name", "statement", "derivation_note"]),
-  lesson_flow: new Set(["item_title", "source", "specific_location"]),
+  lesson_flow: new Set([
+    "item_title",
+    "source",
+    "specific_location",
+    "purpose",
+  ]),
 };
 
 export function isEditableField(table: string, column: string): boolean {
   return EDITABLE_FIELDS[table]?.has(column) ?? false;
+}
+
+// Columns that store a text[] / jsonb array of strings. When edited
+// inline, the textarea holds one item per line; the server action
+// splits on newlines before writing. EditableText is given the value
+// pre-joined with "\n".
+export const ARRAY_FIELDS: Record<string, Set<string>> = {
+  level_up_activities: new Set(["objectives"]),
+};
+
+export function isArrayField(table: string, column: string): boolean {
+  return ARRAY_FIELDS[table]?.has(column) ?? false;
 }

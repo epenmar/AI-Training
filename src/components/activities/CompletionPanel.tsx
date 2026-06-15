@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { saveAndComplete } from "@/app/(dashboard)/activities/actions";
+import { EditableText } from "@/components/admin/EditableText";
 
 interface Props {
   activityId: number;
@@ -261,7 +262,18 @@ export function CompletionPanel({
       <header className="mb-3">
         <h3 className="text-base font-semibold text-gray-700">Deliverable</h3>
         {deliverable && (
-          <p className="text-sm text-gray-600 mt-1">{deliverable}</p>
+          <p className="text-sm text-gray-600 mt-1">
+            <EditableText
+              table="level_up_activities"
+              rowId={activityId}
+              column="deliverable"
+              value={deliverable}
+              label="Deliverable"
+              revalidate={`/activities/${activityId}`}
+            >
+              {deliverable}
+            </EditableText>
+          </p>
         )}
       </header>
 
