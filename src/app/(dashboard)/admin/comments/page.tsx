@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAdminContext } from "@/lib/admin";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, hasServiceRole } from "@/lib/supabase/admin";
 import { ResolveNoteButton } from "@/components/admin/ResolveNoteButton";
 
 type NoteRow = {
@@ -59,12 +59,15 @@ export default async function AdminCommentsPage({
   if (!user) redirect("/login");
   if (!isAdmin) redirect("/");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const admin = createAdminClient() as any;
-
   let notes: NoteRow[] = [];
   let tableMissing = false;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let admin: any = null;
+  if (!hasServiceRole()) {
+    tableMissing = true;
+  }
   try {
+    admin = hasServiceRole() ? (createAdminClient() as unknown) : null;
     const { data, error } = await admin
       .from("admin_edit_comments")
       .select("*")

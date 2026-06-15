@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdminContext, isEditableField } from "@/lib/admin";
-import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  createAdminClient,
+  hasServiceRole,
+  NOT_CONFIGURED_MESSAGE,
+} from "@/lib/supabase/admin";
 
 // Integer-PK tables (row_id arrives as a string from the client and
 // must be cast back to a number for the .eq() filter). Everything
@@ -35,6 +39,7 @@ export async function updateContent(input: {
   if (!isEditableField(table, column)) {
     return { error: `Field ${table}.${column} is not editable` };
   }
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
 
   // Dynamic table / column names — the typed client can't model these,
   // so use an untyped handle for the generic read/write.
@@ -96,6 +101,7 @@ export async function rollbackRevision(
   const { user, isAdmin, displayName } = await getAdminContext();
   if (!user) return { error: "Not signed in" };
   if (!isAdmin) return { error: "Admins only" };
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const admin = createAdminClient() as any;
@@ -176,6 +182,7 @@ export async function addEditComment(input: {
   if (!isAdmin) return { error: "Admins only" };
   const body = input.body.trim();
   if (!body) return { error: "Note can't be empty" };
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const admin = createAdminClient() as any;
@@ -210,6 +217,7 @@ export async function resolveEditComment(
   const { user, isAdmin } = await getAdminContext();
   if (!user) return { error: "Not signed in" };
   if (!isAdmin) return { error: "Admins only" };
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const admin = createAdminClient() as any;
@@ -234,6 +242,7 @@ export async function reopenEditComment(
   const { user, isAdmin } = await getAdminContext();
   if (!user) return { error: "Not signed in" };
   if (!isAdmin) return { error: "Admins only" };
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const admin = createAdminClient() as any;

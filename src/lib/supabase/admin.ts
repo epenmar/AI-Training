@@ -17,3 +17,18 @@ export function createAdminClient() {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
+
+// Whether the service-role key is configured in this environment.
+// Lets callers fail gracefully (return a message) instead of throwing
+// a 500 when the deployment is missing SUPABASE_SERVICE_ROLE_KEY.
+export function hasServiceRole(): boolean {
+  return (
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    !!process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
+
+const NOT_CONFIGURED_MESSAGE =
+  "Admin edits aren't enabled on this deployment — the SUPABASE_SERVICE_ROLE_KEY environment variable is missing. Add it in your hosting provider's settings and redeploy.";
+
+export { NOT_CONFIGURED_MESSAGE };
