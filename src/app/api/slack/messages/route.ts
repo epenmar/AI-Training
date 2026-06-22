@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { ALLOWED_CHANNEL_IDS } from "@/lib/slackChannels";
 
 /**
  * Slack read-only proxy. Fetches conversation history for the given channel_id
@@ -18,12 +19,7 @@ type CacheEntry = { at: number; messages: SlackMessage[]; users: Record<string, 
 const cache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
-const ALLOWED_CHANNELS = new Set([
-  "C094XUNEHC6",
-  "C062HRAVBQR",
-  "CN0498SNP",
-  "C0994NHG4NS",
-]);
+const ALLOWED_CHANNELS = ALLOWED_CHANNEL_IDS;
 
 async function fetchUserName(userId: string, token: string): Promise<string> {
   const res = await fetch(
