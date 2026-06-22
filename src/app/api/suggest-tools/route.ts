@@ -11,7 +11,12 @@ type SuggestedTool = {
   name: string;
   url: string;
   why: string;
+  vetted?: boolean;
 };
+
+// ASU's authoritative, regularly-updated list of approved AI tools.
+// The suggester grounds its picks here and flags which ones appear on it.
+const ASU_VETTED_TOOLS_URL = "https://ai.asu.edu/ai-tools";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -95,13 +100,15 @@ All steps (for context):
 ${stepList}${stepFocusBlock}
 
 Respond with a JSON object of the form:
-{"tools": [{"name": "Tool Name", "url": "https://...", "why": "One-sentence reason this tool fits ${
+{"tools": [{"name": "Tool Name", "url": "https://...", "vetted": true, "why": "One-sentence reason this tool fits ${
     focusedStep ? "this step" : "this activity"
   }."}, ...]}
 
 Only include tools that (a) are publicly available as of your knowledge, (b) have a real, stable URL, and (c) directly help with ${
     focusedStep ? "THIS STEP'S task" : "THIS activity's deliverable"
   }. Keep the "why" under 25 words and lead with "Best for [the specific task]…".
+
+GROUND YOUR PICKS IN ASU'S VETTED TOOL LIST. ASU maintains an authoritative, regularly-updated list of approved AI tools at ${ASU_VETTED_TOOLS_URL}. Prefer tools that appear on it. For every tool you return, set "vetted": true if it is an ASU-sanctioned or ASU-licensed/enterprise tool that would appear on that list (e.g., Create AI, the Adobe suite, Microsoft Copilot, Google/NotebookLM), or "vetted": false for an external tool that may not be ASU-approved. Never label a tool vetted unless you are confident it is ASU-approved.
 
 Tool selection guidelines, in priority order. Aim for a mix across tiers — do NOT default to only well-known options when a licensed or better-fit alternative exists.
 
@@ -171,12 +178,19 @@ When the activity calls for something creative (music, voice, video, a poster, a
     parsed = JSON.parse(match[0]);
   }
 
-  const tools = (parsed.tools ?? []).filter(
-    (t): t is SuggestedTool =>
-      typeof t?.name === "string" &&
-      typeof t?.url === "string" &&
-      typeof t?.why === "string"
-  );
+  const tools = (parsed.tools ?? [])
+    .filter(
+      (t): t is SuggestedTool =>
+        typeof t?.name === "string" &&
+        typeof t?.url === "string" &&
+        typeof t?.why === "string"
+    )
+    .map((t) => ({
+      name: t.name,
+      url: t.url,
+      why: t.why,
+      vetted: t.vetted === true,
+    }));
 
   cache.set(cacheKey, { at: Date.now(), tools });
   return NextResponse.json({ tools, cached: false });
