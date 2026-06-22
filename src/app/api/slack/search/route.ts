@@ -4,6 +4,7 @@ import { SLACK_CHANNELS, channelName } from "@/lib/slackChannels";
 import {
   skillKeywords,
   activityKeywords,
+  questionKeywords,
   matchKeywords,
 } from "@/lib/slackKeywords";
 
@@ -97,22 +98,31 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     mode?: string;
     id?: number;
+    text?: string;
   };
+  const isQuestion = body.mode === "question";
   if (
-    (body.mode !== "skill" && body.mode !== "activity") ||
-    typeof body.id !== "number"
+    !isQuestion &&
+    ((body.mode !== "skill" && body.mode !== "activity") ||
+      typeof body.id !== "number")
   ) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  if (isQuestion && !(body.text && body.text.trim())) {
+    return NextResponse.json({ error: "empty_question" }, { status: 400 });
   }
 
   // Resolve keywords from the DB.
   let keywords: string[] = [];
   let label = "";
-  if (body.mode === "skill") {
+  if (isQuestion) {
+    keywords = questionKeywords(body.text!.trim());
+    label = body.text!.trim();
+  } else if (body.mode === "skill") {
     const { data: skill } = await supabase
       .from("skills")
       .select("id, short_name, statement")
-      .eq("id", body.id)
+      .eq("id", body.id as number)
       .single();
     if (!skill) return NextResponse.json({ error: "not_found" }, { status: 404 });
     keywords = skillKeywords(skill);
@@ -121,7 +131,7 @@ export async function POST(request: Request) {
     const { data: act } = await supabase
       .from("level_up_activities")
       .select("title, description, skill_id")
-      .eq("id", body.id)
+      .eq("id", body.id as number)
       .single();
     if (!act) return NextResponse.json({ error: "not_found" }, { status: 404 });
     keywords = activityKeywords(act);
@@ -169,11 +179,74 @@ export async function POST(request: Request) {
     r.permalink = await resolvePermalink(r.channelId, r.ts, token);
   }
 
+  // For "ask a question" mode, best-effort synthesize a short answer
+  // grounded ONLY in the matched posts (Slackbot-style). Skipped if
+  // Create AI isn't configured or the call fails — posts still return.
+  let answer: string | null = null;
+  if (isQuestion && top.length > 0) {
+    answer = await answerFromPosts(body.text!.trim(), top);
+  }
+
   return NextResponse.json({
     configured: true,
     label,
     keywords,
+    answer,
     results: top,
     scanned: SLACK_CHANNELS.length,
   });
+}
+
+// Synthesize a concise answer from the matched Slack posts using Create
+// AI (same env as the other AI features). Returns null on any failure
+// or if not configured — the caller falls back to showing posts only.
+async function answerFromPosts(
+  question: string,
+  posts: Result[]
+): Promise<string | null> {
+  const apiKey = process.env.CREATE_AI_API_KEY;
+  const apiUrl = process.env.CREATE_AI_API_URL;
+  const modelName = process.env.CREATE_AI_MODEL;
+  const modelProvider = process.env.CREATE_AI_PROVIDER;
+  if (!apiKey || !apiUrl || !modelName || !modelProvider) return null;
+
+  const context = posts
+    .slice(0, 8)
+    .map(
+      (p, i) =>
+        `[${i + 1}] #${p.channelName} — ${p.authorName}: ${p.text.slice(0, 500)}`
+    )
+    .join("\n\n");
+
+  const system =
+    "You answer a user's question using ONLY the provided Slack posts from their team's channels. Be concise (2-4 sentences). If the posts don't actually answer it, say so plainly and suggest asking in the relevant channel. Never invent facts not in the posts. Plain text, no markdown.";
+  const prompt = `Question: ${question}\n\nRelevant Slack posts:\n${context}\n\nAnswer the question using only these posts.`;
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        action: "query",
+        request_source: "override_params",
+        query: prompt,
+        model_provider: modelProvider,
+        model_name: modelName,
+        model_params: {
+          system_prompt: system,
+          temperature: 0.2,
+          max_tokens: 400,
+        },
+      }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { response?: string };
+    const text = (data.response ?? "").trim();
+    return text || null;
+  } catch {
+    return null;
+  }
 }

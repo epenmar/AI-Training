@@ -72,6 +72,12 @@ export function activityKeywords(input: {
   return [...new Set([...fromText, ...boost])].slice(0, 14);
 }
 
+// Derives keywords from a free-text question (drops stopwords + short
+// words). Used by the "ask a question" mode.
+export function questionKeywords(text: string): string[] {
+  return [...new Set(tokenize(text))].slice(0, 12);
+}
+
 // Count distinct keyword matches in a message (whole-word-ish,
 // case-insensitive). Returns the matched keywords.
 export function matchKeywords(text: string, keywords: string[]): string[] {
