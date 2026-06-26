@@ -279,15 +279,27 @@ export default async function ActivityDetailPage({
     }
   }
   if (!nextActivity) {
-    // Fallback: next id in this skill (active only), or null.
+    // Fallback: the next band up in this skill. Ordering by id is wrong —
+    // activity ids aren't in band order (a New→Foundational activity can
+    // have a higher id than the Advanced one), which left some pages with
+    // no "next" and others looping back to the start band.
+    const BAND_RANK: Record<string, number> = {
+      "New → Foundational": 0,
+      "Foundational → Intermediate": 1,
+      "Intermediate → Advanced": 2,
+    };
     const { data: sameSkill } = await supabase
       .from("level_up_activities")
       .select("id, title, band")
       .eq("skill_id", activity.skill_id)
-      .eq("is_active", true)
-      .order("id");
-    const idx = (sameSkill ?? []).findIndex((a) => a.id === activityId);
-    const nextInSkill = idx >= 0 ? (sameSkill ?? [])[idx + 1] : null;
+      .eq("is_active", true);
+    const curRank = BAND_RANK[activity.band] ?? -1;
+    const nextInSkill =
+      curRank >= 0
+        ? ((sameSkill ?? [])
+            .filter((a) => (BAND_RANK[a.band] ?? -1) === curRank + 1)
+            .sort((a, b) => a.id - b.id)[0] ?? null)
+        : null;
     if (nextInSkill) {
       nextActivity = { id: nextInSkill.id, title: nextInSkill.title };
     }
