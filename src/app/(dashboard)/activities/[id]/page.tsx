@@ -24,12 +24,14 @@ const BAND_COLORS: Record<string, string> = {
 
 // Render detailed_help / instruction strings with minimal markdown:
 //   **bold**
+//   *italic*
 //   [text](url)
 //   {{term:definition}} — inline click-to-reveal vocab term
-// Anything else passes through as plain text.
+// Anything else passes through as plain text. Bold is matched before
+// italic so **x** never falls through to the single-* rule.
 function renderRichText(text: string): React.ReactNode[] {
   const tokenRegex =
-    /\*\*([^*]+)\*\*|\[([^\]]+)\]\(([^)]+)\)|\{\{([^:}]+):([^}]+)\}\}/g;
+    /\*\*([^*]+)\*\*|\[([^\]]+)\]\(([^)]+)\)|\{\{([^:}]+):([^}]+)\}\}|\*([^*\n]+)\*/g;
   const out: React.ReactNode[] = [];
   let last = 0;
   let match: RegExpExecArray | null;
@@ -80,6 +82,12 @@ function renderRichText(text: string): React.ReactNode[] {
           term={match[4].trim()}
           definition={match[5].trim()}
         />
+      );
+    } else if (match[6] !== undefined) {
+      out.push(
+        <em key={`i${key++}`} className="italic">
+          {match[6]}
+        </em>
       );
     }
     last = match.index + match[0].length;
