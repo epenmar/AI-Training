@@ -117,6 +117,9 @@ export function HighlighterWorkspace({
   const [selRange, setSelRange] = useState<
     { start: number; end: number } | null
   >(null);
+  // "Start over" wipes the pasted text + all highlights, so it asks for a
+  // second click to confirm (the reviewer hit it expecting a smaller edit).
+  const [confirmReset, setConfirmReset] = useState(false);
   const lastWritten = useRef<string>("");
   const renderRef = useRef<HTMLDivElement>(null);
   const legend = data.legend ?? DEFAULT_LEGEND;
@@ -247,6 +250,7 @@ export function HighlighterWorkspace({
   const reset = () => {
     setState({ text: "", colors: [] });
     setSelRange(null);
+    setConfirmReset(false);
     setEditing(true);
   };
 
@@ -309,24 +313,49 @@ export function HighlighterWorkspace({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer bg-white border border-gray-300 text-gray-700 hover:border-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-asu-blue disabled:opacity-40 disabled:cursor-not-allowed"
           aria-label="Remove highlight from selected text"
         >
-          Erase
+          Erase highlight
         </button>
         <span className="flex-1" />
+        <span
+          className="hidden sm:block w-px h-4 bg-gray-300"
+          aria-hidden="true"
+        />
         <button
           type="button"
           onClick={clearAll}
           className="text-xs text-gray-500 hover:text-asu-maroon cursor-pointer disabled:opacity-40"
           disabled={!state.text}
+          title="Remove every highlight but keep the pasted text"
         >
-          Clear all
+          Clear all highlights
         </button>
-        <button
-          type="button"
-          onClick={reset}
-          className="text-xs text-gray-500 hover:text-asu-maroon cursor-pointer"
-        >
-          Replace text
-        </button>
+        {!confirmReset ? (
+          <button
+            type="button"
+            onClick={() => setConfirmReset(true)}
+            className="text-xs text-gray-500 hover:text-asu-maroon cursor-pointer"
+            title="Discard the pasted text and start over with new text"
+          >
+            Start over
+          </button>
+        ) : (
+          <span className="inline-flex items-center gap-2">
+            <button
+              type="button"
+              onClick={reset}
+              className="text-xs font-semibold text-red-600 hover:text-red-700 cursor-pointer"
+            >
+              Discard text &amp; start over
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmReset(false)}
+              className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer"
+            >
+              Cancel
+            </button>
+          </span>
+        )}
       </div>
 
       {/* The highlightable rendered text */}

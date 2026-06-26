@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Verdict = "real" | "frankenstein" | "invented" | null;
 
@@ -51,10 +51,23 @@ function readStorage(key: string, count: number): Stored {
   }
 }
 
-function writeStorage(key: string, value: Stored) {
+const SYNC_EVENT = "citation-tracker:storage-update";
+
+// Entry mode owns `citations`; verify mode owns `verdicts`. They share a
+// storageKey so the verify step can read the citations the entry step
+// captured. Merge on write so neither instance clobbers the other's
+// field, and broadcast so the sibling instance on the same page re-reads
+// without a reload (the bug: verify hydrated empty and never refreshed).
+function writeStorage(key: string, partial: Partial<Stored>, count: number) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(key, JSON.stringify(value));
+    const cur = readStorage(key, count);
+    const merged: Stored = {
+      citations: partial.citations ?? cur.citations,
+      verdicts: partial.verdicts ?? cur.verdicts,
+    };
+    window.localStorage.setItem(key, JSON.stringify(merged));
+    window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: { key } }));
   } catch {
     // ignore
   }
@@ -66,16 +79,49 @@ export function CitationTracker({ data }: { data: CitationTrackerData }) {
     verdicts: Array(data.count).fill(null),
   });
   const [hydrated, setHydrated] = useState(false);
+  const lastWritten = useRef<string>("");
 
   useEffect(() => {
     setState(readStorage(data.storageKey, data.count));
     setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (typeof window === "undefined") return;
+    // Re-read when the sibling instance (entry <-> verify, same key on
+    // the same page) writes, or when another tab updates storage.
+    const reread = () => {
+      const fresh = readStorage(data.storageKey, data.count);
+      setState((cur) =>
+        JSON.stringify(cur) === JSON.stringify(fresh) ? cur : fresh
+      );
+    };
+    const onSync = (e: Event) => {
+      if ((e as CustomEvent<{ key: string }>).detail?.key === data.storageKey)
+        reread();
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === data.storageKey) reread();
+    };
+    window.addEventListener(SYNC_EVENT, onSync);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(SYNC_EVENT, onSync);
+      window.removeEventListener("storage", onStorage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
   }, [data.storageKey, data.count]);
 
   useEffect(() => {
-    if (hydrated) writeStorage(data.storageKey, state);
-  }, [state, data.storageKey, hydrated]);
+    if (!hydrated) return;
+    // Write only this instance's own field so it never clobbers the
+    // sibling's data (entry writes citations; verify writes verdicts).
+    const partial: Partial<Stored> =
+      data.mode === "entry"
+        ? { citations: state.citations }
+        : { verdicts: state.verdicts };
+    const ser = JSON.stringify(partial);
+    if (ser === lastWritten.current) return;
+    lastWritten.current = ser;
+    writeStorage(data.storageKey, partial, data.count);
+  }, [state, data.mode, data.storageKey, data.count, hydrated]);
 
   if (data.mode === "entry") {
     return (
@@ -102,9 +148,10 @@ export function CitationTracker({ data }: { data: CitationTrackerData }) {
             </li>
           ))}
         </ol>
-        <p className="text-[11px] text-gray-400 mt-3">
-          Saved in your browser. You'll come back to these in a later step to
-          mark each one Real, Frankenstein, or Fully invented.
+        <p className="text-xs text-gray-600 mt-3">
+          Saved automatically in your browser — these carry to the verify
+          step, where you&apos;ll mark each one Real, Frankenstein, or Fully
+          invented.
         </p>
       </div>
     );
