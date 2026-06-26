@@ -130,13 +130,21 @@ export function HighlighterWorkspace({
     if (fresh.text.length > 0) setEditing(false);
     setHydrated(true);
     if (typeof window === "undefined") return;
+    // When a sibling instance (same storageKey, e.g. A44 step 3 -> step 4)
+    // writes text, mirror it AND leave the paste form — otherwise this
+    // instance keeps showing its empty box even though text arrived (the
+    // reviewer's "it didn't auto-load" bug).
+    const refresh = () => {
+      const fresh = readStorage(data.storageKey);
+      setState(fresh);
+      if (fresh.text.length > 0) setEditing(false);
+    };
     const onSync = (e: Event) => {
       const ce = e as CustomEvent<{ key: string }>;
-      if (ce.detail?.key !== data.storageKey) return;
-      setState(readStorage(data.storageKey));
+      if (ce.detail?.key === data.storageKey) refresh();
     };
     const onStorage = (e: StorageEvent) => {
-      if (e.key === data.storageKey) setState(readStorage(data.storageKey));
+      if (e.key === data.storageKey) refresh();
     };
     window.addEventListener(SYNC_EVENT, onSync);
     window.addEventListener("storage", onStorage);
