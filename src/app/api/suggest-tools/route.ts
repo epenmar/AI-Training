@@ -89,6 +89,40 @@ export async function POST(request: Request) {
       ? `\n\nFOCUS — this learner is on step ${focusedStep.step_number} of the activity. Recommend tools that specifically help with this step's task:\n  Step ${focusedStep.step_number}: ${focusedStep.instruction}\n\nThe \"why\" line for each tool MUST tie the recommendation to this step specifically (e.g., "best for [this step's specific task] because…"). Generic activity-level reasons are not acceptable.`
       : "";
 
+  // Live ASU-vetted catalog — the grounded candidate set the model must
+  // prefer and the only tools allowed to be flagged "vetted". Read at
+  // request time so catalog edits take effect with no redeploy. The
+  // public ai.asu.edu/ai-tools page is too thin to scrape, so this
+  // curated table (maintained via seed) is the source of truth.
+  type VettedRow = {
+    name: string;
+    url: string;
+    use_cases: string[] | null;
+    asu_status: string;
+    department_scope: string;
+    data_sensitivity: string;
+    description: string | null;
+  };
+  // vetted_tools isn't in the generated Database types yet.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: vt } = await (supabase as any)
+    .from("vetted_tools")
+    .select(
+      "name, url, use_cases, asu_status, department_scope, data_sensitivity, description"
+    )
+    .eq("active", true);
+  const vettedTools = (vt ?? []) as VettedRow[];
+
+  const vettedBlock =
+    vettedTools.length > 0
+      ? vettedTools
+          .map(
+            (t) =>
+              `   - ${t.name} (${t.url}) — ${t.description ?? ""} [${t.asu_status}; scope: ${t.department_scope}; data: ${t.data_sensitivity}; good for: ${(t.use_cases ?? []).join(", ")}]`
+          )
+          .join("\n")
+      : "   (catalog temporarily unavailable — fall back to your knowledge of ASU-sanctioned and ASU-licensed tools: Create AI, the Adobe suite, Microsoft Copilot, Google/NotebookLM.)";
+
   const prompt = `Suggest 3-5 currently-available AI tools that would help an ASU learner complete ${
     focusedStep ? "this step" : "this activity"
   } well.
@@ -108,20 +142,16 @@ Only include tools that (a) are publicly available as of your knowledge, (b) hav
     focusedStep ? "THIS STEP'S task" : "THIS activity's deliverable"
   }. Keep the "why" under 25 words and lead with "Best for [the specific task]…".
 
-GROUND YOUR PICKS IN ASU'S VETTED TOOL LIST. ASU maintains an authoritative, regularly-updated list of approved AI tools at ${ASU_VETTED_TOOLS_URL}. Prefer tools that appear on it. For every tool you return, set "vetted": true if it is an ASU-sanctioned or ASU-licensed/enterprise tool that would appear on that list (e.g., Create AI, the Adobe suite, Microsoft Copilot, Google/NotebookLM), or "vetted": false for an external tool that may not be ASU-approved. Never label a tool vetted unless you are confident it is ASU-approved.
+GROUND YOUR PICKS IN ASU'S VETTED TOOL CATALOG (below). This is ASU's current set of sanctioned, licensed, and enterprise-available AI tools, maintained by ASU and read live. Prefer a catalog tool whenever one fits the task. For every tool you return, set "vetted": true ONLY if it appears in the catalog below (match by name); set "vetted": false for anything else. Never mark a tool vetted unless it is in the catalog. (ASU also publishes a public overview at ${ASU_VETTED_TOOLS_URL}, but the catalog below is the authoritative set for this feature.)
 
-Tool selection guidelines, in priority order. Aim for a mix across tiers — do NOT default to only well-known options when a licensed or better-fit alternative exists.
+ASU VETTED TOOL CATALOG (live):
+${vettedBlock}
 
-1. ASU-sanctioned platforms — prefer whenever they fit:
-   - Create AI (https://platform.aiml.asu.edu/) — ASU's institutional AI platform for custom assistants, agents, and reusable prompts.
-   - Create AI Compare (https://compare.aiml.asu.edu/) — side-by-side comparison of multiple models on the same prompt.
+Tool selection guidelines, in priority order. Aim for a mix across tiers — do NOT default to only well-known options when a catalog or better-fit alternative exists.
 
-2. ASU-licensed tools — prefer over free alternatives when they fit the deliverable:
-   - Adobe Firefly (https://firefly.adobe.com/) — AI image generation; ASU licenses the full Adobe suite.
-   - Adobe Express (https://new.express.adobe.com/) — fast AI-assisted visual design (flyers, social graphics, simple videos).
-   - NotebookLM (https://notebooklm.google.com/) — source-grounded research assistant with audio overviews; enterprise-available at ASU.
+1. ASU vetted catalog (above) — prefer whenever a catalog tool genuinely fits the task. These are the only tools you may mark "vetted": true.
 
-3. Creative or less-obvious tools — include when they genuinely fit, even if the deliverable could be met by a more generic tool:
+2. Creative or less-obvious tools — include when they genuinely fit, even if the deliverable could be met by a more generic tool. Mark these "vetted": false unless they also appear in the catalog:
    - Napkin (https://www.napkin.ai/) — turns text into editable visual notes and diagrams.
    - Suno (https://suno.com/) or Udio (https://www.udio.com/) — music, jingles, audio branding.
    - ElevenLabs (https://elevenlabs.io/) — voice generation and cloning.
@@ -131,10 +161,10 @@ Tool selection guidelines, in priority order. Aim for a mix across tiers — do 
    - Mermaid Live Editor (https://mermaid.live/) — text-to-diagram for flowcharts and process maps.
    - Perplexity (https://www.perplexity.ai/) — research with inline citations.
 
-4. General-purpose assistants — fine to include when the task is open-ended reasoning or drafting, and nothing above fits better:
+3. General-purpose assistants — fine to include when the task is open-ended reasoning or drafting, and nothing above fits better:
    - ChatGPT (https://chat.openai.com/), Claude (https://claude.ai/), Gemini (https://gemini.google.com/).
 
-When the activity calls for something creative (music, voice, video, a poster, a jingle, an unusual artifact), reach for tier 3 — don't suggest a generic chatbot just because it's famous.`;
+When the activity calls for something creative (music, voice, video, a poster, a jingle, an unusual artifact), reach for the creative tools in tier 2 — don't suggest a generic chatbot just because it's famous.`;
 
   const res = await fetch(apiUrl, {
     method: "POST",
