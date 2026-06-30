@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { navigation, isNavItemActive } from "./nav-items";
+import { FeedbackModal } from "@/components/feedback/FeedbackModal";
 
 interface Props {
   email: string;
@@ -23,8 +24,10 @@ export function TopNav({
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileNavOpen(false);
   }, [pathname]);
 
@@ -171,8 +174,32 @@ export function TopNav({
                   </Link>
                 )}
                 <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setFeedbackOpen(true);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
+                  role="menuitem"
+                >
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  Leave feedback
+                </button>
+                <button
                   onClick={handleSignOut}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
+                  className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer border-t border-gray-100"
                   role="menuitem"
                 >
                   Sign out
@@ -271,6 +298,13 @@ export function TopNav({
           </aside>
         </div>
       )}
+
+      <FeedbackModal
+        key={feedbackOpen ? "feedback-open" : "feedback-closed"}
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        pagePath={pathname}
+      />
     </>
   );
 }
