@@ -82,7 +82,7 @@ function Tabs({ active }: { active: TabKey }) {
     <div
       role="tablist"
       aria-label="Community sections"
-      className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-lg mb-6"
+      className="inline-flex items-center gap-1 p-1 bg-gray-100 border border-gray-200 rounded-lg mb-6"
     >
       <TabButton
         href="/community"
@@ -164,8 +164,8 @@ function TabButton({
       aria-selected={active}
       className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
         active
-          ? "bg-asu-maroon text-white shadow-sm"
-          : "text-gray-600 hover:text-asu-maroon hover:bg-white"
+          ? "bg-white text-asu-maroon shadow-sm"
+          : "text-gray-500 hover:text-gray-700"
       }`}
     >
       <svg
