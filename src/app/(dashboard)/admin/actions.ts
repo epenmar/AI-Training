@@ -374,3 +374,151 @@ export async function removePendingInvite(
   revalidatePath("/admin/users");
   return { success: true };
 }
+
+// ====================== Admin collaboration ======================
+// Shared across reviewer notes (item_type 'note', admin_edit_comments)
+// and user feedback (item_type 'feedback', user_feedback). Status +
+// assignment write to the source row; votes/discussion to the generic
+// collab tables. All gated on is_admin.
+
+type ItemType = "note" | "feedback";
+const ITEM_SOURCE: Record<ItemType, string> = {
+  note: "admin_edit_comments",
+  feedback: "user_feedback",
+};
+const ITEM_STATUSES = new Set(["open", "in_progress", "resolved"]);
+
+function isItemType(t: string): t is ItemType {
+  return t === "note" || t === "feedback";
+}
+
+export async function setItemStatus(input: {
+  itemType: string;
+  itemId: string;
+  status: string;
+}): Promise<UpdateResult> {
+  const { user, isAdmin, displayName } = await getAdminContext();
+  if (!user) return { error: "Not signed in" };
+  if (!isAdmin) return { error: "Admins only" };
+  if (!isItemType(input.itemType)) return { error: "Bad item type" };
+  if (!ITEM_STATUSES.has(input.status)) return { error: "Bad status" };
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any;
+  const patch: Record<string, unknown> = { status: input.status };
+  if (input.itemType === "note") {
+    // Keep the note's resolved metadata in sync.
+    if (input.status === "resolved") {
+      patch.resolved_by = user.id;
+      patch.resolved_at = new Date().toISOString();
+    } else {
+      patch.resolved_by = null;
+      patch.resolved_at = null;
+    }
+  }
+  const { error } = await db
+    .from(ITEM_SOURCE[input.itemType])
+    .update(patch)
+    .eq("id", input.itemId);
+  if (error) return { error: error.message };
+  void displayName;
+  revalidatePath("/admin/comments");
+  return { success: true };
+}
+
+export async function assignItem(input: {
+  itemType: string;
+  itemId: string;
+  assignedTo: string | null;
+}): Promise<UpdateResult> {
+  const { user, isAdmin } = await getAdminContext();
+  if (!user) return { error: "Not signed in" };
+  if (!isAdmin) return { error: "Admins only" };
+  if (!isItemType(input.itemType)) return { error: "Bad item type" };
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any;
+  let assignedName: string | null = null;
+  if (input.assignedTo) {
+    const { data: p } = await db
+      .from("profiles")
+      .select("display_name, email")
+      .eq("id", input.assignedTo)
+      .single();
+    assignedName = p?.display_name ?? p?.email ?? null;
+  }
+  const { error } = await db
+    .from(ITEM_SOURCE[input.itemType])
+    .update({ assigned_to: input.assignedTo, assigned_name: assignedName })
+    .eq("id", input.itemId);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/comments");
+  return { success: true };
+}
+
+export async function toggleItemVote(input: {
+  itemType: string;
+  itemId: string;
+}): Promise<UpdateResult> {
+  const { user, isAdmin } = await getAdminContext();
+  if (!user) return { error: "Not signed in" };
+  if (!isAdmin) return { error: "Admins only" };
+  if (!isItemType(input.itemType)) return { error: "Bad item type" };
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any;
+  const { data: existing } = await db
+    .from("admin_collab_votes")
+    .select("user_id")
+    .eq("item_type", input.itemType)
+    .eq("item_id", input.itemId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (existing) {
+    await db
+      .from("admin_collab_votes")
+      .delete()
+      .eq("item_type", input.itemType)
+      .eq("item_id", input.itemId)
+      .eq("user_id", user.id);
+  } else {
+    await db.from("admin_collab_votes").insert({
+      item_type: input.itemType,
+      item_id: input.itemId,
+      user_id: user.id,
+    });
+  }
+  revalidatePath("/admin/comments");
+  return { success: true };
+}
+
+export async function addItemComment(input: {
+  itemType: string;
+  itemId: string;
+  body: string;
+}): Promise<UpdateResult> {
+  const { user, isAdmin, displayName } = await getAdminContext();
+  if (!user) return { error: "Not signed in" };
+  if (!isAdmin) return { error: "Admins only" };
+  if (!isItemType(input.itemType)) return { error: "Bad item type" };
+  const body = input.body?.trim();
+  if (!body) return { error: "Write something first" };
+  if (body.length > 4000) return { error: "Too long" };
+  if (!hasServiceRole()) return { error: NOT_CONFIGURED_MESSAGE };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any;
+  const { error } = await db.from("admin_collab_comments").insert({
+    item_type: input.itemType,
+    item_id: input.itemId,
+    author_id: user.id,
+    author_name: displayName ?? user.email ?? "Admin",
+    body,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/admin/comments");
+  return { success: true };
+}
